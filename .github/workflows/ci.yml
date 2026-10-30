@@ -1,0 +1,41 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Checkout pinned shared tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: TauCetiProject/TauCetiTools
+          ref: 68ca7893e90b82454ab58ba64dca753a05cd2720
+          path: .tauceti-tools
+          persist-credentials: false
+      - name: Load canonical project configuration
+        env:
+          PYTHONPATH: ${{ github.workspace }}/.tauceti-tools
+          TAUCETI_CONF: https://raw.githubusercontent.com/LeanMachineLearning/LMLExplore/main/tauceti.toml
+        run: |
+          python3 -m tauceti_tools config environment --conf "$TAUCETI_CONF" --github-env "$GITHUB_ENV"
+          echo "PYTHONPATH=$PYTHONPATH" >> "$GITHUB_ENV"
+          echo "TAUCETI_CI_ARCHIVE_DIR=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Set up Lean and restore Mathlib
+        uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6
+        with:
+          build: false
+          test: false
+          lint: false
+          use-mathlib-cache: true
+          use-github-cache: false
+      # Suggested.lean states goals and may use sorry. It does not share the
+      # content repository's axiom audit or warning-as-error policy.
+      - run: lake build

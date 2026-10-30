@@ -1,0 +1,22 @@
+name = "LMLRoadmaps"
+defaultTargets = ["LMLRoadmaps", "Completed"]
+
+# Roadmap target signatures consume existing LMLExplore, LML, Tau Ceti and Mathlib declarations
+# directly. LMLExplore brings the other three, at the versions pinned in its manifest.
+[[require]]
+name = "LMLExplore"
+git = "https://github.com/LeanMachineLearning/LMLExplore"
+rev = "main"
+
+# Human-owned roadmaps: markdown plus Lean target signatures. `sorry` is allowed here (these are
+# goals, not proofs), so this library builds without `warningAsError`. The glob builds every
+# roadmap file, so an orphaned or broken target is caught.
+[[lean_lib]]
+name = "LMLRoadmaps"
+globs = ["LMLRoadmaps.*"]
+
+# Completed roadmaps are no longer offered to contributors, but their Lean files remain checked
+# against the current LMLExplore pin.
+[[lean_lib]]
+name = "Completed"
+globs = ["Completed.+"]

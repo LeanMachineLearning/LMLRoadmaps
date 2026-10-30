@@ -1,0 +1,5 @@
+-- Human-owned root of the roadmap target signatures.
+--
+-- The per-area `README.md` files are the definitive roadmaps. This file deliberately carries no
+-- imports: `lakefile.toml` globs every module under `LMLRoadmaps/`, so `lake build` compiles each
+-- roadmap without it being listed here, and roadmap pull requests never conflict on this file.

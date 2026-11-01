@@ -237,17 +237,19 @@ theorem lai_robbins_gaussian {alg : Algorithm Unit α ℝ} {σ2 : ℝ≥0}
 
 section OnlineLinear
 
-variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
-/-- The regret bound of follow-the-regularized-leader [LS, Theorem 28.5], for a potential that is
-differentiable at the iterates; `a t` minimizes `η ⟪·, ∑_{s<t} y s⟫ + F` over `K`. -/
-theorem ftrl_regret_le {F : E → ℝ} {K : Set E} (hK : Convex ℝ K) (hF : ConvexOn ℝ K F)
-    {η : ℝ} (hη : 0 < η) (y a : ℕ → E)
-    (ha : ∀ t, IsMinOn (fun b ↦ η * ∑ s ∈ range t, ⟪b, y s⟫_ℝ + F b) K (a t))
-    (hdiff : ∀ t, DifferentiableAt ℝ F (a t)) {u : E} (hu : u ∈ K) (n : ℕ) :
-    ∑ t ∈ range n, ⟪a t - u, y t⟫_ℝ ≤
-      (F u - F (a 0)) / η + ∑ t ∈ range n, ⟪a t - a (t + 1), y t⟫_ℝ -
-        (∑ t ∈ range n, bregDiv F (a (t + 1)) (a t) (fderiv ℝ F (a t))) / η :=
+/-- The regret bound of follow-the-regularized-leader [LS, Theorem 28.5], on a normed space with
+losses `y t` in the dual, for a potential with a derivative `F' t` within `K` at each play; each
+play `a t ∈ K` minimizes `b ↦ η ∑_{s<t} y s b + F b` over `K`. -/
+theorem ftrl_regret_le {F : E → ℝ} {K : Set E} (hK : Convex ℝ K) {η : ℝ} (hη : 0 < η)
+    (y : ℕ → E →L[ℝ] ℝ) (a : ℕ → E) {n : ℕ} (ha_mem : ∀ t ≤ n, a t ∈ K)
+    (ha : ∀ t ≤ n, IsMinOn (fun b ↦ η * ∑ s ∈ range t, y s b + F b) K (a t))
+    (F' : ℕ → E →L[ℝ] ℝ) (hF' : ∀ t < n, HasFDerivWithinAt F (F' t) K (a t)) {u : E}
+    (hu : u ∈ K) :
+    ∑ t ∈ range n, y t (a t - u) ≤
+      (F u - F (a 0)) / η + ∑ t ∈ range n, y t (a t - a (t + 1)) -
+        (∑ t ∈ range n, bregDiv F (a (t + 1)) (a t) (F' t)) / η :=
   sorry
 
 end OnlineLinear

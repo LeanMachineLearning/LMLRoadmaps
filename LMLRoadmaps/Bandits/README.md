@@ -126,7 +126,7 @@ dependency versions used to check the interfaces (LML `53be244`, Mathlib `2e318f
 | KL divergence | Mathlib `InformationTheory.klDiv`, `klDiv_compProd_eq_add`, `klDiv_map_le`; LML [`ChainRule.lean`][lml-chain] (`klDiv_compProd_right_eq_lintegral`); Tau Ceti [`Pinsker.lean`][tc-pinsker] (`two_mul_sq_measureReal_sub_le_klDiv`) and [`Variational.lean`][tc-dv] |
 | Sub-Gaussian concentration and martingales | Mathlib [`SubGaussian.lean`][ml-subg] (`HasSubgaussianMGF`, `HasCondSubgaussianMGF`, `hasSubgaussianMGF_of_mem_Icc`, `measure_sum_ge_le_of_iIndepFun`, `measure_sum_ge_le_of_hasCondSubgaussianMGF`), [`OptionalStopping.lean`][ml-os] (`maximal_ineq`), `Supermartingale` |
 | Laws | Mathlib `gaussianReal`, `bernoulliMeasure`, `multivariateGaussian`; Tau Ceti [`Gaussian/Cdf.lean`][tc-gauss] (`measureReal_Ioi_gaussianReal`) |
-| Convex analysis | LML [`Bregman/Basic.lean`][lml-breg] (`bregDiv`, notation `D_[f](x, y, J)`, `bregDiv_three_point`), [`Subgradient/`][lml-subgrad]; Tau Ceti [`Conjugate.lean`][tc-conj] (`fenchelConjugate`), [`Strong.lean`][tc-strong] (`StrongConvexOn.add_add_le_of_hasFDerivWithinAt`); Mathlib `stdSimplex`, `StrongConvexOn` |
+| Convex analysis | LML [`Bregman/Basic.lean`][lml-breg] (`bregDiv`, notation `D_[f](x, y, J)`, `bregDiv_three_point`), [`Subgradient/`][lml-subgrad]; Tau Ceti [`Conjugate.lean`][tc-conj] (`fenchelConjugate`, for a bilinear pairing), [`Strong.lean`][tc-strong] (`StrongConvexOn.add_add_le_of_hasFDerivWithinAt`); Mathlib `StrongConvexOn`, `PiLp`; LMLExplore `simplex` (`Analysis/Convex/Simplex.lean`) |
 | Linear algebra | Mathlib `ContinuousLinearMap.IsPositive` and its Loewner order, `LinearMap.det`, `Matrix.det_one_add_replicateCol_mul_replicateRow`, `Matrix.add_mul_mul_inv_eq_sub`; Tau Ceti [`Frame.lean`][tc-frame] (`frameOperator`) and [`AffineNormalization.lean`][tc-affine] (`IsCompact.exists_affineBasis_abs_coord_le_one`) |
 
 The [Kiefer–Wolfowitz formalization in `colt-2026-83`][kw] (Apache-2.0, no `sorry`) proves the
@@ -328,7 +328,14 @@ a prior over environments); do not restate its results.
 
 ## Layer 6: Convex analysis and online linear optimization
 
-Work in a finite-dimensional real inner product space `E`. Losses are minimized.
+Work in a finite-dimensional real normed space `E`, paired with its dual `E →L[ℝ] ℝ` by
+`(x, y) ↦ y x`; this is the bilinear pairing that Tau Ceti's `fenchelConjugate` takes. Losses and
+gradients live in the dual: the loss of a play `a` under the loss `y` is `y a`, and the regret
+against `u` after `n` rounds is $\sum_{t<n}y_t(a_t-u)$. Strong convexity refers to the norm of `E`
+(Mathlib's `StrongConvexOn`), and the norm of a loss is its operator norm, the dual norm. Losses
+are minimized. Statements whose proofs do not use the dimension, such as the FTRL bounds of item 3,
+are stated without it. The merged FTRL development of LMLExplore is restated in this generality by
+the [Refactors](../Refactors/README.md) roadmap, Layer 0.1.
 
 1. **Legendre functions.** For a convex function $F$ with domain $D$ (represent it as `F : E → ℝ`
    with a convex set `D`, or as `E → EReal`; choose one representation and give conversions to
@@ -348,11 +355,16 @@ Work in a finite-dimensional real inner product space `E`. Losses are minimized.
    directional derivatives, and [LS, Corollary 28.8]. The bounds hold for losses chosen adaptively
    from past actions.
 4. **Two instances.** Prove [LS, Proposition 28.6] (unit ball, $F=\tfrac12\|a\|^2$,
-   $\eta=n^{-1/2}$: $R_n\le\sqrt n$) and [LS, Proposition 28.7] (simplex, unnormalized negative
-   entropy, $\eta=\sqrt{2\log(d)/n}$: $R_n\le\sqrt{2n\log d}$). Identify the latter with exponential
-   weights over a finite set, stated on `α → ℝ` with `stdSimplex`.
+   $\eta=n^{-1/2}$: $R_n\le\sqrt n$) on a real inner product space, with the losses
+   `InnerProductSpace.toDual ℝ E g` of vectors of norm at most `1`. Prove [LS, Proposition 28.7]
+   (simplex, unnormalized negative entropy, $\eta=\sqrt{2\log(d)/n}$: $R_n\le\sqrt{2n\log d}$)
+   on `E = PiLp 1 (fun _ : α ↦ ℝ)`, whose dual norm is the sup norm, from the `1`-strong convexity
+   of the negative entropy on the simplex for the `ℓ¹` norm (Pinsker's inequality). Identify the
+   latter with exponential weights over a finite set, stated on `α → ℝ` with LMLExplore's
+   `simplex α`.
 
-Generalization: an inner product space rather than $\mathbb R^d$; the instances are corollaries.
+Generalization: a normed space with losses in its dual, rather than $\mathbb R^d$ with the
+Euclidean pairing; the instances are corollaries.
 
 ## Layer 7: Adversarial bandits with finitely many arms and expert advice
 

@@ -18,7 +18,7 @@ propose or review one.
 
 ## Roadmaps
 
-No roadmap yet.
+- [Bandit algorithms and their regret](LMLRoadmaps/Bandits/README.md)
 
 ## Writing a roadmap
 

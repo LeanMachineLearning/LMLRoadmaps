@@ -45,7 +45,7 @@ def histOutputMeasure (A : IdentAlg Unit α 𝓨 ℐ) (env : Environment Unit α
 def expectedStoppingTime (A : IdentAlg Unit α 𝓨 ℐ) (env : Environment Unit α 𝓨) : ℝ≥0∞ :=
   ∫⁻ ω, (A.stoppingTime IT.obs IT.action IT.feedback ω : ℝ≥0∞) ∂(trajMeasure A.alg env)
 
-/-! ## Layer 1: identification tasks and natural exponential families -/
+/-! ## Layer 1: identification tasks and exponential families -/
 
 /-- An identification task (README Conventions): models `Θ` with a bandit `ν θ` each, the
 admissible models `M` and the set `correct θ` of correct answers of each model. -/
@@ -123,16 +123,20 @@ def baiTask (κ : α → ℝ → Measure ℝ) [∀ a x, IsProbabilityMeasure (κ
   isMarkovKernel_ν μ := ⟨fun a ↦ (inferInstance : IsProbabilityMeasure (κ a (μ a)))⟩
   correct μ := {a | ∀ b ≠ a, μ b < μ a}
 
-/-- The natural exponential family of a probability measure `ρ` on `ℝ`: the tilt of `ρ` with
-natural parameter `η` (README Layer 1.2). -/
-def natExpFamily (ρ : Measure ℝ) (η : ℝ) : Measure ℝ := ρ.tilted (fun x ↦ η * x)
+/-- The exponential family of a measure `ρ` on `𝓧` with statistic `T`: the tilt of `ρ` with
+natural parameter `η` (README Layer 1.2). The natural exponential families of measures on `ℝ`
+are the case `T = id`. -/
+def expFamily {𝓧 : Type*} [MeasurableSpace 𝓧] (ρ : Measure 𝓧) (T : 𝓧 → ℝ) (η : ℝ) :
+    Measure 𝓧 :=
+  ρ.tilted (fun x ↦ η * T x)
 
-/-- The relative entropy between two members of a natural exponential family:
-`ψ(η') - ψ(η) - ψ'(η) (η' - η)` with `ψ` the cumulant generating function of `ρ`. -/
-theorem klDiv_natExpFamily (ρ : Measure ℝ) [IsProbabilityMeasure ρ] {η η' : ℝ}
-    (hη : η ∈ interior (integrableExpSet id ρ)) (hη' : η' ∈ interior (integrableExpSet id ρ)) :
-    klDiv (natExpFamily ρ η) (natExpFamily ρ η') =
-      ENNReal.ofReal (cgf id ρ η' - cgf id ρ η - deriv (cgf id ρ) η * (η' - η)) :=
+/-- The relative entropy between two members of an exponential family:
+`ψ(η') - ψ(η) - ψ'(η) (η' - η)` with `ψ` the cumulant generating function of `T` under `ρ`. -/
+theorem klDiv_expFamily {𝓧 : Type*} [MeasurableSpace 𝓧] (ρ : Measure 𝓧) [IsProbabilityMeasure ρ]
+    {T : 𝓧 → ℝ} (hT : Measurable T) {η η' : ℝ} (hη : η ∈ interior (integrableExpSet T ρ))
+    (hη' : η' ∈ interior (integrableExpSet T ρ)) :
+    klDiv (expFamily ρ T η) (expFamily ρ T η') =
+      ENNReal.ofReal (cgf T ρ η' - cgf T ρ η - deriv (cgf T ρ) η * (η' - η)) :=
   sorry
 
 /-! ## Layer 2: change of measure and lower bounds -/
@@ -171,12 +175,13 @@ def trackAndStop (κ : α → ℝ → Measure ℝ) (meanSet : α → Set ℝ) (�
     IdentAlg Unit α ℝ α :=
   sorry
 
-/-- **Asymptotic optimality of Track-and-Stop** [GK16, Theorem 14], for arms in natural
-exponential families and the thresholds `β δ t = log (r t / δ)` with `r t = O(t)`. -/
+/-- **Asymptotic optimality of Track-and-Stop** [GK16, Theorem 14], for arms in exponential
+families on `ℝ` with the identity statistic and the thresholds `β δ t = log (r t / δ)` with
+`r t = O(t)`. -/
 theorem trackAndStop_asymptotic (ρ : α → Measure ℝ) [∀ a, IsProbabilityMeasure (ρ a)]
     (κ : α → ℝ → Measure ℝ) [∀ a x, IsProbabilityMeasure (κ a x)] (meanSet : α → Set ℝ)
     (hκ : ∀ a, ∀ x ∈ meanSet a, ∃ η ∈ interior (integrableExpSet id (ρ a)),
-      κ a x = natExpFamily (ρ a) η)
+      κ a x = expFamily (ρ a) id η)
     (r : ℕ → ℝ) (hr : (r · : ℕ → ℝ) =O[atTop] (fun t ↦ (t : ℝ)))
     {μ : α → ℝ} (hμ : μ ∈ (baiTask κ meanSet).M) {c : ℝ≥0}
     (hc : (baiTask κ meanSet).charTime μ < c) :

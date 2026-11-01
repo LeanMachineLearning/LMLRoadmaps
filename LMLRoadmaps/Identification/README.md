@@ -20,7 +20,7 @@ are:
 Build the surrounding library at the generality the research literature uses, so that papers in
 the area can be written on top of it:
 - identification tasks with arbitrary models, answer sets and multiple correct answers;
-- natural exponential families;
+- exponential families with a sufficient statistic, on any measurable space;
 - the change of measure at stopping times;
 - transportation costs and their continuity (Berge's maximum theorem, Sion's minimax theorem);
 - generalized likelihood ratio statistics and their time-uniform deviation inequalities;
@@ -32,7 +32,7 @@ not an exhaustive checklist.
 
 Suggested homes: `LMLExplore/Identification/` for identification material (namespace
 `LMLExplore.Identification`), and the mathematical home of each general tool (for example
-`LMLExplore/Probability/Distributions/ExponentialFamily/` for natural exponential families,
+`LMLExplore/Probability/Distributions/ExponentialFamily/` for exponential families,
 `LMLExplore/Probability/LargeDeviations/` for Cramér-type bounds,
 `LMLExplore/Topology/Semicontinuous/` for Berge's maximum theorem, `LMLExplore/OnlineLearning/` for
 AdaHedge).
@@ -164,7 +164,7 @@ forms above, and that development may be adapted to them.
 | Layer | Content | Prerequisites |
 | --- | --- | --- |
 | 0 | Identification algorithms, correctness and sample complexity | LML `IdentAlg` |
-| 1 | Identification tasks and natural exponential families | Layer 0 |
+| 1 | Identification tasks and exponential families | Layer 0 |
 | 2 | Change of measure and lower bounds | Layers 0–1; Bandits roadmap Layer 4 |
 | 3 | The pure exploration game | Layer 1 |
 | 4 | Deviation inequalities and GLR stopping rules | Layers 1, 3; Bandits roadmap Layer 1 |
@@ -208,7 +208,7 @@ forms above, and that development may be adapted to them.
      that their output law is the output kernel composed with the law of the $T$-round history.
    - Define static (fixed-design) sampling rules, which play a fixed sequence of arms.
 
-## Layer 1: Identification tasks and natural exponential families
+## Layer 1: Identification tasks and exponential families
 
 1. **Tasks.**
    - Define identification tasks (Conventions): alternatives $\neg i$, answer sets
@@ -230,32 +230,45 @@ forms above, and that development may be adapted to them.
      $\{\lambda:\exists b\ne a^*,\ \lambda_b\ge\max_c\lambda_c\}$ within the models whose means lie
      in the families' mean sets. Prove that the transportation infimum over $\neg a^*$ equals the
      infimum over this closed set when the divergences are continuous.
-2. **Natural exponential families.**
-   - For a probability measure $\rho$ on $\mathbb R$ with nonempty open natural-parameter set
-     $\Theta_\rho=\operatorname{interior}(\texttt{integrableExpSet id }\rho)$, define the family of
-     tilts $\rho_\eta=$ `ρ.tilted (η * ·)`, $\eta\in\Theta_\rho$.
-   - Define the log-partition function $\psi=$ `cgf id ρ`, the mean map $\psi'$ (`deriv_cgf`), and
-     its strict monotonicity when $\rho$ is not a Dirac mass (variance `iteratedDeriv_two_cgf` > 0).
-   - Define the open interval of means and the mean parametrization $\mu\mapsto\rho_{\eta(\mu)}$.
+2. **Exponential families.**
+   - For a measurable space `𝓧`, a probability measure $\rho$ on `𝓧` and a measurable statistic
+     `T : 𝓧 → ℝ` with nonempty open natural-parameter set
+     $\Theta_\rho=\operatorname{interior}(\texttt{integrableExpSet T }\rho)$, define the family of
+     tilts $\rho_\eta=$ `ρ.expFamily T η = ρ.tilted (fun x ↦ η * T x)`, $\eta\in\Theta_\rho$. The
+     natural exponential families of measures on `ℝ` are the case `T = id`.
+   - Define the log-partition function $\psi=$ `cgf T ρ`, the mean map $\psi'$ (the mean of `T`
+     under $\rho_\eta$, `deriv_cgf`), and its strict monotonicity when `T` is not
+     $\rho$-almost everywhere constant (variance `iteratedDeriv_two_cgf` > 0).
+   - Define the open interval of means `ρ.expFamilyMeans T`, the natural parameter
+     `ρ.natParam T μ` of a mean, and the mean parametrization $\mu\mapsto\rho_{\eta(\mu)}$.
    - Prove the closed form
      $\mathrm{KL}(\rho_{\eta(\mu)},\rho_{\eta(\mu')})=d(\mu,\mu')
-     =\psi(\eta')-\psi(\eta)-\mu(\eta'-\eta)$ (from `llr_tilted_left`), and that $d$ is
-     nonnegative, zero exactly on the diagonal, continuous on (means)$^2$, strictly convex in its
-     first argument, and monotone in each argument on each side of the other (it is not convex in
-     its second argument in general: the exponential family is a counterexample).
-   - Prove the Cramér–Chernoff bound $\rho_{\eta(\mu)}^{\otimes n}(\hat\mu_n\ge x)\le
-     \exp(-n\,d(x,\mu))$ for $x\ge\mu$ (and the lower tail), generalizing the Bandits roadmap's
-     Layer 1.4 bound.
+     =\psi(\eta')-\psi(\eta)-\mu(\eta'-\eta)$ (`ρ.expFamilyDiv T μ μ'`, from `llr_tilted_left`),
+     and that $d$ is nonnegative, zero exactly on the diagonal, continuous on (means)$^2$, strictly
+     convex in its first argument, and monotone in each argument on each side of the other (it is
+     not convex in its second argument in general: the exponential family is a counterexample).
+   - Prove the Cramér–Chernoff bound
+     $P\big(\sum_{i<n}T(Y_i)\ge nx\big)\le\exp(-n\,d(x,\mu))$ for independent observations
+     $Y_i$ of law $\rho_{\eta(\mu)}$ and $x\ge\mu$ (and the lower tail), in the form of the
+     [Refactors](../Refactors/README.md) roadmap, Layer 0.3: for real random variables dominated
+     by the member of mean $\mu$. That form contains the Bandits roadmap's Layer 1.4 bound.
    - Prove the sub-Gaussian comparison: $d(\mu,\mu')\ge(\mu-\mu')^2/(2\sigma^2)$ when the family has
      variance at most $\sigma^2$ on the segment.
-   - Prove that the Gaussian family with variance $\sigma^2$
-     ($d(\mu,\mu')=(\mu-\mu')^2/(2\sigma^2)$), the Bernoulli family ($d=$ `klBer`, by the Bandits
-     roadmap's `klDiv_bernoulliMeasure`), the Poisson family (Mathlib's `poissonMeasure`, pushed
-     forward to `ℝ`) and the exponential family (`expMeasure`) are natural exponential families in
-     this sense, with their divergences.
-   - Define the bandit of a mean vector, with arm laws in per-arm exponential families. Define the
-     generalized log-likelihood ratio extension of $d$ to empirical means at the boundary of the
-     mean interval (for Bernoulli arms, $\hat\mu\in\{0,1\}$), with its continuity.
+   - Prove that the following are exponential families in this sense, with their divergences:
+     - the Gaussian laws of variance $\sigma^2$ (`T = id`, $d(\mu,\mu')=(\mu-\mu')^2/(2\sigma^2)$);
+     - the Bernoulli laws `Ber((1 : ℝ), 0, p)` (`T = id`, $d=$ `klBer`, by the Bandits roadmap's
+       `klDiv_bernoulliMeasure`);
+     - the Poisson laws, as Mathlib's `poissonMeasure` on `ℕ` with `T = Nat.cast`;
+     - the exponential laws (`expMeasure`, `T = id`);
+     - the Gaussian laws of known mean $m$: $\rho=\mathcal N(m,1)$, $T(x)=(x-m)^2$, members
+       $\mathcal N(m,v)$ with natural parameter $(1-1/v)/2$, means the variances $v>0$, and
+       $d(v,v')=\tfrac12\big(\tfrac v{v'}-1-\log\tfrac v{v'}\big)$.
+   - Define the bandit of a mean vector, whose arm `a` has the law of mean $\mu_a$ in the
+     exponential family $(\rho_a,T_a)$ on a common observation space `𝓨`. Define the generalized
+     log-likelihood ratio extension of $d$ to empirical means at the boundary of the mean interval
+     (for Bernoulli arms, $\hat\mu\in\{0,1\}$), with its continuity.
+   - The merged natural-exponential-family development of LMLExplore is restated in this
+     generality by the Refactors roadmap, Layer 0.2.
 3. **Gaussian arms with unknown variances.** Define the two-parameter Gaussian model
    $\theta=(\mu_a,\sigma_a^2)_a$ and prove
    $\mathrm{KL}(\mathcal N(\mu,\sigma^2),\mathcal N(\mu',\sigma'^2))=

@@ -335,7 +335,7 @@ against `u` after `n` rounds is $\sum_{t<n}y_t(a_t-u)$. Strong convexity refers 
 (Mathlib's `StrongConvexOn`), and the norm of a loss is its operator norm, the dual norm. Losses
 are minimized. Statements whose proofs do not use the dimension, such as the FTRL bounds of item 3,
 are stated without it. The merged FTRL development of LMLExplore is restated in this generality by
-the [Refactors](../Refactors/README.md) roadmap, Layer 0.1.
+the [Refactors](../../Completed/Refactors/README.md) roadmap, Layer 0.1.
 
 1. **Legendre functions.** For a convex function $F$ with domain $D$ (represent it as `F : E → ℝ`
    with a convex set `D`, or as `E → EReal`; choose one representation and give conversions to

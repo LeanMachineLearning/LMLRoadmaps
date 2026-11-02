@@ -20,6 +20,13 @@ propose or review one.
 
 - [Bandit algorithms and their regret](LMLRoadmaps/Bandits/README.md)
 
+## Completed roadmaps
+
+Roadmaps the maintainers have declared complete, a judgment against the roadmap's `README.md`, are
+archived under `Completed/`. Their Lean files stay checked against the current LMLExplore pin.
+
+- [Refactors toward the generality of later layers](Completed/Refactors/README.md)
+
 ## Writing a roadmap
 
 A roadmap is a specification for material we want in LMLExplore, written so that an AI contributor

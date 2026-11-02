@@ -250,7 +250,7 @@ forms above, and that development may be adapted to them.
    - Prove the Cramér–Chernoff bound
      $P\big(\sum_{i<n}T(Y_i)\ge nx\big)\le\exp(-n\,d(x,\mu))$ for independent observations
      $Y_i$ of law $\rho_{\eta(\mu)}$ and $x\ge\mu$ (and the lower tail), in the form of the
-     [Refactors](../Refactors/README.md) roadmap, Layer 0.3: for real random variables dominated
+     [Refactors](../../Completed/Refactors/README.md) roadmap, Layer 0.3: for real random variables dominated
      by the member of mean $\mu$. That form contains the Bandits roadmap's Layer 1.4 bound.
    - Prove the sub-Gaussian comparison: $d(\mu,\mu')\ge(\mu-\mu')^2/(2\sigma^2)$ when the family has
      variance at most $\sigma^2$ on the segment.

@@ -22,8 +22,8 @@ In scope:
 - Wald's identities, probability vectors on finite types, and the generic parts of
   `LMLExplore/Bandits/Concentration.lean`.
 
-Relation to the other roadmaps. The [Bandits](../Bandits/README.md) and
-[Identification](../Identification/README.md) roadmaps specify the mathematics these developments
+Relation to the other roadmaps. The [Bandits](../../LMLRoadmaps/Bandits/README.md) and
+[Identification](../../LMLRoadmaps/Identification/README.md) roadmaps specify the mathematics these developments
 contain, in the generality of the targets here (Bandits Layer 6 for online linear optimization,
 Identification Layer 1.2 for exponential families); this roadmap restates the merged code in that
 generality and moves it where its users are. It adds no target of those roadmaps.

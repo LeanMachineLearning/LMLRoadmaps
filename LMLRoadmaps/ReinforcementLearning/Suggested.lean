@@ -48,6 +48,33 @@ theorem lipschitzWith_of_monotone_of_add_const_le {T : (ι → ℝ) → ι → �
     LipschitzWith γ T :=
   sorry
 
+section AbstractDP
+
+variable {D : Type*} {T : D → (ι → ℝ) → ι → ℝ} {B : (ι → ℝ) → ι → ℝ} {γ : ℝ≥0}
+
+/-- Abstract dynamic programming without attainment (README Layer 0.3), on `ι → ℝ` with the sup
+norm (the README asks for the order-unit form). The maps `T d` are monotone and satisfy Blackwell's
+condition, and `B` is their uniform supremum: `T d ≤ B`, and for every `ε > 0` some decision is
+`ε`-greedy. Then the fixed point of `B` is the least upper bound of the fixed points of the `T d`.
+`IsLUB (Set.range fun d ↦ T d x) (B x)` alone would not suffice. -/
+theorem isLUB_setOf_isFixedPt (hγ : γ < 1) (hT : ∀ d, Monotone (T d))
+    (hT_add : ∀ d x (c : ℝ), 0 ≤ c → T d (x + fun _ ↦ c) ≤ T d x + fun _ ↦ γ * c)
+    (hle : ∀ d x, T d x ≤ B x) (hgreedy : ∀ x, ∀ ε > 0, ∃ d, B x - (fun _ ↦ ε) ≤ T d x)
+    {x : ι → ℝ} (hx : Function.IsFixedPt B x) :
+    IsLUB {y | ∃ d, Function.IsFixedPt (T d) y} x :=
+  sorry
+
+/-- A decision `ε`-greedy for the fixed point `x` of `B` has its fixed point within
+`ε / (1 - γ)` of `x` (README Layer 0.3). -/
+theorem abs_sub_le_of_isFixedPt_of_sub_le (hγ : γ < 1) (hT : ∀ d, Monotone (T d))
+    (hT_add : ∀ d x (c : ℝ), 0 ≤ c → T d (x + fun _ ↦ c) ≤ T d x + fun _ ↦ γ * c)
+    (hle : ∀ d x, T d x ≤ B x) {x : ι → ℝ} (hx : Function.IsFixedPt B x) {d : D} {ε : ℝ}
+    (hd : x - (fun _ ↦ ε) ≤ T d x) {y : ι → ℝ} (hy : Function.IsFixedPt (T d) y) (i : ι) :
+    |x i - y i| ≤ ε / (1 - γ) :=
+  sorry
+
+end AbstractDP
+
 /-- The oscillation (span seminorm) of a function on a finite type. -/
 def osc [Nonempty ι] (x : ι → ℝ) : ℝ := (Finset.univ.sup' Finset.univ_nonempty x) -
   Finset.univ.inf' Finset.univ_nonempty x
@@ -135,6 +162,17 @@ section Concentration
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
   {ℱ : Filtration ℕ mΩ}
 
+/-- The one-step bound behind Freedman's inequality (README Layer 3.1): for `X t ≤ b`, the
+increment `l X t - ψ_b(l) E[X t ^ 2 | ℱ t]` has conditional exponential moment at most `1`. This is
+the conditional MGF domination of the Identification roadmap (Layer 4.2) at parameter `1` with
+`ψ = 0`, whose supermartingale and time-uniform bound give the forms of Freedman's inequality. -/
+theorem condExp_exp_mul_sub_le_one {X : ℕ → Ω → ℝ} {b l : ℝ} (hb : 0 < b) (hl : 0 ≤ l)
+    (h_meas : ∀ t, Measurable[ℱ (t + 1)] (X t)) (h_int : ∀ t, Integrable (fun ω ↦ X t ω ^ 2) P)
+    (h_mean : ∀ t, P[X t | ℱ t] ≤ᵐ[P] 0) (h_bdd : ∀ t ω, X t ω ≤ b) (t : ℕ) :
+    P[fun ω ↦ Real.exp (l * X t ω - (Real.exp (l * b) - 1 - l * b) / b ^ 2 *
+      P[fun ω ↦ X t ω ^ 2 | ℱ t] ω) | ℱ t] ≤ᵐ[P] 1 :=
+  sorry
+
 /-- Freedman's inequality, fixed-`η` time-uniform form (README Layer 3.1). `X t` is
 `ℱ (t + 1)`-measurable, with conditional mean at most zero given `ℱ t`, and `η X t ≤ 1`. -/
 theorem measure_exists_sum_ge_le_freedman {X : ℕ → Ω → ℝ} {η δ : ℝ} (hη : 0 < η) (hδ : 0 < δ)
@@ -215,6 +253,18 @@ def meanReward (R : Kernel (𝓢 × 𝓐) ℝ) (p : 𝓢 × 𝓐) : ℝ := ∫ x
 def stateKernel (M : MDP 𝓢 𝓐 ℝ) (π : Kernel 𝓢 𝓐) [IsMarkovKernel π] : Kernel 𝓢 𝓢 :=
   M.P ∘ₖ (Kernel.id ×ₖ π)
 
+/-- The state–action kernel of a stationary policy `π`. -/
+def saKernel (M : MDP 𝓢 𝓐 ℝ) (π : Kernel 𝓢 𝓐) [IsMarkovKernel π] : Kernel (𝓢 × 𝓐) (𝓢 × 𝓐) :=
+  (Kernel.id ×ₖ π) ∘ₖ M.P
+
+/-- The state marginals of the Markov policy `π` from the initial law `μ`, for a sequence `P` of
+transition kernels (README Layer 7.3): `μ₀ = μ` and `μₙ₊₁ = P n ∘ₘ (μₙ ⊗ₘ π n)`. The marginals of
+an MDP `M` are those of `fun _ ↦ M.P`, those of an episodic MDP those of its kernels `trans`. -/
+def stateMarginal (P : ℕ → Kernel (𝓢 × 𝓐) 𝓢) (π : ℕ → Kernel 𝓢 𝓐) (μ : Measure 𝓢) :
+    ℕ → Measure 𝓢
+  | 0 => μ
+  | n + 1 => P n ∘ₘ (stateMarginal P π μ n ⊗ₘ π n)
+
 /-- The mean reward of a stationary policy. -/
 def policyReward (M : MDP 𝓢 𝓐 ℝ) (π : Kernel 𝓢 𝓐) (s : 𝓢) : ℝ :=
   ∫ a, meanReward M.R (s, a) ∂(π s)
@@ -232,17 +282,42 @@ def runValue [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (alg : Algor
     ℝ :=
   ∫ ω, ∑' n, (γ : ℝ) ^ n * meanReward M.R ((ω n).obs, (ω n).action) ∂(trajMeasure alg (M.env μ))
 
+/-- The `N`-step return with discount `γ` and terminal value `u` of a run of the algorithm `alg`
+from the initial law `μ` (README Layer 7.4), for every `γ`: `γ = 1` is the undiscounted return. -/
+def runReturn [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (N : ℕ) (u : 𝓢 → ℝ)
+    (alg : Algorithm 𝓢 𝓐 ℝ) (μ : Measure 𝓢) : ℝ :=
+  ∫ ω, (∑ n ∈ range N, (γ : ℝ) ^ n * meanReward M.R ((ω n).obs, (ω n).action) +
+    (γ : ℝ) ^ N * u (ω N).obs) ∂(trajMeasure alg (M.env μ))
+
 /-- The optimal discounted value. -/
 def optValue [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (s : 𝓢) : ℝ :=
   ⨆ alg : Algorithm 𝓢 𝓐 ℝ, M.runValue γ alg (Measure.dirac s)
 
-/-- The Bellman optimality operator. -/
+/-- The optimal action value `Q* = r + γ P v*`. -/
+def optQValue [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (p : 𝓢 × 𝓐) : ℝ :=
+  meanReward M.R p + γ * ∫ s', M.optValue γ s' ∂(M.P p)
+
+/-- The Bellman optimality operator (README Layer 8.1), for every discount factor. -/
 def bellman (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (v : 𝓢 → ℝ) (s : 𝓢) : ℝ :=
   ⨆ a, (meanReward M.R (s, a) + γ * ∫ s', v s' ∂(M.P (s, a)))
+
+/-- The evaluation operator `v ↦ r_π + γ P_π v` of a stationary policy (README Layer 8.1). -/
+def bellmanEval (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (π : Kernel 𝓢 𝓐) (v : 𝓢 → ℝ) (s : 𝓢) : ℝ :=
+  ∫ a, (meanReward M.R (s, a) + γ * ∫ s', v s' ∂(M.P (s, a))) ∂(π s)
 
 /-- The greedy action for `v`, with LML's measurable `argmax`. -/
 def greedy [Fintype 𝓐] [Nonempty 𝓐] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (v : 𝓢 → ℝ) (s : 𝓢) : 𝓐 :=
   argmax fun a ↦ meanReward M.R (s, a) + γ * ∫ s', v s' ∂(M.P (s, a))
+
+/-- The deterministic policy `d` is `ε`-greedy for `v` (README Layer 8.1); `ε = 0` is greediness.
+For countably many actions, Layer 0.6 constructs measurable `ε`-greedy policies for `ε > 0`. -/
+def IsApproxGreedy (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (ε : ℝ) (v : 𝓢 → ℝ) (d : 𝓢 → 𝓐) : Prop :=
+  ∀ s, M.bellman γ v s - ε ≤ meanReward M.R (s, d s) + γ * ∫ s', v s' ∂(M.P (s, d s))
+
+/-- The Bellman optimality operator on action values (README Layer 9.1), whose fixed point is
+`Q*`; Q-learning is a stochastic approximation of it. -/
+def qBellman (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (Q : 𝓢 × 𝓐 → ℝ) (p : 𝓢 × 𝓐) : ℝ :=
+  meanReward M.R p + γ * ∫ s', ⨆ a, Q (s', a) ∂(M.P p)
 
 /-- The discounted state–action occupancy measure of a run (README Layer 11.1). -/
 def occupancy [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (alg : Algorithm 𝓢 𝓐 ℝ)
@@ -270,32 +345,72 @@ namespace MDP
 
 variable [Nonempty 𝓢] (M : MDP 𝓢 𝓐 ℝ) {γ : ℝ≥0}
 
+/-! ## Layer 8: Bellman operators and the finite horizon -/
+
+/-- Backward induction gives the supremum of the `N`-step return over all algorithms, for every
+discount factor and countably many actions (README Layer 8.2, [P, Theorem 4.3.2]). -/
+theorem iSup_runReturn_eq_bellman_iterate [Countable 𝓐] [Nonempty 𝓐]
+    (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) {u : 𝓢 → ℝ} (hu : Measurable u)
+    (hu_bdd : ∃ C, ∀ s, |u s| ≤ C) (N : ℕ) (s : 𝓢) :
+    ⨆ alg : Algorithm 𝓢 𝓐 ℝ, M.runReturn γ N u alg (Measure.dirac s) = (M.bellman γ)^[N] u s :=
+  sorry
+
+/-- For finitely many actions, the Markov policy greedy for `T^[N - n - 1] u` at round `n` attains
+the optimal `N`-step return from every initial law (README Layer 8.2, [P, Theorems 4.3.3,
+4.4.2]). -/
+theorem runReturn_markov_greedy [Fintype 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐]
+    (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) {u : 𝓢 → ℝ} (hu : Measurable u)
+    (hu_bdd : ∃ C, ∀ s, |u s| ≤ C) (N : ℕ)
+    (hg : ∀ n, Measurable (M.greedy γ ((M.bellman γ)^[N - n - 1] u)))
+    (μ : Measure 𝓢) [IsProbabilityMeasure μ] :
+    M.runReturn γ N u (Algorithm.markov fun n ↦
+        Kernel.deterministic (M.greedy γ ((M.bellman γ)^[N - n - 1] u)) (hg n)) μ =
+      ∫ s, (M.bellman γ)^[N] u s ∂μ :=
+  sorry
+
 /-! ## Layers 9–10: discounted optimality and algorithms -/
 
-/-- The optimality equation (README Layer 9.4). -/
-theorem bellman_optValue [Fintype 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐]
+/-- The optimality equation, for countably many actions (README Layer 9.4). -/
+theorem bellman_optValue [Countable 𝓐] [Nonempty 𝓐]
     (hγ : γ < 1) (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) :
     M.bellman γ (M.optValue γ) = M.optValue γ :=
   sorry
 
-/-- Uniqueness of bounded measurable solutions of the optimality equation (README Layer 9.4). -/
-theorem eq_optValue_of_bellman_eq [Fintype 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐]
+/-- Uniqueness of bounded measurable solutions of the optimality equation, for countably many
+actions (README Layer 9.4). -/
+theorem eq_optValue_of_bellman_eq [Countable 𝓐] [Nonempty 𝓐]
     (hγ : γ < 1) (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) {v : 𝓢 → ℝ} (hv : Measurable v)
     (hv_bdd : ∃ C, ∀ s, |v s| ≤ C) (h : M.bellman γ v = v) :
     v = M.optValue γ :=
   sorry
 
-/-- The greedy policy for `v*` is optimal (README Layer 9.4). -/
+/-- For countably many actions, `ε`-optimal measurable deterministic stationary policies exist
+(README Layer 9.4, [P, Theorem 6.2.11]). -/
+theorem exists_optValue_sub_le_value [Countable 𝓐] [Nonempty 𝓐] (hγ : γ < 1)
+    (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) {ε : ℝ} (hε : 0 < ε) :
+    ∃ (d : 𝓢 → 𝓐) (hd : Measurable d), ∀ s,
+      M.optValue γ s - ε ≤ M.value γ (Kernel.deterministic d hd) s :=
+  sorry
+
+/-- `Q*` is a fixed point of the action-value optimality operator, for countably many actions
+(README Layer 9.4). -/
+theorem qBellman_optQValue [Countable 𝓐] [Nonempty 𝓐] (hγ : γ < 1)
+    (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) :
+    M.qBellman γ (M.optQValue γ) = M.optQValue γ :=
+  sorry
+
+/-- The greedy policy for `v*` is optimal, for finitely many actions (README Layer 9.5). -/
 theorem value_greedy_optValue [Fintype 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐]
     (hγ : γ < 1) (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C)
     (hg : Measurable (M.greedy γ (M.optValue γ))) :
     M.value γ (Kernel.deterministic (M.greedy γ (M.optValue γ)) hg) = M.optValue γ :=
   sorry
 
-/-- Value iteration (README Layer 10.1, [P, Theorem 6.3.3 (d)]). -/
-theorem abs_bellman_iterate_sub_optValue_le [Fintype 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐]
+/-- Value iteration, for countably many actions (README Layer 10.1, [P, Theorem 6.3.3 (d)]). -/
+theorem abs_bellman_iterate_sub_optValue_le [Countable 𝓐] [Nonempty 𝓐]
     (hγ : γ < 1) (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) {v : 𝓢 → ℝ} (hv : Measurable v)
-    {B : ℝ} (hB : ∀ s, |M.bellman γ v s - v s| ≤ B) (n : ℕ) (s : 𝓢) :
+    (hv_bdd : ∃ C, ∀ s, |v s| ≤ C) {B : ℝ} (hB : ∀ s, |M.bellman γ v s - v s| ≤ B) (n : ℕ)
+    (s : 𝓢) :
     |(M.bellman γ)^[n] v s - M.optValue γ s| ≤ γ ^ n * B / (1 - γ) :=
   sorry
 
@@ -322,6 +437,16 @@ theorem runValue_sub_integral_value (hγ : γ < 1) (hR : ∃ C, ∀ p, ∀ᵐ x 
     [IsProbabilityMeasure μ] :
     M.runValue γ alg μ - ∫ s, M.value γ π s ∂μ =
       (1 - γ : ℝ)⁻¹ * ∫ p, (M.qValue γ π p - M.value γ π p.1) ∂(M.occupancy γ alg μ) :=
+  sorry
+
+/-- The simulation lemma with a reward error (README Layer 12.2, [AJKS, Lemma 2.2], [KS02]):
+`Q^π_M - Q^π_M' = R_γ(P'^π_SA) ((r - r') + γ (P - P') v^π_M)`. -/
+theorem qValue_sub_qValue (M' : MDP 𝓢 𝓐 ℝ) (hγ : γ < 1)
+    (hR : ∃ C, ∀ p, ∀ᵐ x ∂(M.R p), |x| ≤ C) (hR' : ∃ C, ∀ p, ∀ᵐ x ∂(M'.R p), |x| ≤ C)
+    (π : Kernel 𝓢 𝓐) [IsMarkovKernel π] (p : 𝓢 × 𝓐) :
+    M.qValue γ π p - M'.qValue γ π p =
+      resolvent γ (M'.saKernel π) (fun q ↦ meanReward M.R q - meanReward M'.R q +
+        γ * (∫ s', M.value γ π s' ∂(M.P q) - ∫ s', M.value γ π s' ∂(M'.P q))) p :=
   sorry
 
 end MDP
@@ -366,10 +491,6 @@ def MDP.empirical (M : MDP 𝓢 𝓐 ℝ) {N : ℕ} (hN : 0 < N) (ω : ℕ → �
   hP := sorry
   R := M.R
 
-/-- The optimal action value `Q* = r + γ P v*`. -/
-def MDP.optQValue (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (p : 𝓢 × 𝓐) : ℝ :=
-  MDP.meanReward M.R p + γ * ∫ s', M.optValue γ s' ∂(M.P p)
-
 /-- The plug-in policy is minimax optimal [AKY20, Theorem 1] (README Layer 15.3): with probability
 at least `1 - δ`, every `εopt`-optimal stationary policy of the empirical MDP is
 `(ε + 9 εopt / (1 - γ))`-optimal in `M`. -/
@@ -408,9 +529,10 @@ def npgParam (M : MDP 𝓢 𝓐 ℝ) (γ : ℝ≥0) (η : ℝ) : ℕ → 𝓢 �
       (M.qValue γ (softmaxPolicy (npgParam M γ η t)) (s, a) -
         M.value γ (softmaxPolicy (npgParam M γ η t)) s)
 
-/-- Global convergence of natural policy gradient [AKLM21, Theorem 5.3] (README Layer 17.5). -/
-theorem value_npg_ge (M : MDP 𝓢 𝓐 ℝ) {γ : ℝ≥0} (hγ : γ < 1) (r : 𝓢 × 𝓐 → ℝ) (hr : Measurable r)
-    (hMR : M.R = Kernel.deterministic r hr) (hr01 : ∀ p, r p ∈ Set.Icc 0 1) {η : ℝ} (hη : 0 < η)
+/-- Global convergence of natural policy gradient [AKLM21, Theorem 5.3] (README Layer 17.5), for
+every reward kernel with rewards in `[0, 1]`: exact values only see the mean reward. -/
+theorem value_npg_ge (M : MDP 𝓢 𝓐 ℝ) {γ : ℝ≥0} (hγ : γ < 1)
+    (hR : ∀ p, ∀ᵐ x ∂(M.R p), x ∈ Set.Icc 0 1) {η : ℝ} (hη : 0 < η)
     (ρ : Measure 𝓢) [IsProbabilityMeasure ρ] {T : ℕ} (hT : 0 < T) :
     ∫ s, M.optValue γ s ∂ρ - Real.log (Fintype.card 𝓐) / (η * T) - 1 / ((1 - γ) ^ 2 * T) ≤
       ∫ s, M.value γ (softmaxPolicy (npgParam M γ η T)) s ∂ρ :=

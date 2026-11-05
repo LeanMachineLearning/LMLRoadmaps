@@ -81,6 +81,16 @@ targets here:
   thresholds and costs in identification, rewards maximized in bandits with finitely many arms and
   losses minimized in online learning, learning rates as nonincreasing sequences, operator
   statements on `boundedMeasurable 𝓢`.
+- **Sample complexity bounds take their constant directly.** A bound
+  $\mathbb E[\tau_\delta]\le c\log(1/\delta)$ for all small enough $\delta$ has one hypothesis
+  $D^{-1}<c$ on its constant, for the rate $D$ that the algorithm reaches:
+  `(task.altCost μ (w μ) i)⁻¹ < c` for D-tracking of the targets `w`,
+  `(⨅ v ∈ C, task.altCost μ v i)⁻¹ < c` for C-tracking of targets that converge to `C`, and
+  `task.charTime μ < c` at the optimal allocations. A theorem about one algorithm on one task may
+  state $\limsup_{\delta\to0}\mathbb E[\tau_\delta]/\log(1/\delta)\le D^{-1}$ instead. A rate
+  $\kappa<D$ is a step of the proof, not a hypothesis: only the generic reductions of
+  `Identification/GLR.lean`, whose hypothesis is that the statistic grows at least like
+  $\kappa T$, have one.
 - **Names.** A generalized declaration keeps the name of the declaration it generalizes when the
   name still describes it. LML's names are those of LMLExplore's pin (`Environment.bandit`,
   `Environment.evalSeq`).
@@ -434,13 +444,14 @@ targets here:
       `IsCompact.exists_forall_mem_thickening_lt_of_lowerSemicontinuousWithinAt`
       (`Topology/Semicontinuity/Compact.lean`).
     - Derive from it `eventually_expectedStoppingTime_trackAndStop_le` and
-      `eventually_expectedStoppingTime_trackAndStop_le_of_charTime_lt`, and delete the private
-      `mul_le_glr_empCost`.
+      `eventually_expectedStoppingTime_trackAndStop_le_of_charTime_lt`, with their constants as
+      in the Conventions, and delete the private `mul_le_glr_plugInCost`.
     - Unblocks: Identification 4.4, 5.2–5.3, 6; target 1.11.
 11. **Track-and-Stop with C-tracking from the reduction.** After 1.10.
     - Derive `eventually_expectedStoppingTime_cTrackAndStop_le` and
       `eventually_expectedStoppingTime_cTrackAndStop_le_of_charTime_lt` from the reduction of
-      target 1.10, and delete the private `mul_le_glr_empCost_of_mem_thickening` and the argument
+      target 1.10, with their constants as in the Conventions, and delete the private
+      `mul_le_glr_plugInCost_of_mem_thickening` and the argument
       over the rounds that the two proofs of `TrackAndStop.lean` share.
     - Unblocks: Identification 5.2.
 
@@ -607,6 +618,44 @@ targets here:
       `integral_resolvent_sub_eq_integral_resolvent` and `integral_resolvent_eq_add`.
     - Unblocks: ReinforcementLearning 12.2, 15.4, 21.1, 21.3.
 
+### Identification: Track-and-Stop on best arm identification
+
+25. **Track-and-Stop on best arm identification, with every continuity hypothesis discharged**
+    [GK16, Theorem 14, Proposition 6].
+    - The sample complexity theorems of `Identification/TrackAndStop.lean`
+      (`eventually_expectedStoppingTime_trackAndStop_le_of_charTime_lt`,
+      `eventually_expectedStoppingTime_cTrackAndStop_le_of_charTime_lt`) and the theorems of
+      `Identification/GaussianThreshold.lean`
+      (`isDeltaPAC_trackAndStop_unionBoundThreshold_of_mem_optAlloc`,
+      `tendsto_expectedStoppingTime_trackAndStop_unionBoundThreshold_div_log`) take as hypotheses
+      that the target map is continuous at the model (`hw_cont`), that the cost of the
+      alternatives is lower semicontinuous or continuous there (`h_lsc`, `h_cont`), that the
+      recommendation is locally constant (`hrec_eq`) and, for the limit theorem, that the
+      characteristic time is finite (`h_charTime`). Discharge them on best arm identification, in
+      a file of its own that imports these two files and `Identification/Task/BestArm.lean`.
+    - Exponential families. For arms in one exponential family `(ρ, T)` with divergence `d` (the
+      hypotheses of `continuousOn_altCost_baiTask_restrict`), the task
+      `(baiTask ν id).restrict {μ | ∀ c, μ c ∈ ρ.expFamilyMeans T}`, a vector of means `μ` of the
+      family with best arm `a`, measurable targets with `w μ' ∈ optAlloc μ' a` for `μ'` near `μ`
+      and the recommendation of the empirical best arm: `hw_cont` is
+      `continuousAt_of_mem_optAlloc_baiTask_restrict`, `h_lsc` and `h_cont` follow from
+      `continuousOn_altCost_baiTask_restrict`, and `hrec_eq` from the uniqueness of the best arm
+      of the admissible models. Prove, for D-tracking and for C-tracking and for thresholds
+      $\beta_\delta(n,h)\le\log(r(n)/\delta)$ with $r(n)=O(n^p)$,
+      $\limsup_{\delta\to0}\mathbb E_\mu[\tau_\delta]/\log(1/\delta)\le T^*(\mu)$, as a
+      `Filter.limsup` along `𝓝[>] 0` in `ℝ≥0∞`.
+    - Gaussian arms. For `baiTask (Bandits.gaussianBandit · σ2) id` with `σ2 ≠ 0` and targets
+      that are optimal allocations at every admissible model, prove that Track-and-Stop with the
+      thresholds `unionBoundThreshold` is `δ`-PAC for every `δ ∈ (0, 1]` and that
+      $\mathbb E_\mu[\tau_\delta]/\log(1/\delta)\to T^*(\mu)$ at every admissible `μ`, from the
+      two theorems of `GaussianThreshold.lean` above; `h_charTime` follows from
+      `charTime_baiTask_gaussianBandit_le` ($T^*(\mu)\le2H(\mu)$).
+    - No statement of the file assumes continuity, semicontinuity, a locally constant
+      recommendation or a finite characteristic time. These statements are the best arm
+      identification case of Identification 5.2: the pull request that builds Identification 5.2
+      for every single-answer task on exponential-family product models derives them from it.
+    - Unblocks: the Identification completion checks on Track-and-Stop.
+
 ## Layer 2: Material Tau Ceti provides
 
 1. **Exponential tilts and generating functions of standard laws.**
@@ -662,6 +711,12 @@ targets here:
 - `IdentTask.glrt` takes thresholds `(n : ℕ) → Hist Unit α 𝓨 n → ℝ≥0∞`, no declaration
   `IdentTask.empCost` remains, and the D- and C-tracking sample-complexity theorems are derived from one
   reduction.
+- No Track-and-Stop sample complexity theorem has a rate `κ` among its hypotheses. On best arm
+  identification, the Track-and-Stop theorems assume no continuity, semicontinuity or locally
+  constant recommendation; for two Gaussian arms `a`, `b` of variance `σ2` with `μ b < μ a`,
+  Track-and-Stop with `unionBoundThreshold` has
+  $\mathbb E_\mu[\tau_\delta]/\log(1/\delta)\to8\sigma^2/(\mu_a-\mu_b)^2$
+  (`charTime_baiTask_gaussianBandit_of_forall_eq_or_eq`).
 - `exp3`, `exp3IX` and `exp4` are defined as instances of Exp4-IX; `advRegret` is the pseudo-regret
   against `Environment.evalSeq`; `ftrl_regret_le` and `softmax_regret_le` are constant cases of
   anytime bounds.

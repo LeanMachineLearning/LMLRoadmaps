@@ -64,7 +64,7 @@ generating functions with its exponential supermartingales (Layer 4.2).
 | Conditional means of the feedback and their martingale | LML `SequentialLearning/Means.lean` (`Environment.means`, `IsAlgEnvSeq.condExp_feedback`), `FeedbackMartingale.lean` (`noiseSum`, `IsAlgEnvSeq.martingale_noiseSum`) |
 | KL divergence of histories at a fixed horizon | LML `SequentialLearning/DivergenceDecomposition.lean` (`IsAlgEnvSeq.klDiv_map_history_stepKernel`, for any two algorithm-environment pairs); LMLExplore `Learning.IsAlgEnvSeq.klDiv_map_history_eq_sum_pullCount`, `Learning.klDiv_stoppedHistMeasure_le` |
 | Binary relative entropy, Bretagnolle–Huber, Ville's inequality, mixtures of supermartingales, time-uniform sub-Gaussian bounds, Chernoff bounds in relative-entropy form | LMLExplore (Bandits roadmap, Layers 0.2, 1 and 4): `klBer`, `klBerReal`, `exp_neg_klDiv_div_two_le`, `MeasureTheory.Supermartingale.measure_exists_le_le`, `supermartingale_integral_of_integrable`, `supermartingale_exp_sum_mul_of_hasCondSubgaussianMGF`, `measureReal_sum_ge_le_exp_klBerReal` |
-| Sub-Gaussian and sub-exponential random variables, unconditional and conditional | Mathlib `Probability/Moments/SubGaussian.lean` (`HasSubgaussianMGF`, `Kernel.HasSubgaussianMGF`, `HasCondSubgaussianMGF`), LML `ForMathlib/Probability/Moments/SubExponential.lean` (`HasSubexponentialMGF`, `HasCondSubexponentialMGF`); LMLExplore `Probability/Moments/MGFDominated.lean` (`MGFDominatedAbove`, `MGFDominatedBelow`) |
+| Sub-Gaussian and sub-exponential random variables, unconditional and conditional | Mathlib `Probability/Moments/SubGaussian.lean` (`HasSubgaussianMGF`, `Kernel.HasSubgaussianMGF`, `HasCondSubgaussianMGF`), LML `ForMathlib/Probability/Moments/SubExponential.lean` (`HasSubexponentialMGF`, `HasCondSubexponentialMGF`); LMLExplore `Probability/Moments/MGF/Dominated.lean` (`MGFDominatedOn`) |
 | Design operators, self-normalized bounds, G-optimal designs | Bandits roadmap, Layer 8 (`designOp`, the design operator $V(\pi)$ of a design, the self-normalized bound, the Kiefer–Wolfowitz theorem); Tau Ceti `Analysis/InnerProductSpace/Frame.lean` (`frameOperator`) |
 | Exponential weights, regret of online linear optimization | Bandits roadmap, Layer 6 |
 | KL divergence, chain rule, data processing, exponential tilting, cumulant generating functions | Mathlib `InformationTheory/KullbackLeibler/`, `MeasureTheory/Measure/Tilted.lean`, `MeasureTheory/Measure/LogLikelihoodRatio.lean`, `Probability/Moments/` (`cgf`, `integrableExpSet`, `deriv_cgf`, `iteratedDeriv_two_cgf`) |
@@ -363,16 +363,16 @@ forms above, and that development may be adapted to them.
      Layer 1.4). Prove that $\bar d$ is continuous on (closure of the means)$\times$(means) as an
      `ℝ≥0∞`-valued function.
    - Prove the Cramér–Chernoff bound with the rate function: for independent real random variables
-     $X_i$, $i\in s$, each dominated above by a real random variable $X$ (LMLExplore's
-     `MGFDominatedAbove`, the Refactors roadmap's Layer 0.3 form), every $x\ge\mathbb E[X]$ and
-     every real $r\le I_X(x)$, $P\big(\sum_{i\in s}X_i\ge\#s\,x\big)\le\exp(-\#s\,r)$; and the lower
-     tail for variables dominated below and $x\le\mathbb E[X]$. For $X$ the statistic under the
+     $X_i$, $i\in s$, each dominated on $[0,\infty)$ by a real random variable $X$ (LMLExplore's
+     `MGFDominatedOn X_i P X Q (Set.Ici 0)`), every $x\ge\mathbb E[X]$ and every real
+     $r\le I_X(x)$, $P\big(\sum_{i\in s}X_i\ge\#s\,x\big)\le\exp(-\#s\,r)$; and the lower tail for
+     variables dominated on $(-\infty,0]$ and $x\le\mathbb E[X]$. For $X$ the statistic under the
      member of mean $\mu$, this is the bound $\exp(-\#s\,\bar d(x,\mu))$ at every level $x\ge\mu$,
      not only at the means; it contains LMLExplore's
      `iIndepFun.measureReal_sum_ge_le_exp_expFamilyDiv` and the Bandits roadmap's Layer 1.4 bound,
      boundary levels included.
    - Deduce the two-sided bound $P\big(\#s\,\bar d(\hat\mu_s,\mu)\ge z\big)\le2e^{-z}$ for every
-     $z\ge0$, for the empirical mean $\hat\mu_s$ of variables dominated above and below by the
+     $z\ge0$, for the empirical mean $\hat\mu_s$ of variables dominated on $\mathbb R$ by the
      member of mean $\mu$.
    - Prove the sub-Gaussian comparison: $d(\mu,\mu')\ge(\mu-\mu')^2/(2\sigma^2)$ when the family has
      variance at most $\sigma^2$ on the segment.
@@ -695,14 +695,14 @@ alternatives, and Gaussian costs with arm-dependent variances in design-operator
        and LML's `HasCondSubexponentialMGF m hm X V b μ` the case $\psi(t)=Vt^2/2$ on
        $\{t:b|t|\le1\}$;
      - the unconditional version with $\psi$ the cumulant generating function of a real random
-       variable $Y$ on $[0,\infty)\cap$ `integrableExpSet Y Q` is LMLExplore's
-       `MGFDominatedAbove X P Y Q` (and on $(-\infty,0]$, `MGFDominatedBelow`); the Chernoff bounds
-       of Layer 1.2 hold under the conditional version along a filtration;
+       variable $Y$ on $\Lambda\cap$ `integrableExpSet Y Q` is LMLExplore's
+       `MGFDominatedOn X P Y Q Λ` (`mgfDominatedOn_iff_hasMGFBound`); the Chernoff bounds of
+       Layer 1.2 hold under the conditional version along a filtration;
      - $\psi$ the cumulant generating function of the statistic under a member of an exponential
        family on $[0,\infty)$ or $(-\infty,0]$ (the domination of $[0,1]$-valued variables by
        Bernoulli laws is the Bandits roadmap's Layer 1.4);
-     - if $X-\mu$ is conditionally σ²-sub-Gaussian, then $X$ is conditionally dominated above and
-       below by the member of mean $\mu$ of the Gaussian family of variance σ², so that the
+     - if $X-\mu$ is conditionally σ²-sub-Gaussian, then $X$ is conditionally dominated on
+       $\mathbb R$ by the member of mean $\mu$ of the Gaussian family of variance σ², so that the
        Gaussian-family inequalities below apply to σ²-sub-Gaussian rewards.
    - **Exponential supermartingales.** For a filtration $\mathcal F$, a process $(X_k)$ with $X_k$
      $\mathcal F_{k+1}$-measurable and with moment generating function conditionally bounded by

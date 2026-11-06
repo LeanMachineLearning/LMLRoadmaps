@@ -374,8 +374,8 @@ structure Kernel.HasCGFBound (X : Ω → ℝ) (ψ : ℝ → ℝ) (Λ : Set ℝ) 
   mgf_le : ∀ᵐ ω' ∂ν, ∀ t ∈ Λ, mgf X (κ ω') t ≤ exp (ψ t)
 
 /-- The moment generating function of `X` under `P` is bounded by `exp ψ` on `Λ`. With `ψ` the
-cumulant generating function of `Y` under `Q` on `[0, ∞) ∩ integrableExpSet Y Q`, this is
-LMLExplore's `MGFDominatedAbove X P Y Q`. -/
+cumulant generating function of `Y` under `Q` on `Λ ∩ integrableExpSet Y Q`, this is
+LMLExplore's `MGFDominatedOn X P Y Q Λ`. -/
 structure HasCGFBound (X : Ω → ℝ) (ψ : ℝ → ℝ) (Λ : Set ℝ) (P : Measure Ω) : Prop where
   integrable_exp_mul : ∀ t ∈ Λ, Integrable (fun ω ↦ exp (t * X ω)) P
   mgf_le : ∀ t ∈ Λ, mgf X P t ≤ exp (ψ t)
@@ -407,7 +407,7 @@ theorem supermartingale_exp_sum_of_hasCondCGFBound [StandardBorelSpace Ω] {P : 
   sorry
 
 /-- **Cramér–Chernoff bound with the rate function** (README Layer 1.2), at every level above
-the mean, for independent variables dominated above by `Y`. -/
+the mean, for independent variables dominated by `Y` on `[0, ∞)`. -/
 theorem measureReal_sum_ge_le_exp_of_le_rateFunction {P : Measure Ω} [IsProbabilityMeasure P]
     {Q : Measure Ω'} [IsProbabilityMeasure Q] {X : ℕ → Ω → ℝ} {Y : Ω' → ℝ} (hY : Integrable Y Q)
     (h_indep : iIndepFun X P)

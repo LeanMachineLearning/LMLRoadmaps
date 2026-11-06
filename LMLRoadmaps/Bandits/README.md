@@ -153,7 +153,7 @@ dependency versions used to check the interfaces (LML `53be244`, Mathlib `2e318f
 | Convex analysis | LML [`Bregman/Basic.lean`][lml-breg] (`bregDiv`, notation `D_[f](x, y, J)`, `bregDiv_three_point`), [`Subgradient/`][lml-subgrad]; Tau Ceti [`Conjugate.lean`][tc-conj] (`fenchelConjugate`, for a bilinear pairing), [`Strong.lean`][tc-strong] (`StrongConvexOn.add_add_le_of_hasFDerivWithinAt`); Mathlib `StrongConvexOn`, `PiLp`; LMLExplore `simplex` (`Analysis/Convex/Simplex.lean`) |
 | Linear algebra | Mathlib `ContinuousLinearMap.IsPositive` and its Loewner order, `LinearMap.det`, `Matrix.det_one_add_replicateCol_mul_replicateRow`, `Matrix.add_mul_mul_inv_eq_sub`; Tau Ceti [`Frame.lean`][tc-frame] (`frameOperator`), [`AffineNormalization.lean`][tc-affine] (`IsCompact.exists_affineBasis_abs_coord_le_one`) and [`MoorePenrose.lean`][tc-mp] (`LinearMap.moorePenroseInverse`, `LinearMap.IsMoorePenroseInverse`, `LinearEquiv.moorePenroseInverse_eq_symm`) |
 | Designs | Mathlib `Convexity.StdSimplex` (finitely supported probability weights; `StdSimplex.map`, `StdSimplex.range_toFun_comp_weights`) |
-| LMLExplore material that the general forms below extend | exponential families (`Probability/Distributions/ExponentialFamily/`: `Measure.expFamily`, `expFamilyMeans`, `natParam`, `expFamilyDiv`), MGF domination (`MGFDominatedAbove`, `MGFDominatedBelow`, `mgfDominatedAbove_bernoulliMeasure`, `mgfDominatedBelow_bernoulliMeasure`), the Bandits algorithms `ucbF`, `klucb`, `gaussianTS`, `exp3`, `exp3IX`, `exp4` and the lower-bound files, follow-the-perturbed-leader policies (`perturbedLeaderAlgorithm`, `PerturbedLeader.lintegral_pullCount_le`), the FTRL lemma `sum_apply_sub_le_ftrl` (time-varying regularizers), `ConvexOn.exists_mem_segment_apply_sub_sub_bregDiv_div_le` (second-order Bregman bound), `softmax_regret_le`, `IsUnbiasedRound`, `designOp`, `ridgeEstimate` |
+| LMLExplore material that the general forms below extend | exponential families (`Probability/Distributions/ExponentialFamily/`: `Measure.expFamily`, `expFamilyMeans`, `natParam`, `expFamilyDiv`), MGF domination (`MGFDominatedOn`, `mgfDominatedOn_Ici_bernoulliMeasure`, `mgfDominatedOn_Iic_bernoulliMeasure`), the Bandits algorithms `ucbF`, `klucb`, `gaussianTS`, `exp3`, `exp3IX`, `exp4` and the lower-bound files, follow-the-perturbed-leader policies (`perturbedLeaderAlgorithm`, `PerturbedLeader.lintegral_pullCount_le`), the FTRL lemma `sum_apply_sub_le_ftrl` (time-varying regularizers), `ConvexOn.exists_mem_segment_apply_sub_sub_bregDiv_div_le` (second-order Bregman bound), `softmax_regret_le`, `IsUnbiasedRound`, `designOp`, `ridgeEstimate` |
 
 The [Kiefer–Wolfowitz formalization in `colt-2026-83`][kw] (Apache-2.0, no `sorry`) proves the
 existence of G-optimal designs for compact spanning subsets of `EuclideanSpace ℝ ι`
@@ -263,8 +263,8 @@ against an environment with a single arm is $0$.
    supermartingale $\exp(\lambda S_t-\psi(\lambda)N_t)$ of a sum sampled along a predictable
    sequence, and Ville's inequality, as in the proof of [GC11, Theorem 10]) is that roadmap's
    Layer 4.2. Prove here the bounded instance: a random variable with values in $[0,1]$ whose
-   conditional mean given a σ-algebra is at most (at least) $m$ is conditionally dominated above
-   (below) by $\mathcal B(m)$ [GC11, Lemma 9; LS, Note 10.3.1], and the rate function of
+   conditional mean given a σ-algebra is at most (at least) $m$ is conditionally dominated by
+   $\mathcal B(m)$ on $[0,\infty)$ (on $(-\infty,0]$) [GC11, Lemma 9; LS, Note 10.3.1], and the rate function of
    $\mathcal B(m)$ at a level $p\in[0,1]$ is `klBer p m`. Deduce for i.i.d. $X_i\in[0,1]$ with mean
    $\mu$ [LS, Lemma 10.3]: $P(\hat\mu_n\ge\mu+\varepsilon)\le\exp(-n\,d(\mu+\varepsilon,\mu))$ for
    $\varepsilon\in[0,1-\mu]$ and the lower tail, the boundary levels $0$ and $1$ included, and
@@ -320,10 +320,10 @@ $\eta_\rho(q)=$ `ρ.natParam id q`), the divergence $d_\rho(x,q)=$ `ρ.expFamily
 $M_\rho\times M_\rho$, and its extension $\bar d_\rho(x,q)\in[0,\infty]$ to every level
 $x\in\mathbb R$, the Cramér–Chernoff rate function of $\rho_{(q)}$ at $x$. Each arm $a$ has its
 own family $\rho_a$. Arm $a$ is *dominated by its family* if its mean $\mu_a$ lies in
-$M_{\rho_a}$ and its law $\nu_a$ is MGF-dominated above and below by $\rho_{a,(\mu_a)}$
-(LMLExplore's `MGFDominatedAbove`, `MGFDominatedBelow`). Laws on $[0,1]$ with mean in $(0,1)$ are
-dominated by the Bernoulli family (`mgfDominatedAbove_bernoulliMeasure`,
-`mgfDominatedBelow_bernoulliMeasure`), σ²-sub-Gaussian laws by the Gaussian family of variance
+$M_{\rho_a}$ and its law $\nu_a$ is MGF-dominated by $\rho_{a,(\mu_a)}$ on $\mathbb R$
+(LMLExplore's `MGFDominatedOn` with `Set.univ`). Laws on $[0,1]$ with mean in $(0,1)$ are
+dominated by the Bernoulli family (`mgfDominatedOn_Ici_bernoulliMeasure`,
+`mgfDominatedOn_Iic_bernoulliMeasure`), σ²-sub-Gaussian laws by the Gaussian family of variance
 $\sigma^2$ (Identification roadmap, Layer 4.2), and the members of a family by the family itself.
 
 1. **Upper confidence levels.** For a family $\rho$, $x\in\mathbb R$ and $c\in[0,\infty]$, define

@@ -2,11 +2,12 @@
 
 Develop the regret theory of multi-armed and linear bandits: stochastic bandits with finitely
 many arms, their minimax and instance-dependent lower bounds, adversarial bandits with finitely
-many arms and with expert advice, online linear and convex optimization, and stochastic and
-adversarial linear bandits. The headline results are the regret bounds of MOSS, asymptotically
-optimal UCB, KL-UCB and Thompson sampling for exponential families, Exp3, Exp3-IX and Exp4 against
-adaptive adversaries, OFUL, phased elimination with G-optimal designs, and mirror descent with
-bandit feedback, matched by the minimax lower bounds and the Lai–Robbins lower bound.
+many arms and with expert advice, the online linear and convex optimization that bandit
+algorithms use, and stochastic and adversarial linear bandits. The headline results are the regret
+bounds of MOSS, asymptotically optimal UCB, KL-UCB and Thompson sampling for exponential families,
+Exp3, Exp3-IX and Exp4 against adaptive adversaries, Tsallis-INF in the adversarial and stochastic
+regimes, OFUL, phased elimination with G-optimal designs, and mirror descent with bandit feedback,
+matched by the minimax lower bounds and the Lai–Robbins lower bound.
 
 Build the surrounding library at the generality the proofs support: index policies and
 weight-based randomized policies, Ville's inequality and time-uniform concentration, the binary
@@ -30,9 +31,9 @@ theorem).
 
 This roadmap owns regret minimization for: stochastic bandits with a finite set of arms;
 adversarial bandits with a finite set of arms against adaptive adversaries, oblivious reward tables
-included, and bandits with expert advice; online linear and convex optimization with full
-information; stochastic linear bandits with possibly changing decision sets; and adversarial linear
-bandits with finite action sets or the Euclidean unit ball.
+included, and bandits with expert advice; the online linear and convex optimization of Layer 6,
+which the bandit algorithms use; stochastic linear bandits with possibly changing decision sets; and
+adversarial linear bandits with finite action sets or the Euclidean unit ball.
 
 | Material | Owner and interface consumed here |
 | --- | --- |
@@ -51,17 +52,20 @@ bandits with finite action sets or the Euclidean unit ball.
 | Positive operators, Loewner order, matrix determinant lemma, Woodbury identity | Mathlib `Analysis/InnerProductSpace/Positive.lean`, `LinearAlgebra/Matrix/SchurComplement.lean`, `LinearAlgebra/Matrix/NonsingularInverse.lean` |
 | Moore–Penrose inverse | Tau Ceti `Analysis/InnerProductSpace/MoorePenrose.lean` |
 | Finitely supported probability measures | Mathlib `Geometry/Convex/ConvexSpace/Defs.lean` (`Convexity.StdSimplex`) |
+| The local-norm bound through the unconstrained step, for FTRL with time-varying regularizers | OnlineLearning roadmap, Layer 6.1 |
 
 Build missing material in this roadmap where it is listed as a target, and consume existing
 implementations directly.
 
 Outside this roadmap: pure exploration and best-arm identification (LML's `IdentAlg` framework),
 sparse linear bandits, combinatorial and semi-bandits, non-stationary bandits, ranking, partial
-monitoring, Markov decision processes, Bayesian-optimal policies and Gittins indices, Bayesian regret
-beyond what LML proves, high-probability lower bounds, asymptotic lower bounds for linear bandits,
-and bandit convex optimization (convex losses with bandit feedback). AdaHedge and its regret bounds
-belong to the Identification roadmap (Layer 6.1). Scalar Bernstein, McDiarmid and matrix
-concentration inequalities belong to Tau Ceti's `RandomMatrices` roadmap; nothing here needs them.
+monitoring, Markov decision processes, Bayesian-optimal policies and Gittins indices, Bayesian
+regret beyond what LML proves, high-probability lower bounds, asymptotic lower bounds for linear
+bandits, and bandit convex optimization (convex losses with bandit feedback). Online learning with
+full information beyond Layer 6 belongs to the [OnlineLearning](../OnlineLearning/README.md)
+roadmap, which builds on Layer 6. AdaHedge and its regret bounds belong to the Identification
+roadmap (Layer 6.1). Scalar Bernstein, McDiarmid and matrix concentration inequalities belong to Tau
+Ceti's `RandomMatrices` roadmap; nothing here needs them.
 
 ## Conventions
 
@@ -178,7 +182,7 @@ dependency sync that brings the rename updates this roadmap and the code togethe
 | 4 | Lower bounds for finitely many arms | Layer 0; LML divergence decomposition; Layers 2–3 for item 5 |
 | 5 | Thompson sampling | Layers 0–1; Identification roadmap Layer 1.2; Layer 4 for asymptotic optimality |
 | 6 | Convex analysis, online linear and convex optimization | Layer 0 |
-| 7 | Adversarial bandits with finitely many arms and expert advice | Layers 0, 6; Layer 4.5 for the lower bound |
+| 7 | Adversarial bandits with finitely many arms and expert advice | Layers 0, 6; Layer 4.5 for the lower bound; OnlineLearning roadmap Layer 6.1 for item 5 |
 | 8 | Least squares, self-normalized bounds, optimal design | Layer 1 |
 | 9 | Stochastic linear bandits | Layers 0, 8; Layer 4 tools for lower bounds |
 | 10 | Adversarial linear bandits | Layers 6–8 |
@@ -596,14 +600,35 @@ $\gamma_t\ge0$ are nonincreasing sequences (Conventions).
    $\eta_t=2\gamma_t=\sqrt{2\log(M)/(nk)}$,
    $\hat R^E_n\le2\sqrt{2nk\log M}+\big(\sqrt{2nk/\log M}+1\big)\log(2/\delta)$ with probability at
    least $1-\delta$.
+5. **Tsallis-INF and best of both worlds** [Ora, §9.1.2, Theorem 9.2, §9.3, Algorithm 9.6,
+   Theorem 9.17; ZS21]. Work with the losses $1-Y_t$, translated once as in the Conventions, and
+   with the estimates $\hat Y_t$ of item 1 with $\gamma=0$.
+   - Define Tsallis-INF: the weight-based policy (Layer 0.3) whose weights at round $t$ minimize
+     $\langle\sum_{s<t}\hat Y_s,p\rangle-4\sqrt{t+1}\sum_a\sqrt{p_a}$ over `simplex α`. Prove
+     that the minimizer exists and is unique, that its weights are positive (the derivative of the
+     potential diverges at the boundary), and that adding a constant to every coordinate of a loss
+     estimate changes no weight.
+   - Adversarial regime: against every environment with feedback in $[0,1]$,
+     $\bar R_n\le32\sqrt{(k-1)n}$. The proof uses the local-norm bound through the unconstrained
+     step for FTRL with time-varying regularizers (OnlineLearning roadmap, Layer 6.1), the shift by
+     the loss of the played arm, and the conditional moments of item 1.
+   - Self-bounding regime: if an arm $a^\star$ and gaps $\Delta_a$ satisfy
+     $\bar R_n\ge\sum_{t<n}\sum_{a\ne a^\star}\Delta_a\,\mathbb E[P_t(a)]$ for every $n$ (the
+     adversarial regime with a self-bounding constraint of [ZS21] with $C=0$), then
+     $\bar R_n\le256\sum_{a:\Delta_a>0}(1+\log n)/\Delta_a$. Against `stationaryEnv ν` with
+     rewards in $[0,1]$ and a unique optimal arm the constraint holds with equality, so this bounds
+     the expected stochastic regret.
+   - The mirror-descent form with the $\frac12$-Tsallis potential and a constant rate $\eta$
+     [Ora, Theorem 9.2]: $\bar R_n\le2\sqrt k/\eta+\eta\sqrt k\,n$.
 
 Generalization: adaptive adversaries, expert advice that depends on the history, anytime learning
 rates and a single algorithm for Exp3, Exp3-IX and Exp4, where [LS] fixes an oblivious table, a
-known horizon and three algorithms. Completion checks: for $k=1$ every bound is $0$; the lower bound
-of Layer 4.5 shows the order $\sqrt{nk}$ of item 3 is attained up to $\sqrt{\log k}$; with a single
-expert the expert pseudo-regret of Exp4 is nonpositive; against `stationaryEnv ν` with rewards in
-$[0,1]$, item 3 bounds the expected stochastic regret of Exp3 with anytime rates by
-$2\sqrt{nk\log k}$.
+known horizon and three algorithms; and, for Tsallis-INF, adaptive adversaries and the self-bounding
+regime, where [Ora] fixes an oblivious table and independent losses. Completion checks: for $k=1$
+every bound is $0$; the lower bound of Layer 4.5 shows the order $\sqrt{nk}$ of item 3 is attained
+up to $\sqrt{\log k}$; with a single expert the expert pseudo-regret of Exp4 is nonpositive; against
+`stationaryEnv ν` with rewards in $[0,1]$, item 3 bounds the expected stochastic regret of Exp3 with
+anytime rates by $2\sqrt{nk\log k}$.
 
 ## Layer 8: Least squares, self-normalized bounds and optimal design
 
@@ -768,6 +793,8 @@ T. L. Lai and H. Robbins, *Asymptotically efficient adaptive allocation rules* (
   beyond*, COLT 2011.
 - [KKM13] N. Korda, E. Kaufmann and R. Munos, *Thompson sampling for 1-dimensional exponential
   family bandits*, NeurIPS 2013.
+- [ZS21] J. Zimmert and Y. Seldin, *Tsallis-INF: an optimal algorithm for stochastic and
+  adversarial bandits*, JMLR 22 (2021) (Layer 7.5).
 - [Neu15] G. Neu, *Explore no more: improved high-probability regret bounds for non-stochastic
   bandits*, NeurIPS 2015.
 - [Ora] F. Orabona, *Online learning: a modern introduction using convex optimization*,

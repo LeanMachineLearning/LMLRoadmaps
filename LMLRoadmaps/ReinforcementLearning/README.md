@@ -65,6 +65,7 @@ This roadmap owns Markov decision processes and reinforcement learning:
 | Path laws of Markov chains; countable-state classification, recurrence, period, coupling | Tau Ceti `Probability/Process/MarkovChain.lean` (`markovChainLaw`) and the MarkovChainsAndRenewal roadmap: follow its names, and cite it for the countable-state theory |
 | Ville's inequality, time-uniform sub-Gaussian bounds, method of mixtures, binary relative entropy, Bretagnolle–Huber | Bandits roadmap, Layers 0–1 and 4 (in LMLExplore) |
 | FTRL, mirror descent, exponential weights, Legendre functions; implicit exploration | Bandits roadmap, Layers 6–7 |
+| The descent lemma for smooth functions; Gibbs mixtures and their variational formula | OnlineLearning roadmap, Layers 1.3 and 10.1 |
 | Design operators, ridge regression, self-normalized bounds, elliptical potential, Kiefer–Wolfowitz | Bandits roadmap, Layer 8 |
 | Chain rule for the KL divergence of stopped histories at a stopping time, for arbitrary pairs of environments [GMS19, §2], and its bandit regrouping; data processing for `klBer` | Identification roadmap, Layers 2.1–2.2 |
 | Transfer of every event about the first $s$ rewards of each arm from runs to reward streams | Identification roadmap, Layer 4.1 |
@@ -280,7 +281,7 @@ These are sources to adapt, not dependencies:
 | 2 | Mean ergodic theory and finite Markov chains | Layers 0–1 |
 | 3 | Concentration | Bandits roadmap, Layer 1; Identification roadmap, Layer 4.2 |
 | 4 | Stochastic approximation | Mathlib martingale convergence |
-| 5 | Optimization | Bandits roadmap, Layer 6 |
+| 5 | Optimization | Bandits roadmap, Layer 6; OnlineLearning roadmap, Layers 1.3 and 10.1 |
 | 6 | Sequential-learning tools: keyed streams, divergence decomposition by keys | LML; Identification roadmap, Layers 0.3, 2.1–2.2, 4.1 |
 | 7 | MDPs, policies and values | Layers 0–1, 6 |
 | 8 | Bellman operators and the finite horizon | Layers 0, 7 |
@@ -695,12 +696,12 @@ Suggested homes: `Optimization/`, `Analysis/SpecialFunctions/`, `OnlineLearning/
    - `softmax θ` $=\exp\theta/\sum\exp\theta$, with values in LMLExplore's `simplex`;
    - `logSumExp`.
    
-   Prove the Jacobian $\mathrm{diag}(\pi)-\pi\pi^\top$, the convexity of `logSumExp`, its gradient
-   `softmax`, and the Gibbs variational formula on a finite type (the finite case of Tau Ceti's
-   Donsker–Varadhan).
+   Prove the Jacobian $\mathrm{diag}(\pi)-\pi\pi^\top$, the convexity of `logSumExp` and its
+   gradient `softmax`. The Gibbs variational formula on a finite type is the finite case of the
+   OnlineLearning roadmap's Layer 10.1.
 2. **Smooth optimization** [Nes18, Lemma 1.2.3], [KNS16, Theorem 1], [AKLM21, Proposition B.1,
-   Theorem E.1], [MXSS20, Lemmas 7–8]. In a real inner product space, prove:
-   - the descent lemma for $L$-smooth functions;
+   Theorem E.1], [MXSS20, Lemmas 7–8]. The descent lemma for $L$-smooth functions is the
+   OnlineLearning roadmap's Layer 1.3, in a normed space. In a real inner product space, prove:
    - for $L$-smooth $f$ satisfying the Polyak–Łojasiewicz inequality
      $\frac12\|\nabla f\|^2\ge\mu(f^*-f)$, gradient ascent with step $1/L$ gives
      $f^*-f(x_k)\le(1-\mu/L)^k(f^*-f(x_0))$;

@@ -1,7 +1,8 @@
 # Roadmap: Refactors toward the generality of the literature
 
 This roadmap restates material that LMLExplore already contains, in the generality that the
-[Identification](../Identification/README.md), [Bandits](../Bandits/README.md) and
+[Identification](../Identification/README.md), [Bandits](../Bandits/README.md),
+[OnlineLearning](../OnlineLearning/README.md) and
 [ReinforcementLearning](../ReinforcementLearning/README.md) roadmaps specify. Those roadmaps ask
 for the forms of the literature: tasks on arbitrary models, stopping-time tools for every
 environment, thresholds that read the history, one algorithm where the literature has one,
@@ -34,10 +35,11 @@ In scope:
 - declarations of LMLExplore that Tau Ceti provides at the pinned version (Layer 2). LMLExplore's
   scan for overlaps covers Mathlib only.
 
-**Relation to the other roadmaps.** The Identification, Bandits and ReinforcementLearning roadmaps
-specify the mathematics, and each target here points to the item that specifies its general form.
-This roadmap restates merged code in that generality and adds no item of those roadmaps. Where a
-target needs a general statement that is not merged, it lists that item as a prerequisite.
+**Relation to the other roadmaps.** The Identification, Bandits, OnlineLearning and
+ReinforcementLearning roadmaps specify the mathematics, and each target here points to the item that
+specifies its general form. This roadmap restates merged code in that generality and adds no item of
+those roadmaps. Where a target needs a general statement that is not merged, it lists that item as a
+prerequisite.
 
 **Restatements that the other roadmaps own.** Some items of the other roadmaps specify a general
 statement that LMLExplore does not have yet, and say which merged declarations become its
@@ -58,6 +60,11 @@ targets here:
 - Bandits 3.1–3.4: `klucb` and `ucbF` as instances of KL-UCB for exponential families; Bandits
   5.1: `gaussianTS` as an instance of Thompson sampling for exponential families; Bandits 8.3:
   `ridgeEstimate` as the case `λ > 0` of least squares with the Moore–Penrose inverse;
+- OnlineLearning 0.3: `sum_apply_sub_le_ftrl` as the case of linear losses of the FTRL equality;
+  OnlineLearning 5.2: `ftrl_regret_le_of_strongConvexOn_of_antitone` and
+  `ftrl_regret_le_of_strongConvexOn` without their derivative hypothesis; OnlineLearning 10.1:
+  `mixLoss` and `hedgePotential` as the finite case of Gibbs mixtures, after target 1.13 has stated
+  them once in `OnlineLearning/ExponentialWeights.lean`;
 - ReinforcementLearning 8.2 and 8.4: backward induction, and `EpisodicMDP.value_le_optValue` from
   it.
 

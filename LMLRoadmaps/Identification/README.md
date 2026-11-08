@@ -737,8 +737,11 @@ alternatives, and Gaussian costs with arm-dependent variances in design-operator
      \big(\log((K-1)/\delta)/2\big)$, of order $\log(K/\delta)+O(\log\log t)$, for the covers of
      item 3.
    - Prove the union-bound thresholds of [GK16, Proposition 12] ($\log(Ct^\alpha/\delta)$, $\alpha>1$,
-     with an explicit $C(\alpha,K)$, from the two-sided bound of Layer 1.2, for arms dominated by
-     any exponential families), of [GK16, Theorem 10] (Bernoulli arms only,
+     with an explicit $C=C(\alpha,K,\delta)$ such that
+     $\log C(\alpha,K,\delta)=O(\log\log(1/\delta))$ as $\delta\to0$, from the two-sided bound of
+     Layer 1.2, for arms dominated by any exponential families; no $C$ independent of $\delta$
+     works, and the proof of [GK16, Proposition 12] drops the $\delta$ in
+     $\log^2(Ct^\alpha/\delta)$ when it chooses $C$), of [GK16, Theorem 10] (Bernoulli arms only,
      $\log(2t(K-1)/\delta)$, through the Krichevsky–Trofimov mixture of [GK16, Lemma 11]) and of
      [LS, Lemmas 33.7–33.8, Proposition 33.9], and the uniform deviation bound of [MCP14] used by
      [DK19, Lemma 32]. LMLExplore's thresholds for Gaussian arms (`unionBoundThreshold`,
@@ -783,10 +786,11 @@ alternatives, and Gaussian costs with arm-dependent variances in design-operator
      $h(T)\le t\le T$). Prove that $\mathbb E[\tau_\delta]\le c\log(1/\delta)$ for all small
      $\delta$, for every
      $c>(\inf_{w\in W}D(\theta,w,\neg i))^{-1}$, for every family of thresholds with
-     $\beta_t(h,\delta)\le\log(1/\delta)+f(t)$ for all histories and $f(t)=o(t)$
-     [GK16, proof of Theorem 14]. The bound $\beta_t(h,\delta)\le\log(Ct^\alpha/\delta)$ is a
-     case. LMLExplore's `IdentTask.eventually_expectedStoppingTime_glrt_le` (linear growth of the
-     statistic on good events) is the step after the lower semicontinuity.
+     $\beta_t(h,\delta)\le\log(1/\delta)+g(\delta)+f(t)$ for all histories, with
+     $g(\delta)=o(\log(1/\delta))$ as $\delta\to0$ and $f(t)=o(t)$ [GK16, proof of Theorem 14]. The
+     thresholds of item 2 are cases, and so are $\log(r(t)/\delta)$ with $r(t)=O(t^\alpha)$.
+     LMLExplore's `IdentTask.eventually_expectedStoppingTime_glrt_le` (linear growth of the
+     statistic on good events), the case $g=0$, is the step after the lower semicontinuity.
    - Almost sure: with the same statistic, recommendation and thresholds, if almost surely
      $\hat\theta_t\to\theta$ and the distance from $N(t)/t$ to $W$ tends to $0$, prove that
      almost surely, for every $c>(\inf_{w\in W}D(\theta,w,\neg i))^{-1}$,

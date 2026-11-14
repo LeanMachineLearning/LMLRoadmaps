@@ -2,9 +2,9 @@
 
 This roadmap restates material that LMLExplore already contains, in the generality that the
 [Identification](../Identification/README.md), [Bandits](../Bandits/README.md),
-[OnlineLearning](../OnlineLearning/README.md) and
-[ReinforcementLearning](../ReinforcementLearning/README.md) roadmaps specify. Those roadmaps ask
-for the forms of the literature: tasks on arbitrary models, stopping-time tools for every
+[OnlineLearning](../OnlineLearning/README.md),
+[ReinforcementLearning](../ReinforcementLearning/README.md) and [EValues](../EValues/README.md)
+roadmaps specify. Those roadmaps ask for the forms of the literature: tasks on arbitrary models, stopping-time tools for every
 environment, thresholds that read the history, one algorithm where the literature has one,
 adaptive adversaries and anytime learning rates, suprema that need not be attained, a discount in
 every finite-horizon quantity. LMLExplore contains narrower versions of many of these items. Each
@@ -66,7 +66,12 @@ targets here:
   `mixLoss` and `hedgePotential` as the finite case of Gibbs mixtures, after target 1.13 has stated
   them once in `OnlineLearning/ExponentialWeights.lean`;
 - ReinforcementLearning 8.2 and 8.4: backward induction, and `EpisodicMDP.value_le_optValue` from
-  it.
+  it;
+- EValues 4.2: `predictorLikelihoodRatio`, `supermartingale_predictorLikelihoodRatio`,
+  `martingale_predictorLikelihoodRatio` and `integral_predictorLikelihoodRatio`
+  (`Probability/Martingale/LikelihoodRatio.lean`) as the case of a finite alphabet and
+  observations of one law independent of the past of the likelihood ratios of sequential
+  predictors.
 
 ## Conventions
 

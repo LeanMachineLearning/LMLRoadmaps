@@ -1050,7 +1050,9 @@ form of `Sion.exists_isSaddlePointOn` and is not a target.
    Proposition 16.22, Lemma 16.26].
    - The betting martingale: for $Z_t\in[0,1]$ with $\mathbb E[Z_t\mid\mathcal F_t]=\mu$ and
      predictable bets $\beta_t\in[-\frac1{1-\mu},\frac1\mu]$, the wealth $\prod_{s<t}(1+\beta_s(Z_s-\mu))$
-     is a nonnegative martingale. No moment generating function is involved.
+     is a nonnegative martingale. No moment generating function is involved. Its `ℝ≥0∞` form is the
+     case of one mean constraint on `[0, 1]` of the EValues roadmap's Layer 4.4, a case of its
+     portfolio test supermartingales (Layer 2.1); prove it from there.
    - The reduction: if a betting algorithm has a deterministic regret bound $R_t$ against the best
      constant bet, Ville's inequality (Bandits 1.1) makes
      $\{m:\max_\beta\sum_{s<t}\log(1+\beta(Z_s-m))-R_t\le\log(1/\delta)\}$ a confidence sequence for

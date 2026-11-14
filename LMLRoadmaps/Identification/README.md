@@ -417,7 +417,8 @@ forms above, and that development may be adapted to them.
    - Prove that, for independent observations of law $\rho_\eta$, the likelihood ratio process
      $\exp\big(\langle\eta'-\eta,\sum_{i<n}T(Y_i)\rangle-n(\psi(\eta')-\psi(\eta))\big)$ is a
      nonnegative martingale with mean $1$ for every $\eta'$ in the natural-parameter set.
-   - The mean parametrization is built for `E = ℝ` only (item 2).
+   - The mean parametrization is built here for `E = ℝ` only (item 2); for vector statistics it is
+     the EValues roadmap's Layer 1.5, which contains item 2's as the case `E = ℝ`.
    - Prove that the Gaussian laws $\mathcal N(\mu,\sigma^2)$, $\sigma^2>0$, are the family of
      $\mathcal N(0,1)$ with $T(x)=(x,x^2)$ in `EuclideanSpace ℝ (Fin 2)`, with natural parameter
      $(\mu/\sigma^2,(1-1/\sigma^2)/2)$. Their divergence

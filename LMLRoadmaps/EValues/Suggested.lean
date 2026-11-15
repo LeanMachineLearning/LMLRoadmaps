@@ -1,4 +1,5 @@
 import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLog
+import Mathlib.Analysis.SpecialFunctions.Log.PosLog
 import Mathlib.Basic.Real.ENatENNReal
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Independence.Basic
@@ -126,6 +127,22 @@ theorem IsEVar.exists_le_one_add_sum_constraintNull {𝓧 : Type*} [MeasurableSp
       ∀ᵐ x ∂μ, E x ≤ ENNReal.ofReal (1 + ∑ i, (π i : ℝ) * f i x) := by
   sorry
 
+/-- For finitely many constraints, with no constraint qualification, every e-variable is
+quasi-surely dominated by an admissible bet: a bet that every e-variable quasi-surely above it is
+quasi-surely below (Layer 1.4). -/
+theorem IsEVar.exists_admissible_bet_constraintNull {𝓧 : Type*} [MeasurableSpace 𝓧]
+    {ι : Type*} [Fintype ι] (g : ι → 𝓧 → ℝ) (hg : ∀ i, Measurable (g i)) {E : 𝓧 → ℝ≥0∞}
+    (hE : IsEVar E (constraintNull (range g))) :
+    ∃ π ∈ constraintBets g,
+      (∀ μ ∈ constraintNull (range g),
+        ∀ᵐ x ∂μ, E x ≤ ENNReal.ofReal (1 + ∑ i, (π i : ℝ) * g i x)) ∧
+      ∀ F : 𝓧 → ℝ≥0∞, IsEVar F (constraintNull (range g)) →
+        (∀ μ ∈ constraintNull (range g),
+          ∀ᵐ x ∂μ, ENNReal.ofReal (1 + ∑ i, (π i : ℝ) * g i x) ≤ F x) →
+        ∀ μ ∈ constraintNull (range g),
+          ∀ᵐ x ∂μ, F x ≤ ENNReal.ofReal (1 + ∑ i, (π i : ℝ) * g i x) := by
+  sorry
+
 /-- Lagrange duality for finitely many constraints under Slater's condition [Lue69, Chapter 8]. -/
 theorem iInf_eq_iSup_iInf_add_of_slater {V : Type*} [AddCommGroup V] [Module ℝ V] {C : Set V}
     (hC : Convex ℝ C) {F : V → ℝ} (hF : ConvexOn ℝ C F) {ι : Type*} [Fintype ι] {h : ι → V → ℝ}
@@ -135,12 +152,12 @@ theorem iInf_eq_iSup_iInf_add_of_slater {V : Type*} [AddCommGroup V] [Module ℝ
       ⨅ x : C, (F x + ∑ i, (π i : ℝ) * h i x) := by
   sorry
 
-/-- The dual formula for `KL_inf` of a finitely generated null under Slater's condition
-(Layer 1.4). The right side is the expected logarithm of the best bet. -/
+/-- The dual formula for `KL_inf` of a finitely generated null, with no constraint qualification
+(Layer 1.4): every `log⁺ |g i|` is integrable under `Q`. The right side is the supremum of the
+expected logarithms of the bets. -/
 theorem iInf_klDiv_constraintNull_eq {𝓧 : Type*} [MeasurableSpace 𝓧] {ι : Type*} [Fintype ι]
     (g : ι → 𝓧 → ℝ) (hg : ∀ i, Measurable (g i)) (Q : Measure 𝓧) [IsProbabilityMeasure Q]
-    (hslater : ∃ P : Measure 𝓧, IsProbabilityMeasure P ∧ klDiv Q P ≠ ⊤ ∧
-      ∀ i, Integrable (g i) P ∧ ∫ x, g i x ∂P < 0) :
+    (hQ : ∀ i, Integrable (fun x ↦ Real.posLog (g i x)) Q) :
     ⨅ P ∈ constraintNull (range g), (klDiv Q P : EReal) =
       ⨆ π ∈ constraintBets g,
         elogIntegral (fun x ↦ ENNReal.ofReal (1 + ∑ i, (π i : ℝ) * g i x)) Q := by
@@ -358,6 +375,36 @@ theorem maxLogGrowth_add_le {𝓧 : Type*} [MeasurableSpace 𝓧] (Q₁ : Measur
     maxLogGrowth Q₁ S₁ m + maxLogGrowth Q₁ S₁ n ≤ maxLogGrowth Q₁ S₁ (m + n) := by
   sorry
 
+/-- The optimal growth rate `d` of Layer 6.1: the supremum over `n ≥ 1`, equal to the limit, of
+`maxLogGrowth Q₁ S₁ n / n`. In LMLExplore it is `ProbabilityTheory.bipolarRate`. -/
+def bipolarRate {𝓧 : Type*} [MeasurableSpace 𝓧] (Q₁ : Measure 𝓧) (S₁ : Set (Measure 𝓧)) :
+    EReal :=
+  ⨆ n : ℕ, maxLogGrowth Q₁ S₁ (n + 1) / ((n + 1 : ℕ) : EReal)
+
+/-- Almost surely under the i.i.d. law of `Q₁`, no sequence of `n`-sample e-variables for the
+i.i.d. laws of `S₁` grows faster than the optimal growth rate (Layer 6.1). -/
+theorem ae_limsup_log_div_le_bipolarRate {𝓧 : Type*} [MeasurableSpace 𝓧] (Q₁ : Measure 𝓧)
+    (S₁ : Set (Measure 𝓧)) (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P)
+    {M : (n : ℕ) → (Fin n → 𝓧) → ℝ≥0∞}
+    (hM : ∀ n, IsEVar (M n) ((fun P ↦ Measure.pi fun _ : Fin n ↦ P) '' S₁)) :
+    ∀ᵐ ω ∂Measure.infinitePi (fun _ : ℕ ↦ Q₁),
+      limsup (fun n : ℕ ↦ ENNReal.log (M n fun i ↦ ω i) / (n : EReal)) atTop ≤
+        bipolarRate Q₁ S₁ := by
+  sorry
+
+/-- The expected number of observations of a level-`α` sequential test for a null containing the
+i.i.d. laws of `S₁` is at least `log (1 / α)` over the optimal growth rate (Layer 6.3). It is
+infinite when the rate is `0`. With `Filtration.piLE`, `τ + 1` observations have been made at
+time `τ`. -/
+theorem ofReal_log_inv_div_bipolarRate_le_lintegral {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧))
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) {τ : (ℕ → 𝓧) → WithTop ℕ}
+    (hτ : IsStoppingTime (Filtration.piLE (X := fun _ : ℕ ↦ 𝓧)) τ) {α : ℝ}
+    (hlevel : ∀ P ∈ S₁, Measure.infinitePi (fun _ : ℕ ↦ P) {ω | τ ω < ⊤} ≤ ENNReal.ofReal α) :
+    ENNReal.ofReal (Real.log α⁻¹) / (bipolarRate Q₁ S₁).toENNReal ≤
+      ∫⁻ ω, ENat.toENNReal (τ ω) + 1 ∂Measure.infinitePi (fun _ : ℕ ↦ Q₁) := by
+  sorry
+
 /-- The expected stopping time of a level-`α` sequential test for a null containing the i.i.d.
 laws of `S₁` [ARR26, Theorem 3.1]. With `Filtration.piLE`, `τ + 1` observations have been made
 at time `τ`; the README states it for `Filtration.naturalLT`, with `τ` observations. -/
@@ -386,6 +433,22 @@ theorem IsEMerging.exists_le_weightedMean {ι : Type*} [Fintype ι] {F : (ι →
     (hF : IsEMerging F) :
     ∃ (w : ι → ℝ≥0∞) (w₀ : ℝ≥0∞), w₀ + ∑ i, w i = 1 ∧
       ∀ e : ι → ℝ≥0, F (fun i ↦ e i) ≤ w₀ + ∑ i, w i * e i := by
+  sorry
+
+/-- A merging function for exchangeable e-values (Layer 7.4): its integral is at most `1` against
+every probability measure that is invariant under the permutations of the coordinates and whose
+coordinates have expectation at most `1`. -/
+def IsExchangeableEMerging {K : ℕ} (F : (Fin K → ℝ≥0∞) → ℝ≥0∞) : Prop :=
+  Measurable F ∧ ∀ μ : Measure (Fin K → ℝ≥0∞), IsProbabilityMeasure μ →
+    (∀ σ : Equiv.Perm (Fin K), μ.map (fun e ↦ e ∘ σ) = μ) → (∀ i, ∫⁻ e, e i ∂μ ≤ 1) →
+    ∫⁻ e, F e ∂μ ≤ 1
+
+/-- A measurable function is a merging function for exchangeable e-values exactly when its
+symmetrization is at most a convex combination of `1` and the mean (Layer 7.4). -/
+theorem isExchangeableEMerging_iff {K : ℕ} (F : (Fin K → ℝ≥0∞) → ℝ≥0∞) :
+    IsExchangeableEMerging F ↔ Measurable F ∧ ∃ l : ℝ≥0∞, l ≤ 1 ∧ ∀ e : Fin K → ℝ≥0,
+      (∑ σ : Equiv.Perm (Fin K), F fun i ↦ e (σ i)) / (K.factorial : ℝ≥0∞) ≤
+        (1 - l) + l * ((∑ i, (e i : ℝ≥0∞)) / (K : ℝ≥0∞)) := by
   sorry
 
 /-! ## Layer 8: multiple testing -/

@@ -127,7 +127,7 @@ generality and moves it where its users are. It adds no target of those roadmaps
 4. **The transfer from runs to the reward stream, shared and joint over the arms.**
    - Move `LMLExplore/Bandits/SumRewards.lean` to `LMLExplore/SequentialLearning/SumRewards.lean`,
      in namespace `LMLExplore`, with unchanged statements: it holds for every algorithm against
-     `stationaryEnv ν`, including the sampling rules of identification algorithms.
+     `Environment.bandit ν`, including the sampling rules of identification algorithms.
    - For finitely many arms and a measurable predicate `p` on `(α → ℕ) × (α → ℝ)`, prove the joint
      event transfer
      `P {ω | ∃ t, p (fun a ↦ pullCount A a t ω) (fun a ↦ sumRewards A R a t ω)} ≤

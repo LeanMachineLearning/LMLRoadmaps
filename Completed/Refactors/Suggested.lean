@@ -116,7 +116,7 @@ variable {α Ω : Type*} [Fintype α] [DecidableEq α] {mα : MeasurableSpace α
 all arms holds at some round is at most the probability that it holds, for the i.i.d. rewards of
 the stream model, at some vector of counts. -/
 theorem measure_exists_pullCount_sumRewards_le_joint
-    (h : IsAlgEnvSeq O A R alg (stationaryEnv ν) P) {p : (α → ℕ) → (α → ℝ) → Prop}
+    (h : IsAlgEnvSeq O A R alg (Environment.bandit ν) P) {p : (α → ℕ) → (α → ℝ) → Prop}
     (hp : Measurable fun q : (α → ℕ) × (α → ℝ) ↦ p q.1 q.2) :
     P {ω | ∃ t, p (fun a ↦ pullCount A a t ω) (fun a ↦ sumRewards A R a t ω)} ≤
       streamMeasure ν {ω | ∃ s : α → ℕ, p s (fun a ↦ ∑ i ∈ range (s a), ω i a)} :=

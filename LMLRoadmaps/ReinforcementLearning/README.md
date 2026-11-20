@@ -58,7 +58,7 @@ This roadmap owns Markov decision processes and reinforcement learning:
 
 | Material | Owner and interface consumed here |
 | --- | --- |
-| Interaction protocol, runs, trajectory measure, environments, identification algorithms | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `stationaryEnv`, `obliviousEnv`, `IdentAlg`, `pullCount`, `streamMeasure` |
+| Interaction protocol, runs, trajectory measure, environments, identification algorithms | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `Environment.bandit`, `Environment.banditSeq`, `IdentAlg`, `pullCount`, `streamMeasure` |
 | MDPs and their environment | LML's `mdp` branch, not at the pinned version: `MDP 𝓢 𝓐 𝓡` with fields `P : Kernel (𝓢 × 𝓐) 𝓢` and `R : Kernel (𝓢 × 𝓐) 𝓡`, `MDP.env`, `MDP.policyAlg`, `MDP.meanReward`. Follow its names and shapes (Layer 7.1) |
 | Episodic MDPs, episodes as rounds | entropy-mdp (Existing formalizations): `EpisodicMDP`, `augmented`, `Policy`, `statesEnv`, `BPIAlg` |
 | Kernels, Ionescu–Tulcea, invariant measures, total variation | Mathlib `Probability/Kernel/`, `Kernel.traj`, `condExp_traj`, `Kernel.Invariant`, `tvDist` |
@@ -228,7 +228,7 @@ statement and says so.
 ## Existing library and design guidance
 
 Consume these modules and extend their APIs rather than restating them. The pinned versions are LML
-`53be244`, Mathlib `2e318fae` and Tau Ceti `cebc9b6`.
+`e0a6fb9`, Mathlib `2ddf59c8` and Tau Ceti `4d91513`.
 
 | Foundation | Existing source |
 | --- | --- |
@@ -750,7 +750,7 @@ Suggested home: `SequentialLearning/`.
      - an independent uniform randomization stream for the algorithm;
      - an independent array $Z_{k,j}\sim$ `ηY k ⊗ ηO k`, read at the $j$-th occurrence of key $k$.
      
-     This generalizes LML's `Bandits.arrayMeasure` and `probSpace`.
+     This generalizes LML's `Bandits.arrayMeasure` and `ProbSpace`.
    - Deduce the keyed transfer: for every event $E_j$ about the first $j$ draws of key $k$, the
      probability that $E_j$ holds for the draws seen at some $j\le$ the count of $k$ before round
      $n$ is at most the probability that $E_j$ holds for some $j\le n$ under the i.i.d. stream.
@@ -784,7 +784,7 @@ Suggested home: `SequentialLearning/`.
      MDP runs.
 
 Completion checks: for the action key, item 1 is LML's per-arm stream model and item 2 is LML's
-`IsAlgEnvSeq.klDiv_map_history`.
+`IsAlgEnvSeq.klDiv_map_history_bandit`.
 ## Layer 7: Markov decision processes, policies and values
 
 1. **Models and environments.**
@@ -881,21 +881,21 @@ Completion checks: for the action key, item 1 is LML's per-arm stream model and 
      `Policy.extend`.
 7. **Episodes as rounds.**
    - For finite `𝓢` and countable `𝓐`, define the episode-level environment `statesEnv M H μ`. It
-     is LML's `stationaryEnv` of the kernel from $H$-step policies to the law of the state sequence of
-     an episode started from μ. It generalizes entropy-mdp's `statesEnv M H s₁`, which is the case
-     $\mu=\delta_{s_1}$.
+     is LML's `Environment.bandit` of the kernel from $H$-step policies to the law of the state
+     sequence of an episode started from μ. It generalizes entropy-mdp's `statesEnv M H s₁`, which
+     is the case $\mu=\delta_{s_1}$.
    - A learner in it chooses an $H$-step policy at the start of every episode from the previous
      episodes, and observes the state sequence. Rewards are known when they are deterministic.
-   - Define likewise `episodeEnv M H μ`, the `stationaryEnv` of the kernel from $H$-step policies
-     to the joint law of the state sequence and the reward sequence of an episode. A learner in it
-     also observes the rewards, and so learns unknown stochastic rewards. Prove that forgetting
-     the rewards maps its episode laws to those of `statesEnv M H μ`.
+   - Define likewise `episodeEnv M H μ`, the `Environment.bandit` of the kernel from $H$-step
+     policies to the joint law of the state sequence and the reward sequence of an episode. A
+     learner in it also observes the rewards, and so learns unknown stochastic rewards. Prove that
+     forgetting the rewards maps its episode laws to those of `statesEnv M H μ`.
    - For finite `𝓐`, prove that a stochastic Markov policy has the episode law (in either
      environment) of the random $H$-step policy drawn from the product over $(h,s)$ of its action
      laws. Algorithms in `statesEnv` and `episodeEnv` thereby play stochastic Markov policies.
 
 Completion checks: a one-state MDP is a bandit, and `M.env μ` then has the law of LML's
-`stationaryEnv M.R` up to the constant observation; the value of a deterministic policy in a
+`Environment.bandit M.R` up to the constant observation; the value of a deterministic policy in a
 deterministic MDP is a geometric sum along its orbit.
 
 ## Layer 8: Bellman operators and the finite horizon
@@ -1316,7 +1316,7 @@ an item says otherwise.
      `Fin H × 𝓢 × 𝓐`.
    - Prove that the coordinates of disjoint sets of keys are independent.
    - Define the empirical kernel and the empirical MDP `M.empirical N ω`, with the same rewards.
-   - Adaptive sampling is a run of an algorithm against `stationaryEnv M.P`.
+   - Adaptive sampling is a run of an algorithm against `Environment.bandit M.P`.
 4. **Pigeonhole sums.** Here $N_k(x)=\#\{i<k:x_i=x\}$ is stated with LML's `pullCount`. For every
    sequence $(x_k)$ in a finite type with $m\ge1$ elements, prove:
    - $\sum_{k<K}(N_k(x_k)+1)^{-1/2}\le2\sqrt{mK}$;
@@ -1415,7 +1415,7 @@ to `streamMeasure M.P` unless an item says otherwise.
      $2KA$ states whose actions all behave alike, so $S=K(1+2A)$ and there are $KA$ hard pairs.
    - Prove: there are $C,\varepsilon_0,\delta_0>0$ such that, for $\gamma\ge2/5$,
      $\varepsilon\in(0,\varepsilon_0]$ and $\delta\in(0,\delta_0/(KA))$, every algorithm querying
-     `stationaryEnv M.P` adaptively for $T$ rounds whose estimate of $Q^*$ is ε-accurate with
+     `Environment.bandit M.P` adaptively for $T$ rounds whose estimate of $Q^*$ is ε-accurate with
      probability at least $1-\delta$ on every MDP of the family has
      $T\ge KA\log(KA/(C\delta))/(C(1-\gamma)^3\varepsilon^2)$.
    - Use the change of measure of Layer 6.2 at the fixed budget $T$.
@@ -1689,9 +1689,9 @@ Episodic MDPs with known horizon and unknown fixed stage-dependent transitions. 
 losses $\ell_k:\mathrm{Fin}\,H\to\mathcal S\times\mathcal A\to[0,1]$, chosen as an oblivious
 sequence, as in the Bandits roadmap.
 
-- The environment is LML's `obliviousEnv` whose round-$k$ kernel maps an $H$-step policy to the law
-  of the state sequence together with $\ell_k$ (full information), or together with the losses
-  $\ell_{k,h}(S_h,A_h)$ along the trajectory (bandit feedback).
+- The environment is LML's `Environment.banditSeq` whose round-$k$ kernel maps an $H$-step policy to
+  the law of the state sequence together with $\ell_k$ (full information), or together with the
+  losses $\ell_{k,h}(S_h,A_h)$ along the trajectory (bandit feedback).
 - The regret against the best Markov policy is $\max_\pi\sum_{k<K}\langle q_k-q^\pi,\ell_k\rangle$.
   Here $q^\pi$ is the episodic occupancy measure of Layer 11.4, and $q_k$ the occupancy measure of
   the law of the policy played in episode $k$ given the past.

@@ -31,8 +31,8 @@ nor the roadmap. The admitted proofs are targets, not claimed implementations. T
 admitted definitions: constructing them, with their run lemmas, is a target, and their docstrings
 and the README specify them.
 
-The names of the LML framework (`stationaryEnv`, `onlineEvalEnv`, `detAlgorithm`, ...) are those
-of the LML version pinned by LMLExplore. Exponential families are written here through their
+The names of the LML framework (`Environment.bandit`, `Environment.evalSeq`,
+`Algorithm.deterministic`, ...) are those of the LML version pinned by LMLExplore. Exponential families are written here through their
 natural parameters with Mathlib's `Measure.tilted` and `cgf`; the mean parametrization and the
 rate function are the Identification roadmap's (Layer 1.2).
 -/
@@ -101,7 +101,7 @@ def weightAlgorithm {𝓞 𝓨 : Type*} [MeasurableSpace 𝓞] [MeasurableSpace 
 def indexAlgorithm {𝓞 𝓨 : Type*} [MeasurableSpace 𝓞] [MeasurableSpace 𝓨]
     (I : (n : ℕ) → Hist 𝓞 α 𝓨 n × 𝓞 → α → EReal) (hI : ∀ n, Measurable (I n)) :
     Algorithm 𝓞 α 𝓨 :=
-  detAlgorithm (fun n x ↦ argmax (I n x)) (fun n ↦ sorry)
+  Algorithm.deterministic (fun n x ↦ argmax (I n x)) (fun n ↦ sorry)
 
 /-- The regret against the best fixed arm of a run against the oblivious reward table `x`
 [LS, (11.1)]. -/
@@ -122,20 +122,20 @@ def randomRegret {𝓞 : Type*} [MeasurableSpace 𝓞] (env : Environment 𝓞 �
   ⨆ a, ∑ t ∈ range n, (env.means O A Y a t ω - Y t ω)
 
 /-- Against an oblivious reward table, the pseudo-regret is the adversarial regret `R_n(x)`. -/
-theorem pseudoRegret_onlineEvalEnv (x : ℕ → α → ℝ) {alg : Algorithm Unit α ℝ}
+theorem pseudoRegret_evalSeq (x : ℕ → α → ℝ) {alg : Algorithm Unit α ℝ}
     {O : ℕ → Ω → Unit} {A : ℕ → Ω → α} {Y : ℕ → Ω → ℝ}
-    (h : IsAlgEnvSeq O A Y alg (onlineEvalEnv x fun t ↦ measurable_of_countable (x t)) P)
+    (h : IsAlgEnvSeq O A Y alg (Environment.evalSeq x fun t ↦ measurable_of_countable (x t)) P)
     (n : ℕ) :
-    pseudoRegret (onlineEvalEnv x fun t ↦ measurable_of_countable (x t)) O A Y P n =
+    pseudoRegret (Environment.evalSeq x fun t ↦ measurable_of_countable (x t)) O A Y P n =
       advRegret x A P n :=
   sorry
 
 /-- Against a stochastic bandit, the pseudo-regret is the expected stochastic regret. -/
-theorem pseudoRegret_stationaryEnv {ν : Kernel α ℝ} [IsMarkovKernel ν]
+theorem pseudoRegret_bandit {ν : Kernel α ℝ} [IsMarkovKernel ν]
     (hν : ∀ a, Integrable id (ν a)) {alg : Algorithm Unit α ℝ}
     {O : ℕ → Ω → Unit} {A : ℕ → Ω → α} {Y : ℕ → Ω → ℝ}
-    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (n : ℕ) :
-    pseudoRegret (stationaryEnv ν) O A Y P n = P[Bandits.regret ν A n] :=
+    (h : IsAlgEnvSeq O A Y alg (Environment.bandit ν) P) (n : ℕ) :
+    pseudoRegret (Environment.bandit ν) O A Y P n = P[Bandits.regret ν A n] :=
   sorry
 
 /-! ## Layer 1: concentration and maximal inequalities -/
@@ -156,7 +156,7 @@ variable {O : ℕ → Ω → Unit} {A : ℕ → Ω → α} {R : ℕ → Ω → �
 /-- Minimax bound for LML's UCB (README Layer 2.1, the analogue of [LS, Theorem 7.2]). -/
 theorem ucb_regret_le_sqrt {K : ℕ} [NeZero K] {A : ℕ → Ω → Fin K} {ν : Kernel (Fin K) ℝ}
     [IsMarkovKernel ν] {c : ℝ}
-    (h : IsAlgEnvSeq O A R (Bandits.ucbAlgorithm K c) (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A R (Bandits.ucbAlgorithm K c) (Environment.bandit ν) P)
     (hν : ∀ a, HasSubgaussianMGF (fun x ↦ x - (ν a)[id]) σ2 (ν a)) (hσ2 : σ2 ≠ 0)
     (hc : 2 * σ2 < c) (n : ℕ) :
     P[Bandits.regret ν A n] ≤
@@ -177,7 +177,7 @@ def ucbF (σ2 : ℝ≥0) : Algorithm Unit α ℝ :=
   indexAlgorithm (fun n x ↦ ucbFIndex σ2 n x.1) (fun n ↦ sorry)
 
 /-- [LS, (8.2)] for σ²-sub-Gaussian rewards, in eventual form. -/
-theorem ucbF_regret_eventually_le (h : IsAlgEnvSeq O A R (ucbF σ2) (stationaryEnv ν) P)
+theorem ucbF_regret_eventually_le (h : IsAlgEnvSeq O A R (ucbF σ2) (Environment.bandit ν) P)
     (hν : ∀ a, HasSubgaussianMGF (fun x ↦ x - (ν a)[id]) σ2 (ν a)) (hσ2 : σ2 ≠ 0)
     {c : ℝ} (hc : ∑ a ∈ univ.filter (fun a ↦ 0 < Bandits.gap ν a), 2 * σ2 / Bandits.gap ν a < c) :
     ∀ᶠ n : ℕ in atTop, P[Bandits.regret ν A n] ≤ c * log n :=
@@ -194,7 +194,7 @@ def moss (σ2 : ℝ≥0) (horizon : ℕ) : Algorithm Unit α ℝ :=
   indexAlgorithm (fun n x ↦ mossIndex σ2 horizon n x.1) (fun n ↦ sorry)
 
 /-- [LS, Theorem 9.1] for σ²-sub-Gaussian rewards. -/
-theorem moss_regret_le (n : ℕ) (h : IsAlgEnvSeq O A R (moss σ2 n) (stationaryEnv ν) P)
+theorem moss_regret_le (n : ℕ) (h : IsAlgEnvSeq O A R (moss σ2 n) (Environment.bandit ν) P)
     (hν : ∀ a, HasSubgaussianMGF (fun x ↦ x - (ν a)[id]) σ2 (ν a)) :
     P[Bandits.regret ν A n] ≤ 39 * √(σ2 * Fintype.card α * n) + ∑ a, Bandits.gap ν a :=
   sorry
@@ -237,7 +237,7 @@ theorem klucbFam_gaussianReal {σ2 : ℝ≥0} (hσ2 : σ2 ≠ 0) :
 parameter `θ a`, and `θ' a` is the natural parameter of the largest mean in the family of `a`. -/
 theorem klucbFam_regret_eventually_le (ρ : α → Measure ℝ) [∀ a, IsProbabilityMeasure (ρ a)]
     {ν : Kernel α ℝ} [IsMarkovKernel ν] {O : ℕ → Ω → Unit} {A : ℕ → Ω → α} {R : ℕ → Ω → ℝ}
-    (h : IsAlgEnvSeq O A R (klucbFam ρ) (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A R (klucbFam ρ) (Environment.bandit ν) P)
     (θ : α → ℝ) (hθ : ∀ a, θ a ∈ interior (integrableExpSet id (ρ a)))
     (hdom : ∀ a, ∀ t ∈ integrableExpSet id ((ρ a).tilted fun x ↦ θ a * x),
       t ∈ integrableExpSet id (ν a) ∧ mgf id (ν a) t ≤ mgf id ((ρ a).tilted fun x ↦ θ a * x) t)
@@ -273,7 +273,7 @@ def klucb : Algorithm Unit α ℝ :=
   klucbFam fun _ ↦ bernoulliMeasure (1 : ℝ) 0 ⟨2⁻¹, by norm_num, by norm_num⟩
 
 /-- The asymptotic part of [LS, Theorem 10.6], for rewards in `[0, 1]`. -/
-theorem klucb_regret_eventually_le (h : IsAlgEnvSeq O A R klucb (stationaryEnv ν) P)
+theorem klucb_regret_eventually_le (h : IsAlgEnvSeq O A R klucb (Environment.bandit ν) P)
     (hν : ∀ a, ∀ᵐ x ∂(ν a), x ∈ Set.Icc (0 : ℝ) 1) {c : ℝ}
     (hc : ∑ a ∈ univ.filter (fun a ↦ 0 < Bandits.gap ν a),
       Bandits.gap ν a / (klBer (ν a)[id] (⨆ b, (ν b)[id])).toReal < c) :
@@ -292,8 +292,8 @@ theorem klDiv_map_history_eq_sum_pullCount [StandardBorelSpace α]
     {alg : Algorithm Unit α ℝ} {ν ν' : Kernel α ℝ} [IsMarkovKernel ν] [IsMarkovKernel ν']
     {O : ℕ → Ω → Unit} {A : ℕ → Ω → α} {R : ℕ → Ω → ℝ}
     {O' : ℕ → Ω' → Unit} {A' : ℕ → Ω' → α} {R' : ℕ → Ω' → ℝ}
-    (h : IsAlgEnvSeq O A R alg (stationaryEnv ν) P)
-    (h' : IsAlgEnvSeq O' A' R' alg (stationaryEnv ν') P') (n : ℕ) :
+    (h : IsAlgEnvSeq O A R alg (Environment.bandit ν) P)
+    (h' : IsAlgEnvSeq O' A' R' alg (Environment.bandit ν') P') (n : ℕ) :
     klDiv (P.map (history O A R n)) (P'.map (history O' A' R' n)) =
       ∑ a, (∫⁻ ω, (pullCount A a n ω : ℝ≥0∞) ∂P) * klDiv (ν a) (ν' a) :=
   sorry
@@ -311,7 +311,7 @@ theorem exists_sqrt_le_integral_regret_gaussianBandit (alg : Algorithm Unit α �
     ∃ μ : α → ℝ, (∀ a, μ a ∈ Set.Icc 0 1) ∧
       √(σ2 * (Fintype.card α - 1) * n) / 27 ≤
         ∫ ω, Bandits.regret (gaussianBandit μ σ2) IT.action n ω
-          ∂(trajMeasure alg (stationaryEnv (gaussianBandit μ σ2))) :=
+          ∂(trajMeasure alg (Environment.bandit (gaussianBandit μ σ2))) :=
   sorry
 
 /-- `d_inf(P, m, M)`: the smallest relative entropy from `P` to a law of `M` with mean above `m`
@@ -335,7 +335,7 @@ theorem dInf_range_tilted (ρ : Measure ℝ) [IsProbabilityMeasure ρ] (hρ : �
 def IsConsistentGaussian (alg : Algorithm Unit α ℝ) (σ2 : ℝ≥0) : Prop :=
   ∀ μ : α → ℝ, ∀ p : ℝ, 0 < p →
     Tendsto (fun n : ℕ ↦ (∫ ω, Bandits.regret (gaussianBandit μ σ2) IT.action n ω
-      ∂(trajMeasure alg (stationaryEnv (gaussianBandit μ σ2)))) / (n : ℝ) ^ p) atTop (𝓝 0)
+      ∂(trajMeasure alg (Environment.bandit (gaussianBandit μ σ2)))) / (n : ℝ) ^ p) atTop (𝓝 0)
 
 /-- The Lai–Robbins lower bound for Gaussian bandits ([LS, Theorem 16.2] with
 [LS, Table 16.1]), in eventual form. -/
@@ -344,7 +344,7 @@ theorem lai_robbins_gaussian {alg : Algorithm Unit α ℝ} {σ2 : ℝ≥0}
     (hc : c < ∑ a ∈ univ.filter (fun a ↦ 0 < Bandits.gap (gaussianBandit μ σ2) a),
       2 * σ2 / Bandits.gap (gaussianBandit μ σ2) a) :
     ∀ᶠ n : ℕ in atTop, c * log n ≤ ∫ ω, Bandits.regret (gaussianBandit μ σ2) IT.action n ω
-      ∂(trajMeasure alg (stationaryEnv (gaussianBandit μ σ2))) :=
+      ∂(trajMeasure alg (Environment.bandit (gaussianBandit μ σ2))) :=
   sorry
 
 /-! ## Layer 5: Thompson sampling -/

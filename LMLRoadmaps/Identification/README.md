@@ -202,13 +202,13 @@ forms above, and that development may be adapted to them.
 | --- | --- | --- |
 | 0 | Identification algorithms, correctness, sample complexity and phased elimination | LML `IdentAlg` |
 | 1 | Identification tasks, exponential families and product models | Layer 0 |
-| 2 | Change of measure and lower bounds | Layers 0–1; Bandits roadmap Layer 4 |
+| 2 | Change of measure and lower bounds | Layers 0–1; Bandits roadmap Layer 4; EValues roadmap Layer 6.4 for item 3 |
 | 3 | The pure exploration game | Layer 1; Bandits roadmap Layer 8 (design operators) |
 | 4 | Deviation inequalities and GLR stopping rules | Layers 1, 3; Bandits roadmap Layer 1 |
-| 5 | Tracking and asymptotically optimal sampling rules | Layers 2–4 |
+| 5 | Tracking and asymptotically optimal sampling rules | Layers 2–4; EValues roadmap Layers 6.1 and 6.4 for item 4 |
 | 6 | Game-based, Top Two and Frank–Wolfe sampling rules | Layers 3–5; Bandits roadmap Layer 6 |
 | 7 | Elimination and confidence-bound algorithms | Layers 0–2, 4 |
-| 8 | Fixed-budget identification | Layers 0–3 |
+| 8 | Fixed-budget identification | Layers 0–3; EValues roadmap Layers 3 and 4 for item 5 |
 | 9 | Linear identification | Layers 2–6; Bandits roadmap Layer 8 |
 
 ## Layer 0: Identification algorithms, correctness, sample complexity and phased elimination
@@ -514,6 +514,13 @@ product models with $\mathrm K_{\inf}$ costs [AJG20, JDK23a].
    - For any task, a $\delta$-correct algorithm with $\delta\in(0,1/2)$ and an admissible model
      $\theta$ with a single correct answer, prove
      $\mathbb E_\theta[\tau]\ge T^*(\theta)\,\mathrm{kl}(\delta,1-\delta)$ [GK16, Theorem 1].
+   - The sharp form, for arm laws in any measurable spaces: for every single-answer task and every
+     $\delta$-correct algorithm with $\delta\le1/2$ that stops almost surely at $\theta$,
+     $\mathbb E_\theta[\tau]\ge\mathrm{kl}(\delta,1-\delta)/D^*(\theta)$, with $D^*$ the rate of
+     designs for the alternatives of $\theta$ and the Wald inequality with a design of the EValues
+     roadmap's Layer 6.4 [EVR26, Note 41]. $D^*\le1/T^*$, with equality on finite alphabets and
+     strict inequality in the instances of EValues 6.4, so that the first bullet is its corollary
+     when $\mathbb E_\theta[\tau]<\infty$, and holds trivially otherwise.
    - Prove $\mathrm{kl}(\delta,1-\delta)\ge\log\frac1{2.4\delta}$ [KCG16], and the
      Bretagnolle–Huber variant $\mathbb E_\theta[\tau]\ge T^*(\theta)\log\frac1{4\delta}$
      [LS, Theorem 33.5].
@@ -860,7 +867,29 @@ the alternatives, and conditional domination by any cumulant generating function
      multiple-answer task with finitely many answers whose costs satisfy either continuity
      hypothesis of Layer 3.3 [DK19, Theorems 10–11, Corollary 12, Lemmas 13–17].
 
-Generalization: arbitrary tasks, where [GK16] treats best arm identification.
+4. **Learning the design** [EVR26, Note 49]. For a task whose arm laws live on countably
+   generated spaces, with a σ-finite measure `ρ a` for each arm, countably many answers and one
+   correct answer per model:
+   - **Experts.** The countable family of bounded block bets of the EValues roadmap's Layer 6.1,
+     applied for each answer `j` and block shape `s` to the null of the blocks of the models whose
+     answer is not `j`, gives experts `(j, s, g)` with `g` bounded and `∫ e^g dλ^(s) ≤ 1` for those
+     models; at every model dominated by the `ρ a`, the experts of the correct answer have values
+     `∫ g dμ^(s) / |s|` of supremum `D*`, and those of a wrong answer have values at most `0`.
+   - **The algorithm.** Rounds `t = 1, 2, …`: each admitted expert reads `t` blocks of its shape to
+     estimate its value; the eligible expert with the largest estimate bets on about `2^t`
+     observations; its bets multiply into one product per answer, and the algorithm stops when the
+     product of an answer `j` reaches `1 / (δ w j)`, for weights `w` on the answers.
+   - **Guarantees.** Prove that it is `δ`-correct on every model, dominated or not (Ville's
+     inequality for each product), and that at every model `μ` dominated by the `ρ a`,
+     `E_μ[τ_δ] / log (1/δ) → 1 / D*(μ)` (with `1/∞ = 0`, and `∞` when `D* = 0`) and
+     `limsup τ_δ / log (1/δ) ≤ 1 / D*` almost surely. With Layer 2.3, `D*` is the complexity of
+     identification at every such model.
+   - The proof gives `E_μ[τ_δ] ≤ log (1/δ) / (D* - 9η) + C(η)` with a constant `C(η)` of order
+     `exp(Θ(η^{-4}))`; no continuity of the optimal proportions is used.
+
+Generalization: arbitrary tasks, where [GK16] treats best arm identification; arbitrary dominated
+models and the rate `D*` of designs (item 4), where Track-and-Stop has exponential families and
+`T*`.
 
 ## Layer 6: Game-based, Top Two and Frank–Wolfe sampling rules
 
@@ -985,6 +1014,18 @@ Layer 7.
      - tasks with a flat boundary (Theorem 7);
      - the absence of a complexity for Gaussian best arm identification with $K$ large
        (Theorem 8) and for two Bernoulli arms (Theorem 10).
+5. **Certified fixed-budget identification** [EVR26, Note 39]. A certificate system attaches to
+   each answer an e-process for the models with another answer, and an algorithm reports, with its
+   recommendation, the level `(J - 1) / E` read off the e-process `E` of the recommended answer,
+   with `J` the number of answers.
+   - Prove that the reported level is valid at every stopping time and for every `δ` at once, and
+     that for every sampling rule `E_μ[log E_τ] ≤ E_μ[τ] / T*(μ)` at a bounded stopping time, with
+     a converse in probability and almost surely under a second-moment condition.
+   - For best arm identification in an exponential family, prove that tracking with the e-process
+     "mixture likelihood over maximum likelihood on the alternative" attains the rate `1 / T*(μ)`
+     almost surely, with a regret `O(log t)` that pairwise mixtures reduce to the two arms that
+     matter. So the certified level at budget `T` decays like `exp(-T / T*(μ))`, and the same
+     process gives fixed-confidence identification.
 
 ## Layer 9: Linear identification
 
@@ -1095,6 +1136,9 @@ Section 4.6 describes the stack-of-rewards model.
   decision processes*, COLT 2002.
 - [EMM06] E. Even-Dar, S. Mannor and Y. Mansour, *Action elimination and stopping conditions for
   the multi-armed bandit and reinforcement learning problems*, JMLR 7 (2006).
+- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 49 and
+  the Lean library `EValuesResearch` of github.com/RemyDegenne/evalues_research, 2026; written and
+  refereed by AI agents. The EValues roadmap cites it in full.
 - [FJJR19] T. Fiez, L. Jain, K. Jamieson and L. Ratliff, *Sequential experimental design for
   transductive linear bandits*, NeurIPS 2019.
 - [FKV14] E. A. Feinberg, P. O. Kasyanov and M. Voorneveld, *Berge's maximum theorem for

@@ -191,8 +191,8 @@ targets here:
      `Algorithm.piecewise` beside LMLExplore's `Environment.piecewise`
      (`SequentialLearning/Algorithm.lean`), with its step-kernel lemma. The per-round divergences
      with a restricted first marginal need no countably generated observation space (LML's
-     `klDiv_restrict_add_restrict_compl`); the integral form needs it (LML's
-     `klDiv_compProd_right_eq_lintegral`).
+     `klDiv_restrict_add_restrict_compl`); the integral form needs it (Tau Ceti's
+     `TauCeti.klDiv_compProd_right`).
    - Derive `klDiv_stoppedHistMeasure_le` (one algorithm against `Environment.bandit κ` and
      `Environment.bandit κ'`) as its corollary, and delete the private `swapEnv`,
      `klDiv_compProd_stepKernel_swapEnv` and `klDiv_trajMeasure_swapEnv`.

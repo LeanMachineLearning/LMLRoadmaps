@@ -28,8 +28,7 @@ files of the roadmaps that specify them, and are not repeated here:
 
 This file imports only Mathlib, Tau Ceti and LML, at the versions pinned by LMLRoadmaps, so it
 restates the LMLExplore structures it needs (`IdentTask`, `IsBlackwell`, `IsPolicyIteration`,
-`simplex`) and uses the LML names of that pin: `stationaryEnv` is `Environment.bandit` at the pin
-of LMLExplore.
+`simplex`) and uses the LML names of that pin.
 -/
 
 noncomputable section
@@ -121,14 +120,14 @@ variable (task : IdentTask α Θ ℐ 𝓨)
 /-- `A` is `δ`-correct on the task: on every admissible model, with probability at least `1 - δ`,
 it stops and outputs a correct answer. -/
 def IsDeltaCorrect (A : IdentAlg Unit α 𝓨 ℐ) (δ : ℝ) : Prop :=
-  ∀ θ ∈ task.M, (histOutputMeasure A (stationaryEnv (task.ν θ))).real
+  ∀ θ ∈ task.M, (histOutputMeasure A (Environment.bandit (task.ν θ))).real
     {p | p.1 ∉ A.stopSet ∨ p.2 ∉ task.correct θ} ≤ δ
 
 /-- `A` is `δ`-PAC on the task: it is `δ`-correct and stops almost surely on every admissible
 model. -/
 def IsDeltaPAC (A : IdentAlg Unit α 𝓨 ℐ) (δ : ℝ) : Prop :=
   task.IsDeltaCorrect A δ ∧ ∀ θ ∈ task.M,
-    ∀ᵐ ω ∂(trajMeasure A.alg (stationaryEnv (task.ν θ))),
+    ∀ᵐ ω ∂(trajMeasure A.alg (Environment.bandit (task.ν θ))),
       A.stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤
 
 /-- LMLExplore's GLR statistic `inf_{λ ∈ ¬i} Z n h λ` of the evidence function `Z`
@@ -157,10 +156,10 @@ theorem isDeltaPAC_glrt (Z : (n : ℕ) → Hist Unit α 𝓨 n → Θ → ℝ≥
     (rec : (n : ℕ) → Hist Unit α 𝓨 n → ℐ) (hrec : ∀ n, Measurable (rec n))
     (hstop : ∀ n, MeasurableSet {h | β n h < task.glr Z n h (rec n h)}) {δ : ℝ}
     (hc : ∀ θ ∈ task.M, MeasurableSet (task.correct θ))
-    (hdev : ∀ θ ∈ task.M, (trajMeasure alg (stationaryEnv (task.ν θ))).real
+    (hdev : ∀ θ ∈ task.M, (trajMeasure alg (Environment.bandit (task.ν θ))).real
       {ω | ∃ n, β n (history IT.obs IT.action IT.feedback n ω) <
         Z n (history IT.obs IT.action IT.feedback n ω) θ} ≤ δ)
-    (h_stops : ∀ θ ∈ task.M, ∀ᵐ ω ∂(trajMeasure alg (stationaryEnv (task.ν θ))),
+    (h_stops : ∀ θ ∈ task.M, ∀ᵐ ω ∂(trajMeasure alg (Environment.bandit (task.ν θ))),
       (task.glrt Z alg β rec hrec hstop).stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤) :
     task.IsDeltaPAC (task.glrt Z alg β rec hrec hstop) δ :=
   sorry

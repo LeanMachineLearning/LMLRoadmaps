@@ -58,7 +58,7 @@ generating functions with its exponential supermartingales (Layer 4.2).
 
 | Material | Owner and interface consumed here |
 | --- | --- |
-| Interaction protocol, runs, trajectory measure, stationary environments | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `stationaryEnv`, `stepKernel`, `IsAlgEnvSeq.filtrationAction` |
+| Interaction protocol, runs, trajectory measure, stationary environments | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `Environment.bandit`, `stepKernel`, `IsAlgEnvSeq.filtrationAction` |
 | Identification algorithms: sampling, stopping and output rules, stopping time, stopped history, law of the output, PAC property | LML `SequentialLearning/IdentificationAlg.lean` (`IdentAlg`, `IdentAlg.stoppingTime`, `IdentAlg.stoppedHist`, `IdentAlg.outputMeasure`, `IdentAlg.IsRun`, `IdentAlg.IsPAC`), `SequentialLearning/StoppedHistory.lean` (`sigmaHistory`, `stoppedHistMeasure`); LMLExplore `SequentialLearning/StoppedHistory.lean` (`Learning.notStoppedSet`, `Learning.stoppedHistMeasure_congr`) |
 | Pull counts, reward sums, empirical means, per-arm reward streams | LML `SequentialLearning/FiniteActions.lean` (`pullCount`, `rewardByCount`), `SumRewards.lean`, `Online/Bandit/ArrayProbSpace.lean` (`streamMeasure`); LMLExplore `SequentialLearning/SumRewards.lean` |
 | Conditional means of the feedback and their martingale | LML `SequentialLearning/Means.lean` (`Environment.means`, `IsAlgEnvSeq.condExp_feedback`), `FeedbackMartingale.lean` (`noiseSum`, `IsAlgEnvSeq.martingale_noiseSum`) |
@@ -111,7 +111,7 @@ bounds, the pure exploration game and the run-to-stream transfer (Layers 0–3 a
 for general `𝓨`. Exponential families live on any measurable space, with a real or vector
 statistic; the algorithms built on empirical means use `𝓨 = ℝ`, or the statistic of an
 exponential family on `𝓨`. The observation type of the sampling rule is `Unit`, as for LML's
-`stationaryEnv`.
+`Environment.bandit`.
 
 **Models and tasks.** An identification task (Layer 1.1) has a type `Θ` of models with a Markov
 kernel `ν θ : Kernel α 𝓨` for each model, a set `M : Set Θ` of admissible models, a type `ℐ` of
@@ -152,7 +152,7 @@ Cramér rate function (Layer 1.2), also `ℝ≥0∞`-valued.
   determine: the joint law of the stopped history and the output, built from LML's
   `stoppedHistMeasure` and the output kernel, and the law `IdentAlg.outputMeasure`.
 - The sample complexity is $\mathbb E_\theta[\tau]$, the `ℝ≥0∞`-valued lower integral of the
-  stopping time under `trajMeasure A.alg (stationaryEnv (ν θ))`.
+  stopping time under `trajMeasure A.alg (Environment.bandit (ν θ))`.
 - A fixed-budget algorithm with budget $T$ stops after exactly $T$ rounds; its probability of
   error on $\theta$ is the `outputMeasure`-mass of the incorrect answers.
 
@@ -178,7 +178,7 @@ the primary statements; derive them as corollaries.
 
 **Namespaces.** Identification definitions live in `LMLExplore.Identification`, exponential
 families in `LMLExplore` (or the namespace of the type they act on), and LML's definitions keep
-their names (`Learning.IdentAlg`, `Learning.stationaryEnv`, …).
+their names (`Learning.IdentAlg`, `Learning.Environment.bandit`, …).
 
 ## Existing formalizations
 
@@ -285,7 +285,7 @@ forms above, and that development may be adapted to them.
 1. **Tasks.**
    - Define identification tasks (Conventions): alternatives $\neg i$, answer sets
      $\{\theta\in M: i\in i^*(\theta)\}$, single-answer tasks, and the bandit environment
-     `stationaryEnv (ν θ)` of a model.
+     `Environment.bandit (ν θ)` of a model.
    - Define $\delta$-correct and $\delta$-PAC algorithms for a task.
    - For a task on `Θ'` and a map `f : Θ → Θ'`, define the pullback `task.comap f`, with bandits
      `task.ν ∘ f`, admissible models `f ⁻¹' task.M` and correct answers `task.correct ∘ f`. Prove
@@ -488,14 +488,14 @@ product models with $\mathrm K_{\inf}$ costs [AJG20, JDK23a].
      with $\mu_t$ the law of the $t$-round history under the first pair restricted to LMLExplore's
      `notStoppedSet S t`, that is,
      $\mathbb E\big[\sum_{t<\tau}\mathrm{KL}(\text{step}_t(H_t)\,\|\,\text{step}'_t(H_t))\big]$ when the
-     spaces are countably generated (LML's `klDiv_compProd_right_eq_lintegral`), with equality
+     spaces are countably generated (Tau Ceti's `TauCeti.klDiv_compProd_right`), with equality
      when $\tau$ is also almost surely finite under the second pair. The fixed-horizon case is
      LML's `IsAlgEnvSeq.klDiv_map_history_stepKernel`; the proof changes both pairs after the
      stopping time (LMLExplore's `stoppedHistMeasure_congr`).
    - Prove the same bound for the joint law of the stopped history and the output when the output
      kernel is common (Mathlib's `klDiv_compProd_left`).
-   - For one algorithm run in `stationaryEnv ν` and `stationaryEnv ν'` on finite arms, deduce
-     $\mathrm{KL}(\text{law of the stopped history under }\nu,\text{ under }\nu')
+   - For one algorithm run in `Environment.bandit ν` and `Environment.bandit ν'` on finite arms,
+     deduce $\mathrm{KL}(\text{law of the stopped history under }\nu,\text{ under }\nu')
      \le\sum_a\mathbb E_\nu[N_a(\tau)]\,\mathrm{KL}(\nu_a,\nu'_a)$, with equality when $\tau$ is also
      almost surely finite under $\nu'$. LMLExplore's `klDiv_stoppedHistMeasure_le` becomes this
      corollary; the fixed-horizon case is LML's `IsAlgEnvSeq.klDiv_map_history_stepKernel`.
@@ -661,10 +661,10 @@ alternatives, and Gaussian costs with arm-dependent variances in design-operator
 1. **Empirical statistics along a run and the per-arm streams.**
    - Define the per-arm sums, counts and empirical means of a run (from LML's `SumRewards`), and
      the sum-count statistic of a history.
-   - For a run of any algorithm against `stationaryEnv ν`, with `ν : Kernel α 𝓨` on any measurable
-     space `𝓨`, and a predicate $q$ on the numbers of pulls `s : α → ℕ` and the first $s_a$
-     observations of each arm (an element of `(a : α) → Fin (s a) → 𝓨`), prove the event transfer
-     to LML's per-arm stream model `streamMeasure ν` (the stack-of-rewards model
+   - For a run of any algorithm against `Environment.bandit ν`, with `ν : Kernel α 𝓨` on any
+     measurable space `𝓨`, and a predicate $q$ on the numbers of pulls `s : α → ℕ` and the first
+     $s_a$ observations of each arm (an element of `(a : α) → Fin (s a) → 𝓨`), prove the event
+     transfer to LML's per-arm stream model `streamMeasure ν` (the stack-of-rewards model
      [LS, Section 4.6]): the probability that $q$ holds at some round for the pull counts and the
      observations of each arm so far is at most the `streamMeasure ν`-probability that $q$ holds
      for some `s` and the first $s_a$ stream observations of each arm. Prove its form up to a

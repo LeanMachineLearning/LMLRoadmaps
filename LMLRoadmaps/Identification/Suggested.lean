@@ -27,8 +27,8 @@ nor the roadmap. The admitted proofs are targets, not claimed implementations. T
 the helper `armObs` are admitted definitions: constructing them, with their run lemmas, is a
 target, and their docstrings and the README specify them.
 
-The names of the LML framework (`IdentAlg`, `stationaryEnv`, `stoppedHistMeasure`, ...) are those
-of the LML version pinned by LMLExplore.
+The names of the LML framework (`IdentAlg`, `Environment.bandit`, `stoppedHistMeasure`, ...) are
+those of the LML version pinned by LMLExplore.
 -/
 
 noncomputable section
@@ -54,7 +54,7 @@ def histOutputMeasure (A : IdentAlg Unit α 𝓨 ℐ) (env : Environment Unit α
 
 /-- The expected number of rounds played by `A` in `env` (README Layer 0.3). -/
 def expectedStoppingTime (A : IdentAlg Unit α 𝓨 ℐ) (env : Environment Unit α 𝓨) : ℝ≥0∞ :=
-  ∫⁻ ω, (A.stoppingTime IT.obs IT.action IT.feedback ω : ℝ≥0∞) ∂(trajMeasure A.alg env)
+  ∫⁻ ω, ENat.toENNReal (A.stoppingTime IT.obs IT.action IT.feedback ω) ∂(trajMeasure A.alg env)
 
 /-- **Wald's identity for the feedback**, for every environment (README Layer 0.3): for a stopping
 time `τ` of the filtration of the actions with `E[τ] < ∞`, and conditional absolute means of the
@@ -65,7 +65,7 @@ theorem integral_sum_feedback_eq_integral_sum_means {Ω 𝓞 𝓐 : Type*} [Meas
     {O : ℕ → Ω → 𝓞} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓞 𝓐 ℝ}
     {env : Environment 𝓞 𝓐 ℝ} (h : IsAlgEnvSeq O A Y alg env P) {τ : Ω → ℕ∞}
     (hτ : IsStoppingTime h.filtrationAction τ) (hτ_int : ∫⁻ ω, (τ ω : ℝ≥0∞) ∂P ≠ ∞) {C : ℝ}
-    (hC : ∀ n, ∀ᵐ ω ∂P, ∫ y, |y| ∂(env.measure O A Y n ω (A n ω)) ≤ C) :
+    (hC : ∀ n, ∀ᵐ ω ∂P, ∫ y, |y| ∂(env.feedbackKernel O A Y n ω (A n ω)) ≤ C) :
     ∫ ω, ∑ t ∈ range (τ ω).toNat, Y t ω ∂P =
       ∫ ω, ∑ t ∈ range (τ ω).toNat, env.means O A Y (A t ω) t ω ∂P :=
   sorry
@@ -96,14 +96,14 @@ def alt (i : ℐ) : Set Θ := {θ' | θ' ∈ task.M ∧ i ∉ task.correct θ'}
 /-- `A` is `δ`-correct on the task [DK19]: on every admissible model, with probability at least
 `1 - δ`, it stops and outputs a correct answer. -/
 def IsDeltaCorrect (A : IdentAlg Unit α 𝓨 ℐ) (δ : ℝ) : Prop :=
-  ∀ θ ∈ task.M, (histOutputMeasure A (stationaryEnv (task.ν θ))).real
+  ∀ θ ∈ task.M, (histOutputMeasure A (Environment.bandit (task.ν θ))).real
     {p | p.1 ∉ A.stopSet ∨ p.2 ∉ task.correct θ} ≤ δ
 
 /-- `A` is `δ`-PAC on the task: it is `δ`-correct and stops almost surely on every admissible
 model. -/
 def IsDeltaPAC (A : IdentAlg Unit α 𝓨 ℐ) (δ : ℝ) : Prop :=
   task.IsDeltaCorrect A δ ∧ ∀ θ ∈ task.M,
-    ∀ᵐ ω ∂(trajMeasure A.alg (stationaryEnv (task.ν θ))),
+    ∀ᵐ ω ∂(trajMeasure A.alg (Environment.bandit (task.ν θ))),
       A.stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤
 
 /-- The pullback of a task along `f : Θ' → Θ` (README Layer 1.1): the bandit, the admissibility
@@ -303,13 +303,14 @@ transportation cost bounds the binary relative entropy of the probabilities of `
 relative entropy is written in `ℝ≥0∞` through `klDiv` of two Bernoulli laws. -/
 theorem klDiv_bernoulli_le_sum_lintegral_pullCount [MeasurableSpace.CountablyGenerated 𝓨]
     (A : IdentAlg Unit α 𝓨 ℐ) (ν ν' : Kernel α 𝓨) [IsMarkovKernel ν] [IsMarkovKernel ν']
-    (hτ : ∀ᵐ ω ∂(trajMeasure A.alg (stationaryEnv ν)),
+    (hτ : ∀ᵐ ω ∂(trajMeasure A.alg (Environment.bandit ν)),
       A.stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤)
     {E : Set ((Σ n : ℕ, Hist Unit α 𝓨 n) × ℐ)} (hE : MeasurableSet E) :
-    klDiv ((histOutputMeasure A (stationaryEnv ν)).map (· ∈ E))
-        ((histOutputMeasure A (stationaryEnv ν')).map (· ∈ E)) ≤
-      ∑ a, (∫⁻ ω, (pullCount IT.action a ((A.stoppingTime IT.obs IT.action IT.feedback ω).toNat)
-        ω : ℝ≥0∞) ∂(trajMeasure A.alg (stationaryEnv ν))) * klDiv (ν a) (ν' a) :=
+    klDiv ((histOutputMeasure A (Environment.bandit ν)).map (· ∈ E))
+        ((histOutputMeasure A (Environment.bandit ν')).map (· ∈ E)) ≤
+      ∑ a, (∫⁻ ω, (pullCount IT.action a
+        (ENat.toNat (A.stoppingTime IT.obs IT.action IT.feedback ω)) ω : ℝ≥0∞)
+          ∂(trajMeasure A.alg (Environment.bandit ν))) * klDiv (ν a) (ν' a) :=
   sorry
 
 /-- **Lower bound on the sample complexity** [GK16, Theorem 1]: for a `δ`-correct algorithm with
@@ -320,7 +321,7 @@ theorem charTime_mul_le_expectedStoppingTime [MeasurableSpace.CountablyGenerated
     (hδ : δ ∈ Set.Ioc 0 (1 / 2)) (hA : task.IsDeltaCorrect A δ) {θ : Θ} (hθ : θ ∈ task.M)
     {i : ℐ} (hi : task.correct θ = {i}) :
     task.charTime θ * ENNReal.ofReal ((1 - 2 * δ) * log ((1 - δ) / δ)) ≤
-      expectedStoppingTime A (stationaryEnv (task.ν θ)) :=
+      expectedStoppingTime A (Environment.bandit (task.ν θ)) :=
   sorry
 
 /-! ## Layer 3: continuity on product models -/
@@ -356,7 +357,7 @@ at most the probability that it holds for some numbers of pulls in the stream mo
 theorem measure_exists_armObs_le_streamMeasure {Ω : Type*} [MeasurableSpace Ω]
     {P : Measure Ω} [IsProbabilityMeasure P] {O : ℕ → Ω → Unit} {A : ℕ → Ω → α}
     {Y : ℕ → Ω → 𝓨} {alg : Algorithm Unit α 𝓨} {ν : Kernel α 𝓨} [IsMarkovKernel ν]
-    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (Environment.bandit ν) P)
     (q : (s : α → ℕ) → ((a : α) → Fin (s a) → 𝓨) → Prop) :
     P {ω | ∃ t, q (fun a ↦ pullCount A a t ω) (fun a ↦ armObs A Y a t ω)} ≤
       Bandits.streamMeasure ν {x | ∃ s : α → ℕ, q s (fun a i ↦ x i a)} :=
@@ -463,7 +464,7 @@ theorem trackAndStop_asymptotic (task : IdentTask α (α → ℝ) ℐ 𝓨) (ρ 
     {μ : α → ℝ} (hμ : μ ∈ task.M) {c : ℝ≥0} (hc : task.charTime μ < c) :
     ∀ᶠ δ in 𝓝[>] 0, expectedStoppingTime
       (trackAndStop task (empMeanStat T) w rec (expFamilyEvidence κ T) β δ)
-      (stationaryEnv (task.ν μ)) ≤ c * ENNReal.ofReal (log (1 / δ)) :=
+      (Environment.bandit (task.ν μ)) ≤ c * ENNReal.ofReal (log (1 / δ)) :=
   sorry
 
 end LMLRoadmaps.Identification

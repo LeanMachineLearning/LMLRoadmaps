@@ -37,7 +37,7 @@ adversarial linear bandits with finite action sets or the Euclidean unit ball.
 
 | Material | Owner and interface consumed here |
 | --- | --- |
-| Interaction protocol, runs, trajectory measure, stochastic and oblivious environments | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `stationaryEnv`, `obliviousEnv`, `onlineEvalEnv`, `detAlgorithm` |
+| Interaction protocol, runs, trajectory measure, stochastic and oblivious environments | LML `SequentialLearning/`: `Algorithm`, `Environment`, `IsAlgEnvSeq`, `trajMeasure`, `Environment.bandit`, `Environment.banditSeq`, `Environment.evalSeq`, `Algorithm.deterministic` |
 | Pull counts, reward sums, empirical means, the per-arm reward stream model | LML `SequentialLearning/FiniteActions.lean`, `SumRewards.lean`, `Online/Bandit/ArrayProbSpace.lean`, `Online/Bandit/RewardByCountMeasure.lean` |
 | Stochastic regret, gaps, regret decomposition; regret of explore-then-commit, UCB and Bayesian Thompson sampling | LML `Online/Bandit/Regret.lean` and `Online/Bandit/Algorithms/` |
 | Means of the feedback laws along a run | LML `SequentialLearning/Means.lean` (`Environment.means`) |
@@ -91,8 +91,8 @@ as [LS, Chapters 26–28] and convex analysis do. Where the analysis of a reward
 through a loss-based tool, state the translation $y = 1 - x$ (or $y=-x$) once as a lemma.
 
 **Stochastic bandits.** A stochastic bandit is a Markov kernel `ν : Kernel α ℝ` and its environment
-is LML's `stationaryEnv ν`. The mean of arm $a$ is `(ν a)[id]`. Noise assumptions are stated per
-arm, as in LML: σ²-sub-Gaussian rewards are
+is LML's `Environment.bandit ν`. The mean of arm $a$ is `(ν a)[id]`. Noise assumptions are stated
+per arm, as in LML: σ²-sub-Gaussian rewards are
 `∀ a, HasSubgaussianMGF (fun x ↦ x - (ν a)[id]) σ2 (ν a)` with `σ2 : ℝ≥0` the variance proxy, and
 bounded rewards are `∀ a, ∀ᵐ x ∂(ν a), x ∈ Set.Icc 0 1`. Where [LS] assumes 1-subgaussian rewards,
 state the result for σ²-sub-Gaussian rewards; the constants below include $\sigma^2$.
@@ -104,11 +104,11 @@ reward law of round $t$ may depend on the history and on the observation of roun
 table* $m_t(a)$ is LML's `env.means O A Y a t`, the mean reward of arm $a$ at round $t$ given the
 past. The *pseudo-regret* is $\bar R_n=\max_a\mathbb E\big[\sum_{t<n}(m_t(a)-Y_t)\big]$
 [BCB12, Section 3] and the *random regret* is $\hat R_n=\max_a\sum_{t<n}(m_t(a)-Y_t)$. Against an
-oblivious reward table $x:\mathbb N\to\alpha\to\mathbb R$ (`onlineEvalEnv x _`), $m_t(a)=x_t(a)$ and
-$\bar R_n$ is the adversarial regret
+oblivious reward table $x:\mathbb N\to\alpha\to\mathbb R$ (`Environment.evalSeq x _`),
+$m_t(a)=x_t(a)$ and $\bar R_n$ is the adversarial regret
 $R_n(x)=\max_a\sum_{t<n}x_t(a)-\mathbb E\big[\sum_{t<n}x_t(A_t)\big]$ [LS, (11.1)]; against
-`stationaryEnv ν` it is the expected stochastic regret. Linear regrets are defined in Layer 9 and
-Layer 10.
+`Environment.bandit ν` it is the expected stochastic regret. Linear regrets are defined in Layer 9
+and Layer 10.
 
 **Learning rates.** Learning rates and implicit-exploration parameters are sequences
 `η γ : ℕ → ℝ` fixed in advance, nonincreasing, with $\eta_t>0$ and $\gamma_t\ge0$ used at Lean
@@ -133,25 +133,25 @@ product space) as the primary statements; derive them as corollaries when useful
 
 **Namespaces.** Bandit definitions live in `LMLExplore.Bandits`, online-learning definitions in
 `LMLExplore.OnlineLearning`, general tools in `LMLExplore` or in the namespace of the type they act
-on (dot notation). LML's definitions keep their names (`Learning.stationaryEnv`, `Bandits.regret`,
-…).
+on (dot notation). LML's definitions keep their names (`Learning.Environment.bandit`,
+`Bandits.regret`, …).
 
 ## Existing library and design guidance
 
 Consume these modules and extend their APIs rather than restating them. The links pin the
-dependency versions used to check the interfaces (LML `53be244`, Mathlib `2e318fae`, Tau Ceti
-`v4.36.0-rc1`).
+dependency versions used to check the interfaces (LML `e0a6fb9`, Mathlib `2ddf59c8`, Tau Ceti
+`4d91513`).
 
 | Foundation | Existing source |
 | --- | --- |
 | Interaction protocol and law of a run | [LML `Algorithm.lean`][lml-alg] (`Algorithm`, `Environment`, `IsAlgEnvSeq`, `history`, `IsAlgEnvSeq.filtration`, `IsAlgEnvSeq.filtrationObs`: the history before round `t` and the observation of round `t`), [`IonescuTulceaSpace.lean`][lml-it] (`trajMeasure`, `IT.isAlgEnvSeq_trajMeasure`, `IsAlgEnvSeq.map_trajectory`) |
 | Means of the feedback laws | [LML `Means.lean`][lml-means] (`Environment.means`, `IsAlgEnvSeq.condExp_feedback`, `means_bandit`) |
-| Stochastic and oblivious environments | [LML `StationaryEnv.lean`][lml-env] (`stationaryEnv`, `obliviousEnv`, `IsObliviousEnv`), [`EvaluationEnv.lean`][lml-eval] (`onlineEvalEnv g hg`, the oblivious adversary with bandit feedback) |
-| Deterministic algorithms and measurable argmax | [LML `Deterministic.lean`][lml-det] (`detAlgorithm`), [`MeasurableArg.lean`][lml-argmax] (`argmax`, `measurable_argmax`) |
-| Counts, sums, empirical means, per-arm reward streams | [LML `FiniteActions.lean`][lml-fa] (`pullCount`, `pullCount'`, `rewardByCount`), [`SumRewards.lean`][lml-sum] (`sumRewards`, `empMean`, `empMean'`), [`Online/Bandit/SumRewards.lean`][lml-conc] (`prob_sumRewards_sub_pullCount_mul_ge_le` and the transfer to the i.i.d. stream model) |
-| Stochastic regret and existing regret bounds | [LML `Regret.lean`][lml-regret] (`regret`, `gap`, `integral_regret_le_of_forall_integral_pullCount_le`), [`Regret/UCB.lean`][lml-ucb] (`UCB.expectation_pullCount_le`, `UCB.regret_le_of_gt_two'`), [`Regret/ETC.lean`][lml-etc], [`Regret/BayesRegretTS.lean`][lml-ts] |
-| KL divergence of histories | [LML `DivergenceDecomposition.lean`][lml-div] (`IsAlgEnvSeq.klDiv_map_history`: the time-sum $\sum_{t<n}\int D(\nu_{A_t},\nu'_{A_t})$ for two stationary environments) |
-| KL divergence | Mathlib `InformationTheory.klDiv`, `klDiv_compProd_eq_add`, `klDiv_map_le`; LML [`ChainRule.lean`][lml-chain] (`klDiv_compProd_right_eq_lintegral`); Tau Ceti [`Pinsker.lean`][tc-pinsker] (`two_mul_sq_measureReal_sub_le_klDiv`) and [`Variational.lean`][tc-dv] |
+| Stochastic and oblivious environments | [LML `StationaryEnv.lean`][lml-env] (`Environment.bandit`, `Environment.banditSeq`, `Environment.IsOblivious`), [`EvaluationEnv.lean`][lml-eval] (`Environment.evalSeq g hg`, the oblivious adversary with bandit feedback) |
+| Deterministic algorithms and measurable argmax | [LML `Deterministic.lean`][lml-det] (`Algorithm.deterministic`), [`MeasurableArg.lean`][lml-argmax] (`argmax`, `measurable_argmax`) |
+| Counts, sums, empirical means, per-arm reward streams | [LML `FiniteActions.lean`][lml-fa] (`pullCount`, `pullCount'`, `rewardByCount`), [`SumRewards.lean`][lml-sum] (`sumRewards`, `empMean`, `empMean'`), [`Online/Bandit/Concentration.lean`][lml-conc] (`prob_exists_sqrt_le_empMean_sub_le` and the transfer to the i.i.d. stream model) |
+| Stochastic regret and existing regret bounds | [LML `Regret.lean`][lml-regret] (`regret`, `gap`, `integral_regret_le_of_forall_integral_pullCount_le`), [`Regret/UCB.lean`][lml-ucb] (`UCB.integral_pullCount_le`, `UCB.regret_le_of_gt_two'`), [`Regret/ETC.lean`][lml-etc], [`Regret/BayesRegretTS.lean`][lml-ts] |
+| KL divergence of histories | [LML `DivergenceDecomposition.lean`][lml-div] (`IsAlgEnvSeq.klDiv_map_history_bandit`: the time-sum $\sum_{t<n}\int D(\nu_{A_t},\nu'_{A_t})$ for two stationary environments) |
+| KL divergence | Mathlib `InformationTheory.klDiv`, `klDiv_compProd_eq_add`, `klDiv_map_le`; Tau Ceti [`ChainRule.lean`][tc-chain] (`TauCeti.klDiv_compProd_right`); Tau Ceti [`Pinsker.lean`][tc-pinsker] (`two_mul_sq_measureReal_sub_le_klDiv`) and [`Variational.lean`][tc-dv] |
 | Sub-Gaussian concentration and martingales | Mathlib [`SubGaussian.lean`][ml-subg] (`HasSubgaussianMGF`, `HasCondSubgaussianMGF`, `hasSubgaussianMGF_of_mem_Icc`, `measure_sum_ge_le_of_iIndepFun`, `measure_sum_ge_le_of_hasCondSubgaussianMGF`), [`OptionalStopping.lean`][ml-os] (`maximal_ineq`), `Supermartingale` |
 | Laws | Mathlib `gaussianReal`, `bernoulliMeasure`, `multivariateGaussian`; Tau Ceti [`Gaussian/Cdf.lean`][tc-gauss] (`measureReal_Ioi_gaussianReal`) |
 | Convex analysis | LML [`Bregman/Basic.lean`][lml-breg] (`bregDiv`, notation `D_[f](x, y, J)`, `bregDiv_three_point`), [`Subgradient/`][lml-subgrad]; Tau Ceti [`Conjugate.lean`][tc-conj] (`fenchelConjugate`, for a bilinear pairing), [`Strong.lean`][tc-strong] (`StrongConvexOn.add_add_le_of_hasFDerivWithinAt`); Mathlib `StrongConvexOn`, `PiLp`; LMLExplore `simplex` (`Analysis/Convex/Simplex.lean`) |
@@ -164,12 +164,6 @@ existence of G-optimal designs for compact spanning subsets of `EuclideanSpace �
 (`exists_isGOptimalDesign`, `IsGOptimalDesign.gValue_eq`) with matrices. Layer 8 asks for the
 statement on a finite-dimensional inner product space, with the support bound and the non-spanning
 case; that development may be adapted to it.
-
-LML's `main` branch renames the framework after the version pinned here: `stationaryEnv` becomes
-`Environment.bandit`, `obliviousEnv` becomes `Environment.banditSeq`, `onlineEvalEnv` becomes
-`Environment.evalSeq`, `detAlgorithm` becomes `Algorithm.deterministic`, and `IsObliviousEnv`
-becomes `Environment.IsOblivious` with a stronger meaning. Use the names of the pinned version; the
-dependency sync that brings the rename updates this roadmap and the code together.
 
 ## Layers and dependencies
 
@@ -220,22 +214,22 @@ dependency sync that brings the rename updates this roadmap and the code togethe
 5. **Adversarial and expert regrets.** Define the pseudo-regret $\bar R_n$ and the random regret
    $\hat R_n$ of the Conventions for runs against any environment `env : Environment 𝓞 α ℝ` with
    integrable feedback laws, and prove $\bar R_n\le\mathbb E[\hat R_n]$. Prove that against
-   `onlineEvalEnv x _` the pseudo-regret is the adversarial regret $R_n(x)$ and the random regret
-   is $\max_a\sum_{t<n}(x_t(a)-x_t(A_t))$ [LS, Chapter 12], and that against `stationaryEnv ν` with
-   integrable arms the pseudo-regret is `P[regret ν A n]`. Construct the environment of a
-   deterministic adaptive adversary, whose feedback at round $t$ is $x_t(h,o)(a)$ for measurable
-   tables $x_t:\mathrm{Hist}_t\times\mathcal O\to(\alpha\to\mathbb R)$; `onlineEvalEnv x _` is the
-   case of tables that do not depend on $(h,o)$. For bandits with expert advice, the advice
-   $E_t\in\Delta(\alpha)^M$ of round $t$ is a measurable function of the observation of round $t$,
-   and the expert pseudo-regret and random regret are
+   `Environment.evalSeq x _` the pseudo-regret is the adversarial regret $R_n(x)$ and the random
+   regret is $\max_a\sum_{t<n}(x_t(a)-x_t(A_t))$ [LS, Chapter 12], and that against
+   `Environment.bandit ν` with integrable arms the pseudo-regret is `P[regret ν A n]`. Construct the
+   environment of a deterministic adaptive adversary, whose feedback at round $t$ is $x_t(h,o)(a)$
+   for measurable tables $x_t:\mathrm{Hist}_t\times\mathcal O\to(\alpha\to\mathbb R)$;
+   `Environment.evalSeq x _` is the case of tables that do not depend on $(h,o)$. For bandits with
+   expert advice, the advice $E_t\in\Delta(\alpha)^M$ of round $t$ is a measurable function of the
+   observation of round $t$, and the expert pseudo-regret and random regret are
    $\bar R^E_n=\max_m\mathbb E\big[\sum_{t<n}(\langle E_t(m),m_t\rangle-Y_t)\big]$ and
    $\hat R^E_n=\max_m\sum_{t<n}(\langle E_t(m),m_t\rangle-Y_t)$ ([LS, (18.6)] for advice and
    tables fixed in advance); with the $k$ experts that each recommend one arm they are $\bar R_n$
    and $\hat R_n$. Construct the environment with
    deterministic observations (the advice) and bandit feedback. Prove that for i.i.d. reward tables
    the expected adversarial regret dominates the stochastic regret: the law of the first $n$ rounds
-   against `stationaryEnv ν` is the mixture, over tables $x$ whose rows $x_t$ are independent with
-   law $\bigotimes_a\nu_a$, of the laws against `onlineEvalEnv x _`, so that
+   against `Environment.bandit ν` is the mixture, over tables $x$ whose rows $x_t$ are independent
+   with law $\bigotimes_a\nu_a$, of the laws against `Environment.evalSeq x _`, so that
    $\mathbb E_x[R_n(x)]\ge\mathbb E_\nu[R_n]$ (used in Layer 4.5).
 
 Completion examples: a one-armed bandit has zero regret for every algorithm; Gaussian and Bernoulli
@@ -255,9 +249,9 @@ against an environment with a single arm is $0$.
    $P(\exists t\le n,\ S_t\ge\varepsilon)\le\exp(-\varepsilon^2/(2n\sigma^2))$ [LS, Theorem 9.2],
    and its time-uniform union-bound consequences used by Layers 2 and 8.
 3. **Per-arm statements on runs.** The transfer of events about the first $s$ rewards of each arm
-   from a run of any algorithm against `stationaryEnv ν` to LML's reward-stream model, for all $s$
-   simultaneously, is the Identification roadmap's Layer 4.1. Its single-arm counting form for real
-   rewards bounds
+   from a run of any algorithm against `Environment.bandit ν` to LML's reward-stream model, for all
+   $s$ simultaneously, is the Identification roadmap's Layer 4.1. Its single-arm counting form for
+   real rewards bounds
    $\mathbb E\big[\sum_{s}\mathbb 1\{\text{event about the first } s \text{ rewards of arm } a\}\big]$
    by the corresponding i.i.d. quantity; the lemmas of item 5 and of Layer 3.2 are proved in the
    stream model and transferred to runs by it.
@@ -283,14 +277,14 @@ against an environment with a single arm is $0$.
    $\varphi$ the standard Gaussian density.
 
 Completion checks: Ville's inequality is sharp for the martingale $M_t=1$; the per-arm transfer of
-item 3 applied to LML's existing union bound recovers `prob_sumRewards_sub_pullCount_mul_ge_le`.
+item 3 applied to LML's existing union bound recovers `prob_exists_sqrt_le_empMean_sub_le`.
 
 ## Layer 2: UCB-type algorithms for sub-Gaussian rewards
 
 Throughout, rewards are σ²-sub-Gaussian with `σ2 ≠ 0`, $\Delta_a$ is `gap ν a`, and indices of
 unpulled arms are $+\infty$.
 
-1. **Minimax bound for LML's UCB.** From `UCB.expectation_pullCount_le` and
+1. **Minimax bound for LML's UCB.** From `UCB.integral_pullCount_le` and
    `integral_regret_le_of_forall_integral_pullCount_le`, prove for `ucbAlgorithm K c` with
    $c>2\sigma^2$:
    $\mathbb E[R_n]\le 2\sqrt{8cKn\log(n+1)}+\big(4+\frac{2\sigma^2}{c-2\sigma^2}\big)\sum_a\Delta_a$,
@@ -352,7 +346,7 @@ $\sigma^2$ (Identification roadmap, Layer 4.2), and the members of a family by t
    generalization of [LS, Lemma 10.7]: for $\varepsilon>0$ with $\mu-\varepsilon\in M_\rho$ and
    $s\ge1$, $P\big(U_\rho(\hat\mu_s,L/s)\le\mu-\varepsilon\big)\le e^{-L}e^{-s\,d_\rho(\mu-\varepsilon,\mu)}$,
    by the three-point identity and the Chernoff bound of Layer 1.4; and in a run of any algorithm
-   against `stationaryEnv ν`, with the exploration level $\log f(t+1)$ at Lean round $t$, the
+   against `Environment.bandit ν`, with the exploration level $\log f(t+1)$ at Lean round $t$, the
    expected number of rounds at which an arm with law $\nu_a$ dominated by $\rho_{(\mu)}$ has been
    pulled and has index $U_\rho(\hat\mu_a,\log f(t+1)/T_a)\le\mu-\varepsilon$ is at most
    $3/(2\,d_\rho(\mu-\varepsilon,\mu))$. For rewards in $[0,1]$ with mean in $(0,1)$, Pinsker's
@@ -395,7 +389,7 @@ variances.
    on a finite arm type, prove [LS, Lemma 15.1] in `ℝ≥0∞`:
    $D(P_{\nu}^{(n)},P_{\nu'}^{(n)})=\sum_a\mathbb E_\nu[T_a(n)]\,D(\nu_a,\nu'_a)$, where
    $P^{(n)}$ is the law of the history of length $n$, by regrouping LML's
-   `IsAlgEnvSeq.klDiv_map_history` along the pulled arm.
+   `IsAlgEnvSeq.klDiv_map_history_bandit` along the pulled arm.
 2. **Bretagnolle–Huber.** For probability measures $P,Q$ and every measurable $A$:
    $P(A)+Q(A^c)\ge\tfrac12\exp(-D(P,Q))$ [LS, Theorem 14.2], through the stronger
    $\int\min(p,q)\ge\tfrac12\exp(-D(P,Q))$ for densities with respect to $P+Q$ [LS, (14.8)].
@@ -557,11 +551,11 @@ pairing, a fixed learning rate and linear losses; the instances are corollaries.
 ## Layer 7: Adversarial bandits with finitely many arms and expert advice
 
 Runs against an environment `env : Environment 𝓞 α ℝ` whose feedback laws are supported in
-$[0,1]$: an adaptive adversary (Conventions), which includes oblivious tables `onlineEvalEnv x _`
-with $x_t(a)\in[0,1]$ and stochastic bandits `stationaryEnv ν` with rewards in $[0,1]$.
-Expectation bounds are on the pseudo-regret $\bar R_n$, high-probability bounds on the random
-regret $\hat R_n$ (Layer 0.5). Learning rates $\eta_t>0$ and implicit-exploration parameters
-$\gamma_t\ge0$ are nonincreasing sequences (Conventions).
+$[0,1]$: an adaptive adversary (Conventions), which includes oblivious tables
+`Environment.evalSeq x _` with $x_t(a)\in[0,1]$ and stochastic bandits `Environment.bandit ν` with
+rewards in $[0,1]$. Expectation bounds are on the pseudo-regret $\bar R_n$, high-probability bounds
+on the random regret $\hat R_n$ (Layer 0.5). Learning rates $\eta_t>0$ and implicit-exploration
+parameters $\gamma_t\ge0$ are nonincreasing sequences (Conventions).
 
 1. **Importance-weighted estimators.** For a weight-based policy (Layer 0.3) with weights $P_t$,
    define the standard and loss-based estimators [LS, (11.3), (11.6)] and the implicit-exploration
@@ -615,7 +609,7 @@ $\gamma_t\ge0$ are nonincreasing sequences (Conventions).
    - Self-bounding regime: if an arm $a^\star$ and gaps $\Delta_a$ satisfy
      $\bar R_n\ge\sum_{t<n}\sum_{a\ne a^\star}\Delta_a\,\mathbb E[P_t(a)]$ for every $n$ (the
      adversarial regime with a self-bounding constraint of [ZS21] with $C=0$), then
-     $\bar R_n\le256\sum_{a:\Delta_a>0}(1+\log n)/\Delta_a$. Against `stationaryEnv ν` with
+     $\bar R_n\le256\sum_{a:\Delta_a>0}(1+\log n)/\Delta_a$. Against `Environment.bandit ν` with
      rewards in $[0,1]$ and a unique optimal arm the constraint holds with equality, so this bounds
      the expected stochastic regret.
    - The mirror-descent form with the $\frac12$-Tsallis potential and a constant rate $\eta$
@@ -627,8 +621,8 @@ known horizon and three algorithms; and, for Tsallis-INF, adaptive adversaries a
 regime, where [Ora] fixes an oblivious table and independent losses. Completion checks: for $k=1$
 every bound is $0$; the lower bound of Layer 4.5 shows the order $\sqrt{nk}$ of item 3 is attained
 up to $\sqrt{\log k}$; with a single expert the expert pseudo-regret of Exp4 is nonpositive; against
-`stationaryEnv ν` with rewards in $[0,1]$, item 3 bounds the expected stochastic regret of Exp3 with
-anytime rates by $2\sqrt{nk\log k}$.
+`Environment.bandit ν` with rewards in $[0,1]$, item 3 bounds the expected stochastic regret of Exp3
+with anytime rates by $2\sqrt{nk\log k}$.
 
 ## Layer 8: Least squares, self-normalized bounds and optimal design
 
@@ -805,31 +799,31 @@ T. L. Lai and H. Robbins, *Asymptotically efficient adaptive allocation rules* (
 
 [ls]: https://tor-lattimore.com/downloads/book/book.pdf
 [kw]: https://github.com/RemyDegenne/colt-2026-83/blob/3f6c0f296a3b7e4aa8fe333225505f5b2f61f9e0/Maiti2026Power/MXJ2026/OptimalDesign.lean
-[lml-alg]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/Algorithm.lean
-[lml-it]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/IonescuTulceaSpace.lean
-[lml-env]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/StationaryEnv.lean
-[lml-eval]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/EvaluationEnv.lean
-[lml-det]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/Deterministic.lean
-[lml-argmax]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/ForMathlib/MeasureTheory/Order/MeasurableArg.lean
-[lml-fa]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/FiniteActions.lean
-[lml-sum]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/SumRewards.lean
-[lml-conc]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/Online/Bandit/SumRewards.lean
-[lml-regret]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/Online/Bandit/Regret.lean
-[lml-ucb]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/Online/Bandit/Algorithms/Regret/UCB.lean
-[lml-etc]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/Online/Bandit/Algorithms/Regret/ETC.lean
-[lml-ts]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/Online/Bandit/Algorithms/Regret/BayesRegretTS.lean
-[lml-div]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/DivergenceDecomposition.lean
-[lml-means]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/SequentialLearning/Means.lean
-[lml-chain]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/ForMathlib/InformationTheory/KullbackLeibler/ChainRule.lean
-[lml-breg]: https://github.com/LeanMachineLearning/LML/blob/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/ForMathlib/Analysis/Convex/Bregman/Basic.lean
-[lml-subgrad]: https://github.com/LeanMachineLearning/LML/tree/53be244591a865c51ea10fa09403189ee060f116/LeanMachineLearning/ForMathlib/Analysis/Convex/Subgradient
-[ml-subg]: https://github.com/leanprover-community/mathlib4/blob/2e318faecff7d70d4e0cf8cc875104424a737355/Mathlib/Probability/Moments/SubGaussian.lean
-[ml-os]: https://github.com/leanprover-community/mathlib4/blob/2e318faecff7d70d4e0cf8cc875104424a737355/Mathlib/Probability/Martingale/OptionalStopping.lean
-[tc-pinsker]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/InformationTheory/KullbackLeibler/Pinsker.lean
-[tc-dv]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/InformationTheory/KullbackLeibler/Variational.lean
-[tc-gauss]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Probability/Distributions/Gaussian/Cdf.lean
-[tc-conj]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Analysis/Convex/Conjugate.lean
-[tc-strong]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Analysis/Convex/Strong.lean
-[tc-frame]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Analysis/InnerProductSpace/Frame.lean
-[tc-affine]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Analysis/Convex/AffineNormalization.lean
-[tc-mp]: https://github.com/TauCetiProject/TauCeti/blob/cebc9b6046b14d2bd8d1c1088707109cdbac3a77/TauCeti/Analysis/InnerProductSpace/MoorePenrose.lean
+[lml-alg]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/Algorithm.lean
+[lml-it]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/IonescuTulceaSpace.lean
+[lml-env]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/StationaryEnv.lean
+[lml-eval]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/EvaluationEnv.lean
+[lml-det]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/Deterministic.lean
+[lml-argmax]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/ForMathlib/MeasureTheory/Order/MeasurableArg.lean
+[lml-fa]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/FiniteActions.lean
+[lml-sum]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/SumRewards.lean
+[lml-conc]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/Online/Bandit/Concentration.lean
+[lml-regret]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/Online/Bandit/Regret.lean
+[lml-ucb]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/Online/Bandit/Algorithms/Regret/UCB.lean
+[lml-etc]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/Online/Bandit/Algorithms/Regret/ETC.lean
+[lml-ts]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/Online/Bandit/Algorithms/Regret/BayesRegretTS.lean
+[lml-div]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/DivergenceDecomposition.lean
+[lml-means]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/SequentialLearning/Means.lean
+[lml-breg]: https://github.com/LeanMachineLearning/LML/blob/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/ForMathlib/Analysis/Convex/Bregman/Basic.lean
+[lml-subgrad]: https://github.com/LeanMachineLearning/LML/tree/e0a6fb927495bfeb8fe7d4247092cab9b61f5e51/LeanMachineLearning/ForMathlib/Analysis/Convex/Subgradient
+[ml-subg]: https://github.com/leanprover-community/mathlib4/blob/2ddf59c8f14245864e6c0ed227a2dab76b9efea2/Mathlib/Probability/Moments/SubGaussian.lean
+[ml-os]: https://github.com/leanprover-community/mathlib4/blob/2ddf59c8f14245864e6c0ed227a2dab76b9efea2/Mathlib/Probability/Martingale/OptionalStopping.lean
+[tc-chain]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/InformationTheory/KullbackLeibler/ChainRule.lean
+[tc-pinsker]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/InformationTheory/KullbackLeibler/Pinsker.lean
+[tc-dv]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/InformationTheory/KullbackLeibler/Variational.lean
+[tc-gauss]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Probability/Distributions/Gaussian/Cdf.lean
+[tc-conj]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Analysis/Convex/Conjugate.lean
+[tc-strong]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Analysis/Convex/Strong.lean
+[tc-frame]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Analysis/InnerProductSpace/Frame.lean
+[tc-affine]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Analysis/Convex/AffineNormalization.lean
+[tc-mp]: https://github.com/TauCetiProject/TauCeti/blob/4d91513e4d30746eb1fa96658c18e051c772e55e/TauCeti/Analysis/InnerProductSpace/MoorePenrose.lean

@@ -27,6 +27,11 @@ as corollaries, never as separate targets. The headline results are:
   [EVR26]; it equals $\mathrm{KL}_{\inf}$ under lower semicontinuity [RR26], which gives the bound
   of [ARR26]; and the existence of power-one tests against composite alternatives is characterized
   by finite-block events [Ram26];
+- the Wald inequality with a design: for data that an algorithm collects from several sources,
+  the expected logarithm of every e-variable at a stopping time is at most the rate `D*` of the
+  designs times the expected number of observations, so that $\mathbb E[\tau]\ge
+  \mathrm{kl}(\delta,1-\delta)/D^*$ for every `δ`-correct identification algorithm, with
+  `D* ≤ 1 / T*` and an algorithm that learns the design and attains `D*` [EVR26];
 - testing by betting: against a conditional mean constrained to a convex set, every e-process is
   dominated by a betting wealth [Cle26b]; and confidence sequences by duality;
 - merging: the e-merging functions are the functions dominated by weighted means [Wan25; Cle26],
@@ -40,6 +45,9 @@ as corollaries, never as separate targets. The headline results are:
 Build the surrounding library at the generality of the literature:
 - e-variables, e-processes and p-variables for arbitrary sets of measures, with no dominating
   measure, no convexity and no parametrization, valued in `ℝ≥0∞`;
+- the polarity between nulls and bets, of which the effective null is the closure, and the
+  operations on nulls (images, products, i.i.d. and independent sequences, conditioning, stopping)
+  as definitions;
 - any filtration indexed by `ℕ`, and data that need not be independent;
 - conditional e-variables and test supermartingales stated with set integrals, with no
   integrability side conditions;
@@ -68,7 +76,8 @@ supermartingales at arbitrary stopping times (Layer 2.2), the essential supremum
 functions with the discrete-time Snell envelope (Layer 3.1), and first-passage times of random
 walks with positive drift (Layer 6.3). It owns the dual formula of $\mathrm K_{\inf}$ for
 nonparametric classes (Layer 1.4), which the Identification roadmap's Layer 1.4 defines and does not
-compute.
+compute, and the Wald inequality with a design (Layer 6.4), which the Identification roadmap's
+Layers 2.3 and 5.4 and the Bandits roadmap's Layer 4.4 use.
 
 **Statlib.** Statlib, a dependency of LML at LMLExplore's pin, already contains the theory of
 e-variables at a fixed sample size: definitions, convexity, the existence of the numeraire for any
@@ -80,11 +89,11 @@ growth rate of e-processes are all derived from Statlib's numeraire and duality.
 
 | Material | Owner and interface consumed here |
 | --- | --- |
-| E-variables for a set of measures, randomized e-variables, convexity, `liminf`, composition, monotonicity | Statlib `EValues/EVariable.lean` (`ProbabilityTheory.IsEVar`, `IsRandEVar`, `isRandEVar_iff_isEVar`, `convex_isEVar`, `isEVar_liminf`, `IsEVar.comp`, `IsEVar.mono`, `IsEVar.congr`, `IsEVar.anti_set`, `IsEVar.of_lintegral_le_one`, `IsEVar.lintegral_le_measure_univ`, `IsEVar.ae_lt_top`) |
+| E-variables for a set of measures, randomized e-variables, convexity, `liminf`, composition, monotonicity | Statlib `EValues/EVariable.lean` (`ProbabilityTheory.IsEVar` with its fields `measurable` and `lintegral_le_one`, `isEVar_one_iff`, `isEVar_zero`, `IsRandEVar`, `isRandEVar_iff_isEVar`, `convex_isEVar`, `isEVar_liminf`, `IsEVar.comp`, `IsEVar.mono`, `IsEVar.congr`, `IsEVar.anti_set`, `IsEVar.ae_lt_top`) |
 | Classes of e-variables | Statlib `EValues/EVarClass.lean` (`IsEVarClass`, `isEVarClass_isEVar`, `IsEVarClass.inter`) |
 | Utilities, the maximal expected utility, data processing | Statlib `EValues/Utility/`, `EValues/DPI.lean` (`Utility`, `logUtility`, `maxUtility`, `maxUtility_comp_le`, `convexOn_maxUtility`) |
 | The numeraire, its existence and uniqueness | Statlib `EValues/Numeraire.lean`, `NumeraireExistence.lean` (`IsNumeraireFor`, `IsNumeraire`, `isNumeraire_iff`, `IsNumeraire.ae_unique`, `IsNumeraire.eintegral_log_le`, `IsEVarClass.exists_max_eintegral_utility`, `IsEVarClass.exists_isNumeraireFor`, `exists_isNumeraire`, `numeraire`) |
-| The reverse information projection, the effective null, duality | Statlib `EValues/RIPr.lean` (`ripr`, `effectiveSet`, `klIntegral`, `ripr_mem_effectiveSet`, `maxUtility_eq_iInf_klIntegral_effectiveSet`, `maxUtility_singleton_eq_klDiv`) |
+| The reverse information projection, the effective null, duality | Statlib `EValues/RIPr.lean` (`ripr`, `effectiveSet`, `subset_effectiveSet`, `isEVar_effectiveSet_iff`, `effectiveSet_effectiveSet`, `measure_univ_le_one_of_mem_effectiveSet`, `klIntegral`, `ripr_mem_effectiveSet`, `maxUtility_eq_iInf_klIntegral_effectiveSet`, `maxUtility_singleton_eq_klDiv`) |
 | Products of e-variables and numeraires | Statlib `EValues/Product.lean` (`IsEVar.prod`, `IsNumeraire.prod`, `maxUtility_prod_eq_add`, `isNumeraire_pi_numeraire`) |
 | Bernoulli nulls, e-Rényi and e-Chernoff divergences | Statlib `EValues/Bernoulli.lean`, `Divergence.lean`, `LowerBound.lean` (`isEVar_bernoulli_iff`, `isNumeraire_bernoulli`, `maxUtility_bernoulli`, `erenyiDiv`, `echernoffDiv`) |
 | Likelihood ratios, divergences and Wald's identity at stopping times of i.i.d. sequences | Statlib `Testing/Sequential/` (`rnDeriv_trim_piLE_infinitePi`, `rnDeriv_trim_stoppingTime_infinitePi`, `klDiv_trim_stoppingTime`, `integral_sum_comp_stoppingTime`) |
@@ -104,6 +113,7 @@ growth rate of e-processes are all derived from Statlib's numeraire and duality.
 | Separation of convex sets in finite dimension | Mathlib `Analysis/LocallyConvex/Separation.lean` (`geometric_hahn_banach_open`, `geometric_hahn_banach_point_closed`) |
 | Exchangeability | Tau Ceti `Probability/Exchangeability/` (`TauCeti.Probability.ExchangeableAt`, `TauCeti.Probability.Exchangeable`) |
 | KL and Rényi divergences | Mathlib `InformationTheory.klDiv`; Statlib `renyiDiv` |
+| Algorithm–environment pairs, runs, pull counts, identification algorithms and `δ`-correctness | LML `SequentialLearning/` (`IsAlgEnvSeq`, `IdentAlg`, `pullCount`); Identification roadmap, Layers 0.2 and 2 |
 
 Build missing material in this roadmap where it is listed as a target, and consume existing
 implementations directly.
@@ -115,7 +125,10 @@ vocabulary in which they are e-processes and confidence sequences (Layers 2.1 an
 not respecify them. The betting martingale of OnlineLearning 16.4 is the case of one mean
 constraint on `[0, 1]` of Layer 4.4. Regret bounds of bettors, portfolios and predictors belong to
 the OnlineLearning roadmap and enter Layers 4.2 and 6.3 as hypotheses. The dual formula of
-Layer 1.4 computes the $\mathrm K^\pm$ of Identification 1.4 for nonparametric classes.
+Layer 1.4 computes the $\mathrm K^\pm$ of Identification 1.4 for nonparametric classes. Layer 6.4
+owns the e-value tool for adaptively collected data; Identification 5.4 (an algorithm that learns
+the design) and 8.5 (certified fixed-budget identification) own the algorithms and their guarantees,
+and Identification 2.3 and Bandits 4.4 the lower bounds.
 
 **Outside this roadmap:**
 - e-processes indexed by continuous time, for which the literature has no standard theory beyond
@@ -140,8 +153,9 @@ other source: the layers state them in full, and cite the note of [EVR26] that p
 are numbered from 0.
 
 **Nulls.** A null hypothesis is a set `S : Set (Measure Ω)`, as for Statlib's `IsEVar`; formulas
-write it $\mathcal P$ (Mathlib reserves `𝒫` for the power set). Theorems assume
-`∀ P ∈ S, IsProbabilityMeasure P`.
+write it $\mathcal P$ (Mathlib reserves `𝒫` for the power set). A hypothesis on its members, that
+they are probability measures or have mass at most one, appears only where the constant `1` is a
+bet or a member is normalized.
 - No dominating measure, no convexity and no topology are assumed unless the statement names one
   (likelihood ratios, universal inference, the dominated forms of Layer 1, the weak topology of
   Layer 6.1).
@@ -152,15 +166,36 @@ write it $\mathcal P$ (Mathlib reserves `𝒫` for the power set). Theorems assu
   covered.
 - Statements about a composite null hold under each of its members: "almost surely" means
   `P`-almost surely for every `P ∈ S`, and independence is independence under every `P ∈ S`. A
-  property holds `S`-quasi-surely when it holds `P`-almost surely for every `P ∈ S`.
+  property holds `S`-quasi-surely when it holds `P`-almost surely for every `P ∈ S`; statements
+  write it with the filter `quasiSure S` of Layer 0.6, and `=ᶠ`, `≤ᶠ` for it.
+- Nulls are built with the named operations of Layer 0.6 (`mapNull`, `sampleNull`, `iidNull`,
+  `indepNull`), of Layers 2.1, 3.1 and 4.5 (`condNull`, `stoppedNull`, `sequentialNull`) and of
+  Layers 0.1 and 7 (`superUniformNull`, `mergingNull`). No statement writes one of these images
+  inline.
+- Validity for the largest null, growth for the smallest. A statement of validity (a process is a
+  test supermartingale or an e-process, a function is an e-variable) is made for the largest null of
+  the chain `iidNull S₁ ⊆ indepNull S₁ ⊆ sequentialNull (fun _ _ ↦ S₁) X ℱ` for which it holds, and
+  the smaller nulls are instances; an upper bound on growth is made for the smallest. A one-step
+  null may depend on the round and on the past (Layer 4.5).
+- The e-variables of a null are written `{X | IsEVar X S}`, with no name of their own. A null
+  presented by bets `𝓔` is `polarNull 𝓔` (Layer 0.6), intersected with the probability measures
+  where needed, and a complete class theorem describes `{X | IsEVar X (polarNull 𝓔)}` from `𝓔`.
+- A confidence set, a confidence sequence and an e-collection are stated from a family `E θ` of
+  e-variables or e-processes for the nulls `S θ` of the laws of which `θ` is true; the truth may be
+  a parameter, a set of parameters or a set of true hypotheses.
 
 **Values.** E-variables, e-processes, test supermartingales, wealth processes and merging
 functions are `ℝ≥0∞`-valued, and expectations are lower integrals `∫⁻`.
-- Statlib's `IsEVar` is defined through `∫ᵉ X - 1 ≤ 0`; for probability measures, use its
-  equivalence with `∫⁻ X ≤ 1` (`IsEVar.of_lintegral_le_one`, `IsEVar.lintegral_le_measure_univ`)
-  and state results with `∫⁻`. For a finite measure `μ` it asks `∫⁻ X ∂μ ≤ μ univ`, which is
-  stronger than the condition `∫⁻ X ∂μ ≤ 1` defining the effective null; state statements about
-  sub-probability measures of the effective null with `∫⁻`.
+- Statlib's `IsEVar X S` is `Measurable X ∧ ∀ μ ∈ S, ∫⁻ X ∂μ ≤ 1` (its fields `measurable` and
+  `lintegral_le_one`), for every set of measures: the pairing of the bipolar theorem [BS99], under
+  which the effective null is the polar of the set of e-variables. The constant `1` is an
+  e-variable exactly when every member has mass at most one (`isEVar_one_iff`).
+- A level-`α` test is a measurable `φ` with values in `[0, 1]` and `∫⁻ φ ∂P ≤ α` on the null
+  (`IsTest φ S α`, Layer 0.1). Its indicator form and its form "`α` times an e-variable with values
+  at most `α⁻¹`" are lemmas.
+- A map that preserves validity (a calibrator, an adjuster, a merging function, a combiner) is
+  characterized as an e-variable for a null on the space of values (`superUniformNull`,
+  `mergingNull 𝒞`), and its theory is derived from the theory of e-variables.
 - P-variables are `ℝ≥0∞`-valued as well, with `P {ω | p ω ≤ α} ≤ α` for every `α : ℝ≥0∞`; values
   above `1` carry no evidence. The e-to-p calibration is `E ↦ E⁻¹`, with `0⁻¹ = ∞` and
   `∞⁻¹ = 0`, and no truncation at `1`.
@@ -169,22 +204,30 @@ functions are `ℝ≥0∞`-valued, and expectations are lower integrals `∫⁻`
   (Layer 2.1).
 - Expected logarithms of `ℝ≥0∞`-valued variables are `∫ᵉ ω, ENNReal.log (X ω) ∂Q`, valued in
   `EReal`, as in Statlib's `maxUtility` with `logUtility` and `IsNumeraire.eintegral_log_le`;
-  never the Bochner integral, which is `0` for non-integrable functions.
+  never the Bochner integral, which is `0` for non-integrable functions. The largest expected
+  logarithm of an e-variable is `maxEPower Q S := maxUtility Q S logUtility`, and the smallest
+  relative entropy to a null is `klInf Q S := ⨅ P ∈ S, klIntegral Q P` in `EReal`, with Statlib's
+  `klIntegral Q P = ∫ log (dQ/dP) dQ` (Layer 1.1). For probability measures `klIntegral` is
+  Mathlib's `klDiv`; on the sub-probability measures of an effective null, or of a closure of a
+  null, `klDiv` adds the difference of the masses and `klIntegral` is the divergence that the
+  theory produces.
 
 **Conditional statements.** Conditional expectations of `ℝ≥0∞`-valued variables are not used.
 "$\mathbb E_P[X\mid m]\le Y$" is stated as
 `∀ s, MeasurableSet[m] s → ∫⁻ ω in s, X ω ∂P ≤ ∫⁻ ω in s, Y ω ∂P`, the form of LMLExplore's
-`supermartingale_of_setLIntegral_succ_le`. A conditional law is given by a kernel through the same
-set-integral identity, or Mathlib's `HasCondDistrib`.
+`supermartingale_of_setLIntegral_succ_le`. A conditional law of `Y` given a σ-algebra `m` is
+Mathlib's `HasCondDistrib Y id κ P`, with `id` the identity of `Ω` into `(Ω, m)` and `κ` a kernel
+from `(Ω, m)`; equivalently, the set-integral identity
+`∫⁻ ω, g ω (Y ω) ∂P = ∫⁻ ω, ∫⁻ y, g ω y ∂(κ ω) ∂P` for every `g` jointly measurable for `m` and the
+σ-algebra of the values, with `κ` measurable for `m`. Without that measurability the identity
+holds for the point mass at the observation itself, `κ ω = δ_{Y ω}`, for every `m`.
 
 **Time, filtrations and stopping times.**
 - Time is `ℕ` and filtrations are arbitrary: `ℱ : Filtration ℕ mΩ`. Observations need not be
-  independent, identically distributed or a product. The canonical filtrations of a sequence of
-  observations are Mathlib's `Filtration.piLE` on `ℕ → 𝓧` (the observations `0, …, n` at time `n`,
-  as in Statlib's `Testing/Sequential/`) and LMLExplore's `Filtration.naturalLT` (the observations
-  before `n`); statements hold for every filtration, and statements about i.i.d. data (Layer 6)
-  use `Filtration.piLE`, as Statlib's `Testing/Sequential/` does, so that time `n` has seen
-  `n + 1` observations.
+  independent, identically distributed or a product. The canonical filtration of a sequence of
+  observations on `ℕ → 𝓧` is `Filtration.piLT` (Layer 6.1), the observations before `n`, so that
+  time `n` has seen `n` observations; `piLT (n + 1) = piLE n` relates it to Mathlib's
+  `Filtration.piLE` and to Statlib's `Testing/Sequential/`. Statements hold for every filtration.
 - A process `E` is adapted when `E n` is `ℱ n`-measurable. The factor of round `n` of a product, a
   bet or a sequential e-variable, is `ℱ (n + 1)`-measurable, and is a conditional e-variable given
   `ℱ n`; bets and portfolios used in round `n` are `ℱ n`-measurable.
@@ -194,6 +237,16 @@ set-integral identity, or Mathlib's `HasCondDistrib`.
   it. The value of a process at a possibly infinite stopping time is `stoppedValueLimsup E τ`,
   equal to `E (τ ω) ω` where `τ ω` is finite and to `limsup (E · ω)` where it is infinite
   [RRLK; RLKR23, (1.2)].
+- A level-`α` sequential test is a stopping time `τ` with `P {τ < ⊤} ≤ α` for every member of the
+  null (Layer 3.3); its power against `Q` is `Q {τ < ⊤}`.
+
+**Adaptively collected data.** Statements about data that an algorithm collects (Layer 6.4) are made
+for any algorithm–environment pair of LML (`IsAlgEnvSeq`), with arms of a finite type `α`,
+observations in any measurable space `𝓨` (not real rewards), randomized algorithms, and a stopping
+time of the filtration of the history. An instance is a family of arm laws `α → Measure 𝓨`, and a
+set of instances is any `Λ : Set (α → Measure 𝓨)`; no product structure is assumed. "Attains `c` at
+`μ`" means `limsup_{δ → 0} E_μ[τ_δ] / log (1 / δ) ≤ c` for one family of algorithms indexed by `δ`,
+with no uniformity over instances unless a statement says so.
 
 **Theorem shapes.** Validity statements quantify over every member of the null and every stopping
 time. Constants are explicit. Asymptotic statements are eventual inequalities or limits along
@@ -207,7 +260,8 @@ special case listed as a corollary before the general statement: derive it.
 **Namespaces and names.** Definitions live in `ProbabilityTheory`, next to Statlib's, with names
 in Statlib's pattern: `IsPVar`, `IsCondEVar`, `IsTestSupermartingale`, `IsTestMartingale`,
 `IsEProcess`, `IsPProcess`, `IsConfSeq`, `IsEMerging`, `IsCompoundEVar`, `IsECollection`,
-`constraintNull`. Statlib's names keep their names.
+`IsTest`, `constraintNull`, `polarNull`, `mapNull`, `quasiSure`, `klInf`, `maxEPower`. Statlib's
+names keep their names.
 
 ## Existing formalizations
 
@@ -217,11 +271,17 @@ in Statlib's pattern: `IsPVar`, `IsCondEVar`, `IsTestSupermartingale`, `IsTestMa
   licence is not stated; it is a source, not a specification, and its code is adapted only under
   a licence that permits it.
 - The Lean library `EValuesResearch` of the paper project github.com/RemyDegenne/evalues_research
-  (Apache 2.0), built on LMLExplore, which states and proves in Lean the results cited [EVR26].
-  Its notes and its proofs were written and refereed by AI agents. It is a source: the layers
-  state each result at the generality of this roadmap.
+  (Apache 2.0), built on LMLExplore, which states and proves in Lean part of the results cited
+  [EVR26]; the others are proved in its notes. Its notes and its proofs were written and refereed by
+  AI agents. It is a source: the layers state each result at the generality of this roadmap.
 
 ## Restatements of merged code
+
+The Generalization roadmap's e-values targets (its Layer 0, targets 0.17–0.26, and Layer 1,
+targets 1.26–1.37) restate the merged e-values code in the conventions above: the operations on
+nulls, the polarity, the quasi-sure filter, tests, `klInf` and `maxEPower`, the filtration `piLT`,
+one conditional null that may depend on the past, and the canonical nulls of calibrators and
+merging functions. The items of this roadmap that define those objects are their prerequisites.
 
 Layer 4.2 generalizes `LMLExplore.predictorLikelihoodRatio`,
 `LMLExplore.supermartingale_predictorLikelihoodRatio`,
@@ -236,33 +296,48 @@ and `laplacePredictor` and its time-uniform bound from them.
 
 | Layer | Content | Prerequisites |
 | --- | --- | --- |
-| 0 | E-variables, p-variables, calibration and post-hoc validity | Statlib `EValues/` |
+| 0 | E-variables, p-variables, tests, calibration, post-hoc validity, admissibility, nulls and bets | Statlib `EValues/` |
 | 1 | Optimal e-variables: the effective null, numeraires, constraint nulls and $\mathrm{KL}_{\inf}$ | Layer 0; Statlib `EValues/`; Identification 1.2–1.4 |
 | 2 | Test supermartingales, optional stopping and the exact Ville identity | Layer 0; Bandits 1.1 |
 | 3 | E-processes | Layers 0, 2 |
 | 4 | Constructions: likelihood ratios, predictors, universal inference, betting | Layers 1–3; Identification 4.2; OnlineLearning 10–11 |
 | 5 | Confidence sequences | Layers 3–4; Identification 4.2 |
-| 6 | Growth rates, power and expected stopping times | Layers 1, 3–4; OnlineLearning 11.4, 13.2 |
+| 6 | Growth rates, power, expected stopping times and designs | Layers 1, 3–4; OnlineLearning 11.4, 13.2; LML `SequentialLearning/` |
 | 7 | Merging e-values | Layers 0, 2 |
 | 8 | Multiple testing | Layers 0, 3, 7 |
 | 9 | Exchangeability, conformal e-prediction, change detection, two-sample testing | Layers 1, 3–4, 6–8; OnlineLearning 8.3 |
 
-## Layer 0: E-variables, p-variables, calibration and post-hoc validity
+## Layer 0: E-variables, p-variables, calibration, post-hoc validity, nulls and bets
 
 1. **P-variables, tests and Markov's inequality** [RW, Definition 1.2, Fact 1.3, Proposition 2.1].
    - Define `IsPVar p S` for a measurable `p : Ω → ℝ≥0∞`: `P {ω | p ω ≤ α} ≤ α` for every
      `P ∈ S` and every `α : ℝ≥0∞`. Define exact e-variables (`∫⁻ E ∂P = 1` for every `P ∈ S`)
      and exact p-variables (`P {p ≤ α} = α` for `α ≤ 1`).
-   - Prove Markov's inequality for e-variables, `P {ω | α⁻¹ ≤ E ω} ≤ α`, hence that `E⁻¹` is a
-     p-variable, that the indicator of `{α⁻¹ ≤ E}` has `P`-mass at most `α`, and that
-     `min (α * E) 1` has expectation at most `α`.
+   - Define `IsTest φ S α` for `φ : Ω → ℝ≥0∞`: `φ` is measurable, `φ ≤ 1`, and `∫⁻ φ ∂P ≤ α` for
+     every `P ∈ S`. Prove that `IsTest φ S α` holds exactly when `φ ≤ 1` and `φ / α` is an
+     e-variable, for `0 < α < ∞` [RW, Fact 3.6], and that with the measurability of `φ` written on
+     the right the equivalence holds at every level.
+   - Prove Markov's inequality for e-variables, `P {ω | α⁻¹ ≤ E ω} ≤ α`, for every null, hence that
+     `E⁻¹` is a p-variable, and that the indicator of `{α⁻¹ ≤ E}` and `min (α * E) 1` are tests of
+     level `α`.
+   - Define the super-uniform null `superUniformNull`, the probability measures `μ` on `ℝ≥0∞` with
+     `μ (Iic α) ≤ α` for every `α`, and prove that a measurable `p` is a p-variable for a null of
+     probability measures exactly when `mapNull p S ⊆ superUniformNull` (`mapNull` is defined in
+     item 6).
    - Prove that products of finitely many e-variables that are independent under every `P ∈ S`
      are e-variables; Statlib's `IsEVar.prod` (product measures) is the case of the coordinates
      of a product space.
 2. **Calibrators** [RW, Definition 2.3, Propositions 2.4–2.7; VW21, Propositions 2.1–2.2].
+   - Prove that a measurable `f : ℝ≥0∞ → ℝ≥0∞` is an e-variable for `superUniformNull` exactly when
+     its antitone envelope `u ↦ ⨆ q ≥ u, f q` has integral at most one on `[0, 1]`. A super-uniform
+     law dominates the uniform law stochastically, which gives one direction; for the other, the
+     law of `q (U)` for a selection `q u ≥ u` that nearly attains the envelope on the cells of a
+     grid is super-uniform. The p-to-e calibrators are then the antitone e-variables for
+     `superUniformNull` that vanish on `(1, ∞]`.
    - Define a p-to-e calibrator as an antitone `f : ℝ≥0∞ → ℝ≥0∞`, zero on `(1, ∞]`, with
-     `∫⁻ x in Icc 0 1, f (ENNReal.ofReal x) ≤ 1`: [RW, Proposition 2.5]'s characterization is the
-     definition. Prove that `f ∘ p` is an e-variable for every p-variable `p` for every null on
+     `∫⁻ x in Icc 0 1, f (ENNReal.ofReal x) ≤ 1`: [RW, Proposition 2.5]'s characterization, a case
+     of the previous bullet, is the definition.
+     Prove that `f ∘ p` is an e-variable for every p-variable `p` for every null on
      every measurable space, and conversely that an antitone `f` vanishing on `(1, ∞]` for which
      `f` applied to the identity of `[0, 1]` under Lebesgue measure is an e-variable is a
      calibrator.
@@ -294,9 +369,13 @@ and `laplacePredictor` and its time-uniform bound from them.
      `p⁻¹`, truncated to `0` on `{1 ≤ p}`, is an e-variable [RW, Proposition 4.4], which is
      [Kon23, Theorem 2] and the e-variable compatibility of [Gru24, Proposition 1].
 5. **Admissibility** [RW, Definition 2.11, Theorem 2.14, Corollary 2.15, Propositions 2.12, 2.13
-   and 2.17].
-   - Define an admissible e-variable: every e-variable `E' ≥ E` equals `E` almost surely under
-     every member of the null.
+   and 2.17; LRR26, Lemma 6.2; EVR26, Notes 42, 45 and 46].
+   - Define admissibility once, as maximality for the order `≤ᶠ[quasiSure S]` (item 6) on a set of
+     bets, and
+     use it for e-variables, calibrators, merging functions and e-processes (Layers 0.2, 3.7, 7).
+     An admissible e-variable is one that every e-variable `E' ≥ E` equals quasi-surely. Prove once
+     that a complete class whose members are admissible is the set of admissible elements, up to
+     quasi-sure versions [LRR26, Lemma 6.2].
    - Prove the characterization of [RW, Theorem 2.14]: `E` is admissible exactly when
      $\liminf_{\delta\downarrow0}\inf\{(1-\mathbb E_P[E])/\delta : P\in\mathcal P,\ P(A)>\delta\}=0$
      for every measurable `A`, with `⨅ ∅ = 0`. Derive from it its sufficient conditions [RW, Corollary 2.15], the necessary
@@ -306,9 +385,56 @@ and `laplacePredictor` and its time-uniform bound from them.
    - Call `E` strongly admissible when every measurable `A` charged by some member of the null is
      charged by some `P ∈ S` with `∫⁻ E ∂P = 1` [RW, Corollary 2.15(a)]. Products of strongly
      admissible e-variables are strongly admissible for the product null [RW, Proposition 2.17].
+   - For any null with no domination, the criterion of [RW, Theorem 2.14] in the form with a ratio:
+     `E` is admissible exactly when, for every set `B` that is not polar,
+     `⨅ {(1 - ∫⁻ E ∂P) / P B | P ∈ S, 0 < P B} = 0` [EVR26, Note 46].
+   - An e-variable is a numeraire against some probability measure exactly when it is exact under a
+     member of the effective null, or infinite on a nonempty set; a numeraire against an alternative
+     that dominates the null is admissible; for a finite null an e-variable is admissible exactly
+     when the members under which it is exact charge every set that the null charges, and it is then
+     a numeraire [EVR26, Note 42]. Instance: for the Poisson family, `2 * 𝟙{x odd}` is admissible
+     and a numeraire against no alternative.
+   - **Extended numeraires.** With `c E = ⨆ μ ∈ effectiveSet S, ∫⁻ E ∂μ`, prove that `c E = 1`
+     exactly when `E` is a limit of numeraires in the sense `∫⁻ E / X k ∂Q k → 1`, the alternatives
+     `Q k` being `E • P k` normalized for members `P k`, and that every admissible e-variable has
+     `c E = 1`, which is stronger than [RW, Proposition 2.13] [EVR26, Note 45].
+   - **Dominated nulls.** For a null dominated by a σ-finite measure: a law
+     `P̄ = ∑ i, 2^{-i} P i` of members whose null sets are the polar sets; admissibility through
+     mixtures `m k` in the cone of the null with masses at most one and densities tending to `∞` in
+     `P̄`-probability; an admissible `E` is a `P̄`-limit in probability of the numeraires against
+     `E • m k` normalized; and every e-variable is below an admissible one, which is
+     [LRR26, Theorem 6.3] in the dominated case [EVR26, Note 46].
+
+6. **Nulls and bets** [BS99; LRR25, Definition 3.1].
+   - **Operations on nulls.** Define `mapNull φ S := Measure.map φ '' S`, the image of a null by a
+     kernel, the product `Set.image2 Measure.prod S T` of two nulls, `sampleNull S₁ n` (the laws
+     `Measure.pi fun _ : Fin n ↦ P` for `P ∈ S₁`), `iidNull S₁` (the laws
+     `Measure.infinitePi fun _ : ℕ ↦ P`) and `indepNull S₁` (the laws `Measure.infinitePi P` with
+     `P i ∈ S₁` for every `i`). For each: the membership lemma, monotonicity, the singleton case,
+     and that its members are probability measures, or have mass at most one, when those of the
+     argument do. Prove `iidNull S₁ ⊆ indepNull S₁`, that the image of `iidNull S₁` by the first `n`
+     coordinates is `sampleNull S₁ n` for probability members, and
+     `IsEVar X (mapNull φ S) ↔ IsEVar (X ∘ φ) S` for measurable `X` and `φ` (Statlib's `IsEVar.comp`
+     is one direction), and the same for `IsPVar`.
+   - **The polarity.** Define `polarNull 𝓔`, the measures `μ` with `∫⁻ X ∂μ ≤ 1` for every
+     `X ∈ 𝓔`, with its σ-algebra as an instance argument (with an implicit one,
+     `Convex ℝ≥0∞ (polarNull 𝓔)` does not elaborate), and the upper expectation
+     `upperExp S X := ⨆ P ∈ S, ∫⁻ X ∂P`. For every null, prove the Galois connection
+     `𝓔 ⊆ {X | IsEVar X S} ↔ S ⊆ polarNull 𝓔` for measurable `𝓔`,
+     `IsEVar X S ↔ Measurable X ∧ upperExp S X ≤ 1`, and
+     `effectiveSet S = polarNull {X | IsEVar X S}`, which holds by definition. Prove that every
+     `polarNull 𝓔` is convex, solid and closed under setwise limits along any filter, with masses at
+     most one when `1 ∈ 𝓔`, and that `{X | IsEVar X S}` is solid among measurable functions in the
+     quasi-sure form (a measurable function below an e-variable quasi-surely is one; a
+     non-measurable function is not). Convexity and closure under `liminf` are Statlib's
+     `convex_isEVar` and `isEVar_liminf`.
+   - **Quasi-surely.** Define `quasiSure S := ⨆ P ∈ S, ae P`, with `eventually_quasiSure_iff`, and
+     the congruence and monotonicity lemmas of `IsEVar`, `IsPVar`, `IsCondEVar`,
+     `IsTestSupermartingale` and `IsEProcess` with `=ᶠ[quasiSure S]` and `≤ᶠ[quasiSure S]`.
 
 Generalization: arbitrary sets of measures, where [VW21] states calibrators for one probability
-space at a time; `ℝ≥0∞`-valued p-variables, so that `E⁻¹` needs no truncation.
+space at a time; `ℝ≥0∞`-valued p-variables, so that `E⁻¹` needs no truncation; validity under every
+null, where the effective null and the bipolar theorem pair the integral with one.
 
 ## Layer 1: Optimal e-variables
 
@@ -319,12 +445,26 @@ numeraires, describes the effective null, and computes both sides of the duality
 of nulls of the literature.
 
 1. **The effective null** [LRR25, Definition 3.1, Lemma 4.5, Corollary 4.6; RW, §6.3.1,
-   Theorem 6.10].
-   - For Statlib's `effectiveSet S`, prove: it contains every mixture `κ ∘ₘ π` of a probability
-     measure `π` and a kernel `κ` with values in `S`, hence the convex hull of `S`; it is solid
-     (`μ ≤ ν ∈ effectiveSet S` gives `μ ∈ effectiveSet S`); it is closed under setwise
-     convergence; and `S` and the probability measures of `effectiveSet S` have the same
-     e-variables.
+   Theorem 6.10; BS99, Theorem 1.3; RLRR26, Corollary 3.6; EVR26, Notes 11, 40 and 48].
+   - Statlib's `effectiveSet S` is `polarNull {X | IsEVar X S}` (Layer 0.6), and a closure
+     operator: `subset_effectiveSet`, `effectiveSet_effectiveSet` and `isEVar_effectiveSet_iff`.
+     Derive from the properties of polars that it is convex, solid
+     (`μ ≤ ν ∈ effectiveSet S` gives `μ ∈ effectiveSet S`) and closed under setwise convergence,
+     and prove that it contains every mixture `κ ∘ₘ π` of a measure `π` of mass at most one and a
+     kernel `κ` with values in it, hence the convex hull of `S`.
+   - **Divergences.** Define `klInf Q S := ⨅ P ∈ S, klIntegral Q P` in `EReal` and
+     `maxEPower Q S := maxUtility Q S logUtility`. Prove: `klInf Q S = ⨅ P ∈ S, klDiv Q P` for a
+     probability measure `Q` and a null of probability measures (`klInf_eq_iInf_klDiv`, through
+     Statlib's `klIntegral_eq_klDiv`), and
+     `klDiv μ ν = klIntegral μ ν + ν univ - μ univ` for finite measures with `μ ≪ ν` and an
+     integrable log-likelihood ratio; nonnegativity of both for a probability measure `Q` and a
+     null of masses at most one; the value zero of `maxEPower` under the probability measures of
+     the effective null; data processing for both along `mapNull`; additivity of `maxEPower` on
+     products of nulls; the simple null, `maxEPower Q {P} = klIntegral Q P` for `P` of mass at most
+     one; and `maxEPower Q S ≤ klInf Q S` for a null of masses at most one. Statlib's duality
+     `maxUtility_eq_iInf_klIntegral_effectiveSet` reads `maxEPower Q S = klInf Q (effectiveSet S)`.
+     With `klDiv` in place of `klIntegral` both fail on sub-probability measures: for
+     `S = {δ₀ / 2}` and `Q = δ₀`, `maxEPower Q S = log 2` and `klDiv Q (δ₀ / 2) = log 2 - 1 / 2`.
    - A probability measure `Q` admits, for some `α ∈ (0, 1)`, a level-`α` test `φ` for `S` with
      `α < ∫⁻ φ ∂Q` exactly when `Q ∉ effectiveSet S` [RW, Theorem 6.10]: through
      [RW, Fact 3.6], truncate an e-variable with `1 < ∫⁻ E ∂Q` (which exists by the definition of
@@ -336,6 +476,31 @@ of nulls of the literature.
      Brannath and Schachermayer in `L⁰₊(μ)` [BS99, Theorem 1.3]; build it.
    - Corollary: for finite `S`, the probability measures of `effectiveSet S` are the convex hull
      of `S` [LRR25, Corollary 4.6], which gives [ZRW24, Theorem 3.4].
+   - **The bipolar theorem on the side of functions** [BS99, Theorem 1.3]: for a probability
+     measure `μ` and a set `𝓔` of measurable functions, a `μ`-almost everywhere finite `X` has
+     `∫⁻ X ∂ν ≤ 1` for every σ-finite `ν ≪ μ` of `polarNull 𝓔` exactly when its class is in the
+     smallest subset of `L⁰₊(μ)` that contains `𝓔` and is convex, solid and closed in
+     `μ`-probability. With all of `polarNull 𝓔` in place of its dominated members the statement is
+     false: for `𝓔 = {1}` the bets must then be at most one everywhere.
+   - **No domination.** For any null on any measurable space, a measure is in `effectiveSet S`
+     exactly when it is setwise below a member of the weak-* closed convex hull of `S` among the
+     finitely additive measures of mass at most one; and the smallest relative entropy from a
+     probability measure `Q` to the effective null equals the smallest one to that closure, the
+     second minimum being attained at a finitely additive measure whose countably additive part
+     dominates the reverse information projection [EVR26, Note 40; RLRR26, Corollary 3.6, for the
+     equality of the minima].
+   - Under domination, the effective null is the closure of the countable mixtures of `S` under
+     limits in probability of the densities, made solid. Without domination this fails: a null on
+     the countable ordinals, with the countable–co-countable σ-algebra, has a probability measure
+     in its effective null that is singular to every integral mixture of its members; the
+     construction uses an Ulam matrix and the axiom of choice [EVR26, Note 48].
+   - **Bets on two observations.** On a finite alphabet, a function `H` of two observations is an
+     e-variable for every i.i.d. law exactly when `J - H̄` is copositive, with `H̄` the
+     symmetrization and `J` the matrix of ones; for a finite graph with clique number `ω ≥ 2`,
+     `c * 𝟙{x₁ ~ x₂}` is an e-variable exactly when `c ≤ ω / (ω - 1)`. For `n` observations on any
+     space, the e-variables of every i.i.d. law are the `H` with
+     `M^{-n} ∑_{i ∈ [M]^n} H (y_{i_1}, …, y_{i_n}) ≤ 1` for every `M` and all points `y` [EVR26,
+     Note 11].
    - Corollary: a null `S` such that every probability measure on `𝓧` is a limit in total variation
      of members of `S` has, for every finite number of i.i.d. observations, the e-variables of the
      null of all laws: `E` is an e-variable for `{Measure.pi (fun _ : ι ↦ P) | P ∈ S}` exactly when
@@ -378,11 +543,31 @@ of nulls of the literature.
        `isNumeraire_bernoulli` as the Bernoulli case;
      - the GROW theorem of [GdHK24, Theorem 1] for Bayes mixtures over a null, Li's definition of
        the reverse information projection, and [LGH24, Theorems 3 and 5].
+   - The e-variables that are numeraires are characterized in Layer 0.5. For a null that lies
+     between the products of members and the null of the product bet, the numeraire is the product
+     of the numeraires [EVR26, Note 42].
+   - For a null dominated by a σ-finite measure and every probability measure `Q`, `maxEPower Q S`
+     is the infimum of the relative entropy from `Q` to the countable mixtures of members, with no
+     other hypothesis [EVR26, Note 48]; [GdHK24, Theorem 1] (all priors, finiteness assumed) and
+     [LRR25, Corollary 4.11] are cases.
+   - **The conditional numeraire.** If `κ` is the conditional law given a statistic `T` under every
+     member of `S`, `P.map T ≪ Q.map T` for every `P ∈ S`, and `κ ∘ₘ Q.map T` is in the effective
+     null and dominates the probability measure `Q`, then `Q.rnDeriv (κ ∘ₘ Q.map T)` is the
+     numeraire. Without `P.map T ≪ Q.map T` the statement is false, on a four-point space. The
+     two-sample numeraires of Layer 1.5 are instances.
 3. **Utilities beyond the logarithm** [LRR25, Theorem 6.1; Kon26, Corollary 6].
    - For the power utility $x\mapsto x^{1-\gamma}/(1-\gamma)$, $\gamma>1$ (a Statlib `Utility`),
      prove that the maximal expected utility is
      $\frac1{1-\gamma}\exp\big((1-\gamma)\inf_{P\in\mathrm{eff}(\mathcal P)}R_{1/\gamma}(Q\|P)\big)$,
      with Statlib's `renyiDiv`, and that the infimum is attained.
+   - **Reverse Rényi projections.** For `Q` absolutely continuous with respect to the null, the
+     optimal e-variables `E γ` for the power utilities converge to the numeraire `E*` as `γ ↓ 1`,
+     with the bound `E_Q[χ(E γ / E*)] ≤ 2 E_Q|E*^{1-γ} - 1|`; the reverse Rényi projections converge
+     to the reverse information projection in probability, and in total variation when the
+     projection is a probability measure or the numeraire is bounded away from zero. The description
+     gain of
+     [LGH24] does not change from a σ-convex set to its closure, so the σ-convex and Choquet-convex
+     hulls of [LGH24] give the same value, two conjectures of [LGH24] [EVR26, Note 27].
    - Extend Statlib's existence theorem `IsEVarClass.exists_max_eintegral_utility` to bounded
      concave upper semicontinuous utilities without a derivative, and deduce the composite
      Neyman–Pearson lemma [Kon26, Corollary 6] for any null and any `Q`, with `Qᵃ` the part of `Q`
@@ -413,9 +598,14 @@ of nulls of the literature.
      set `S`, the domination holds pointwise on the effective domain (the points charged by some
      member), by the affine e-variables `1 + λ · Φ - σ(λ)` with `σ` the support function of `S`
      restricted to the affine hull of the values of `Φ` [Cle26b, Proposition 1]; equality
-     constraints are the case of a point `S`. For arbitrary `Φ`, prove the description by the closure for
-     $\sigma(L^\Phi,M^\Phi)$ of the cone generated by `Φ` minus the quasi-surely nonnegative
-     functions [LRR26, Theorem 2.2].
+     constraints are the case of a point `S`. For a set `𝓔₀` of measurable functions with finite
+     values, `constraintNull {Y - 1 | Y ∈ 𝓔₀}` is the set of probability measures of
+     `polarNull 𝓔₀` (finiteness cannot be dropped), and the complete class theorem reads: for a
+     null presented by finitely many such bets `Y i`, the e-variables are the measurable functions
+     quasi-surely below some `c + ∑ i, π i * Y i` with `π i ≥ 0` and `c + ∑ i, π i ≤ 1`, where `c`
+     may be negative since the constraint on the mass is an equality. For arbitrary `Φ`, prove the
+     description by the closure for $\sigma(L^\Phi,M^\Phi)$ of the cone generated by `Φ` minus the
+     quasi-surely nonnegative functions [LRR26, Theorem 2.2].
    - **Admissible bets.** Every admissible e-variable (Layer 0.5) is quasi-surely equal to a bet,
      and a bet is admissible exactly when every bet whose combination `∑ i, π i * g i` is
      quasi-surely at least its own has a combination quasi-surely equal to its own; under the
@@ -520,6 +710,14 @@ of nulls of the literature.
      then the numeraire under $Q_\mu$ is item 2.
    - Instance: the Gaussian scale family $\{\mathcal N(0,\sigma^2)\}$ against
      $\mathcal N(m,s^2)$, with statistic $x^2$.
+   - **The t-test.** The Bayes factor of the t-test with a prior `W` on the effect size is GROW
+     among all e-variables of the scale-invariant null as soon as `∫ log (1 + |δ|) dW < ∞`, where
+     [GdHK24, Theorem 2] and [PLdHG24, Theorem 2, Corollary 3] assume a moment of positive order
+     [EVR26, Note 29].
+   - **Pivotal e-variables.** Under joint atomlessness, the separation condition of
+     [ZRW24, Theorem 6.7] holds exactly when a pivotal exact e-variable has positive e-power
+     uniformly over the alternatives, the conjecture [ZRW24, Conjecture 6.8] in that form [EVR26,
+     Note 26].
    - Instance, two samples with a common nuisance parameter [HGLLA24]: for two independent
      exponential observations, the null of the products of two equal exponential laws and the
      alternative with rates `l₁ ≠ l₂`, the numeraire is the likelihood ratio of the alternative to
@@ -543,7 +741,10 @@ constraint on bounded or semi-bounded laws [HT15] or a mean and a moment constra
    7.19, Propositions 7.9 and 7.20; GdHK24, Definition 1, Proposition 2; WSR24, Proposition 3;
    WSJ26; ShSVV11].
    - Define `IsCondEVar X m S`: `X` is measurable and `∫⁻ ω in s, X ω ∂P ≤ P s` for every
-     `P ∈ S` and every `m`-measurable `s`.
+     `P ∈ S` and every `m`-measurable `s`. Define `condNull m S`, the conditional laws `P[|s]` of
+     the members given the `m`-measurable sets `s` with `P s ≠ 0`, and prove, for every null,
+     `IsCondEVar X m S ↔ IsEVar X (condNull m S)`: on a set of infinite measure the conditional law
+     is zero and both sides hold. The definition of `IsCondEVar` keeps its set-integral form.
    - Define `IsENNSupermartingale M ℱ S`: `M : ℕ → Ω → ℝ≥0∞` is adapted and
      `∫⁻ ω in s, M (n + 1) ω ∂P ≤ ∫⁻ ω in s, M n ω ∂P` for every `P ∈ S`, `n` and `ℱ n`-measurable
      `s`. Define `IsTestSupermartingale M ℱ S` as `IsENNSupermartingale M ℱ S` with
@@ -628,6 +829,14 @@ filtration; an identity in place of Ville's inequality.
      stopping times with the `liminf` convention; for each `P ∈ S`, `E` is `P`-almost surely
      dominated by a test supermartingale for `P`; by a test martingale for `P`. The step to a
      martingale uses Doob's decomposition (Mathlib's `martingalePart`).
+   - **E-processes are e-variables on stopped paths** [KG22, Section 3]. Define the σ-algebra
+     `optionalSigma ℱ` on `ℕ × Ω` (the sets whose section at each `n` is `ℱ n`-measurable; its
+     measurable functions are the adapted processes), the stopped law `stoppedLaw ℱ P τ`, the law of
+     `ω ↦ (τ ω, ω)`, and `stoppedNull ℱ S`, the stopped laws of the members of `S` at the stopping
+     times with values in `ℕ`. Prove, with no hypothesis on the null,
+     `IsEProcess E ℱ S ↔ IsEVar (Function.uncurry E) (stoppedNull ℱ S)`, and derive from the theory
+     of e-variables `IsEProcess.congr`, `mono`, `anti_set`, convexity, closure under the time-wise
+     `liminf` and mixtures.
 2. **Consequences of the characterization** [RW, Fact 7.6, Propositions 7.9 and 7.23; RRLK,
    Lemmas 1–3, Proposition 15, Remark 16].
    - Ville's inequality for e-processes, `P {ω | ∃ n, α⁻¹ ≤ E n ω} ≤ α` for `P ∈ S`, and its forms
@@ -642,9 +851,11 @@ filtration; an identity in place of Ville's inequality.
      test supermartingale for each `P ∈ S` is an e-process.
    - The running maximum of an e-process is not an e-process in general [RRLK, Remark 16]: give the
      counterexample.
-   - For adapted events `A n`, with `A ∞ = limsup A n`, the following are equivalent:
-     `P (⋃ n, A n) ≤ α` for every `P ∈ S`; `P (A T) ≤ α` for every random time `T` with values in
-     `WithTop ℕ` and every `P ∈ S`; the same for every stopping time [RRLK, Lemma 2]. The
+   - For adapted events `A n`, with `A ∞ = limsup A n`, define time-uniform validity at level `α`,
+     `P (⋃ n, A n) ≤ α` for every `P ∈ S`, and prove its equivalence with `P (A T) ≤ α` for every
+     random time `T` with values in `WithTop ℕ` and every `P ∈ S`, and with the same for every
+     stopping time [RRLK, Lemma 2], and its monotonicity in the filtration. P-processes, sequential
+     tests and confidence sequences are instances. The
      corresponding statements about expectations are not equivalent [RRLK, Lemma 3]: prove the
      implications and give the counterexamples.
 3. **P-processes and sequential tests** [RW, Proposition 7.8, Definition 7.10; RRLK,
@@ -656,6 +867,11 @@ filtration; an identity in place of Ville's inequality.
      level-`α` sequential test, that every level-`α` sequential test is a thresholded e-process,
      and that a p-to-e calibrator applied to a p-process gives an e-process [RRLK,
      Proposition 14].
+   - A level-`α` sequential test as a stopping time: `τ : Ω → WithTop ℕ` with
+     `P {τ < ⊤} ≤ α` for every `P ∈ S`, its power `Q {τ < ⊤}` against `Q`, power one, and its
+     expected number of observations `∫⁻ τ ∂Q`. The first time an e-process reaches `α⁻¹` is one,
+     at every level `α`, `0` included; the rejection events of an adapted `{0, 1}`-valued test are
+     those of the first time it rejects.
 4. **Filtrations and adjusters** [CR26, Lemma 1, Theorems 1–3, Corollary 3].
    - For filtrations `G ≤ ℱ`, prove the lifting lemma: a family of `G`-adapted error events is
      controlled at every `G`-stopping time exactly when it is controlled at every `ℱ`-stopping
@@ -686,7 +902,18 @@ filtration; an identity in place of Ville's inequality.
      and finite with probability at most `α` under every member of the null [EVR26, Note 16]. The
      centred uniform integrability of [RLKR23, §4.2] implies the hypothesis.
 6. **Fork-convexity** [RRLK22, Definitions 10–11, Lemma 12, Theorems 13–14, Corollary 16,
-   Theorem 17].
+   Theorem 17; Del06; EVR26, Note 31].
+   - Define the predicate that a null on a filtered space is closed under fork-convex combinations:
+     for `P, P', P'' ∈ S` dominated by a reference measure, a time `n` and an `ℱ n`-measurable
+     weight `h` with values in `[0, 1]`, the law that follows `P` up to time `n` and then the
+     mixture, with weights `h` and `1 - h`, of the conditional laws of `P'` and `P''` given `ℱ n`,
+     is in `S` [RRLK22, Definition 10]. With a set in place of the weight the predicate is stability
+     under pasting, which does not give convexity. For closed convex dominated sets, [Del06]
+     identifies fork-convexity with m-stability and rectangularity.
+   - For a one-step null with convex values and observations with `X k` measurable for
+     `ℱ (k + 1)`, the sequential null of Layer 4.5 is closed under fork-convex combinations, hence
+     contains the fork-convex hull of `iidNull S₁`. Without the measurability of `X k` this fails,
+     already for `S₁ = {Ber(1/2)}`.
    - Define fork-convex combinations and the closed fork-convex hull of a locally dominated null
      with respect to a reference measure, and prove that a process that is a nonnegative
      supermartingale for every member of `S` is one for every member of the closed fork-convex
@@ -699,6 +926,12 @@ filtration; an identity in place of Ville's inequality.
      of all laws, so that every process that is a nonnegative supermartingale under all i.i.d.
      Bernoulli laws is nonincreasing [RRLK22, Theorem 17]. This is the standard example of
      e-processes (Layer 9.1) that no single test supermartingale dominates.
+   - For a convex null every point of which is an atom of a member, the test supermartingales of
+     the i.i.d. null are exactly the betting supermartingales, products of one-step e-variables
+     chosen in the past, so they are the test supermartingales of the sequential null; for a null
+     of mutually absolutely continuous laws, the i.i.d. null and its closed fork-convex hull
+     contain the laws of independent observations with laws in the null; for all the coins, every
+     test supermartingale is nonincreasing, while e-processes with power exist [EVR26, Note 31].
 7. **Admissibility** [RRLK, Theorem 18, Proposition 9, Corollaries 26 and 29, Theorem 35].
    - Define admissibility as [RRLK, §4.2] does: `E'` dominates `E` when `P (E n ≤ E' n) = 1` for
      every `n` and `P ∈ S`, strictly when moreover `0 < P (E n < E' n)` for some `n` and `P ∈ S`;
@@ -708,15 +941,45 @@ filtration; an identity in place of Ville's inequality.
      `1` [RRLK, Corollary 26]. Derive the simple-null case, where the admissible e-processes are the test
      martingales with initial expectation `1` [RRLK, Theorem 18]. Composite nonnegative
      martingales with initial expectation `1` are admissible [RRLK, Corollary 29].
+   - An e-process is admissible exactly when, as a function on `ℕ × Ω` with `optionalSigma ℱ`, it
+     is an admissible e-variable of `stoppedNull ℱ S` (item 1); with the criterion of Layer 0.5
+     this gives a criterion for e-processes over the bounded stopping times [EVR26, Note 46].
+   - On a discrete tree, the room at a node, `r v = ⨅ {s^P v | P ∈ S, 0 < P v}`, is the largest
+     amount that can be added at `v`; an e-process is admissible exactly when the room is zero at
+     every relevant node [EVR26, Note 31].
    - Instance: `exp (∑ k < n, X k - n / 2)` is admissible for the null of conditionally
      `1`-sub-Gaussian increments [RRLK, Theorem 35]. It is also admissible for the smaller null of
      the i.i.d. laws whose marginal is `1`-sub-Gaussian ($\int e^{\lambda x}\,d\mu\le
      e^{\lambda^2/2}$ for every real `λ`) and has no atom, with `Filtration.piLE` [EVR26,
      Note 02], as [RRLK] conjectures.
 
+8. **E-processes that are optimal for a distribution over times** [KG22, Theorem 5; EVR26,
+   Note 40].
+   - For a null `S` of probability measures, a probability measure `Q` and a probability measure
+     `ρ` on `ℕ`, prove that some e-process `E*` for `S` has `∑' n, ρ {n} * ∫⁻ E n / E* n ∂Q ≤ 1` for
+     every e-process `E`; it maximizes the extended integral of `log (Function.uncurry E)` under the
+     mixture `∑' n, ρ {n} • stoppedLaw ℱ Q n`, and the maximum is `klInf` from that mixture to the
+     effective null of `stoppedNull ℱ S`. The proof applies Statlib's `exists_isNumeraire` and
+     `maxUtility_eq_iInf_klIntegral_effectiveSet` on `ℕ × Ω` with `optionalSigma ℱ`, through the
+     equivalence of item 1; no dominating measure is needed. For one stopping time `σ` in place of
+     `ρ` the statement reduces to the numeraire of the null trimmed to the σ-algebra at `σ`, since
+     `n ↦ Y * 𝟙{σ ≤ n}` is an e-process for every e-variable `Y` measurable at `σ`.
+   - The identity of [KG22, Theorem 5], with the mixtures of the stopped laws of the null on the
+     dual side, is false with finite mixtures on infinite spaces; it holds for dominated nulls with
+     countable mixtures, from the bipolar theorem of Layer 1.1, and on every space with the closure
+     of the mixtures among finitely additive measures, the countably additive part of a minimizer
+     dominating the projection [EVR26, Note 40, Theorem 3].
+   - Against an i.i.d. alternative whose one-step numeraire `X*` is finite, the product
+     `∏ k < n, X* (ω k)` is a numeraire at every bounded stopping time, for every null that contains
+     the products of members of `S₁` and for which it is an e-process; the proof uses Tonelli's
+     theorem coordinate by coordinate and no measurable selection [EVR26, Note 40, Theorem 5]. For a
+     simple i.i.d. null and an i.i.d. alternative with a singular part, no e-process is a numeraire
+     at every stopping time [EVR26, Note 40, Proposition 6].
+
 Generalization: arbitrary nulls with no domination and arbitrary filtrations, where [RW] defines
 e-processes on the natural filtration; validity at every stopping time with the value
-`stoppedValueLimsup` at infinity, where [RW] leaves the value at infinity undefined.
+`stoppedValueLimsup` at infinity, where [RW] leaves the value at infinity undefined; optimal
+e-processes for every null, where [KG22] assumes domination.
 
 ## Layer 4: Constructions of e-processes
 
@@ -814,14 +1077,34 @@ e-processes on the natural filtration; validity at every stopping time with the 
      asserts no measurability of `π k` in the past observations, and uses the validity of the
      e-process only at bounded stopping times and under the finitely supported members of the
      null.
-5. **Sequential numeraires** [GdHK24, Proposition 2, Corollary 1; KG22, Theorem 12].
-   - For a set `S₁` of probability measures on `𝓧`, define the sequential null of the laws under
-     which the conditional law of each observation `X k` given `ℱ k` lies in `S₁`; it contains the
-     laws of i.i.d. sequences with law in `S₁` and of independent sequences with laws in `S₁`, and
-     the sequential constraint null of item 4 is the case `S₁ = constraintNull Φ`.
-   - For a probability measure `Q₁` on `𝓧`, prove that $\prod_{k<n}X^*(X_k)$, with
-     `X* = numeraire Q₁ S₁` (Statlib), is a test supermartingale for every member of the
-     sequential null.
+5. **Sequential nulls and sequential numeraires** [GdHK24, Proposition 2, Corollary 1; KG22,
+   Theorem 12].
+   - For one-step nulls `S₁ : ℕ → Ω → Set (Measure 𝓧)` that may depend on the round and on the
+     past, define `sequentialNull S₁ X ℱ`: the probability measures `P` such that, for every `k`,
+     some kernel `κ` from `(Ω, ℱ k)` to `𝓧` has `HasCondDistrib (X k) id κ P` (the Conventions) and
+     `κ ω ∈ S₁ k ω` for `P`-almost every `ω`. LMLExplore's present `sequentialNull`, whose
+     conditional law (`HasCondLaw`) need not be measurable for the past, contains it with a
+     constant one-step null; the sequential constraint null of item 4 and the one-sided
+     conditionally sub-Gaussian null are its cases `S₁ = constraintNull Φ` and the sub-Gaussian
+     laws.
+   - Prove that, for a kernel `κ` from `(Ω, ℱ k)`, `HasCondDistrib (X k) id κ P` holds exactly
+     when LMLExplore's `HasCondLaw (X k) κ (ℱ k) P` does, so that the proofs written with the
+     set-integral identity apply; and that for a standard Borel `𝓧`, the coordinates
+     `X k ω = ω k` of `ℕ → 𝓧` with `Filtration.piLT` and any probability measure `P` on `ℕ → 𝓧`,
+     Mathlib's `condDistrib` of `ω k` given the first `k` coordinates, composed with the
+     restriction to them, is such a kernel.
+   - Define the dual form `condEVarNull 𝓔 X ℱ`: the probability measures under which every
+     `e (X k)`, `e ∈ 𝓔`, is a conditional e-variable given `ℱ k`. Prove the chain
+     `iidNull S₁ ⊆ indepNull S₁ ⊆ sequentialNull (fun _ _ ↦ S₁) X ℱ ⊆ condEVarNull 𝓔 X ℱ` for bets
+     `𝓔` of `S₁` and the coordinates `X` with their filtration, and that the law of a run of any
+     algorithm against any bandit of a class `𝓜` is in
+     `sequentialNull (fun k ω ↦ {ν (A k ω) | ν ∈ 𝓜}) Y filtrationAction`.
+   - For an alternative given by its conditional laws, prove that the product of the numeraires of
+     the conditional law of the alternative against the one-step null, at each round, is a test
+     supermartingale for every member of the sequential null, the numeraires being chosen jointly
+     measurable in the past and the observation (a hypothesis of the statement). For an i.i.d.
+     alternative `Q₁` and a constant one-step null of masses at most one, this is
+     $\prod_{k<n}X^*(X_k)$ with `X* = numeraire Q₁ S₁` (Statlib).
 
 Generalization: any filtration and any conditional law of the observations, where LMLExplore's
 predictor ratios use a finite alphabet and independent observations of one law; composite nulls
@@ -848,6 +1131,12 @@ on `[0, 1]`.
    - Universal confidence sequences from Layer 4.3.
 3. **Sub-ψ processes, line crossings and stitching** [HRMS20, Definition 1, Theorem 1; HRMS21,
    Definition 1, Theorem 1].
+   - **Exponential supermartingales for sub-ψ nulls.** On any measurable space, the exponential
+     process $\exp(\lambda\sum_{k<n}X_k-n\psi(\lambda))$ is a test supermartingale for
+     `condEVarNull` (Layer 4.5) of the bets $e^{\lambda x-\psi(\lambda)}$, and LMLExplore's
+     statements under conditional moment generating function bounds are the case of their
+     members; the Freedman, Hoeffding, sub-Gaussian and Bernoulli cases give confidence sequences
+     through Layer 5.2.
    - Define sub-ψ processes `(S, V)` with initial bound `l₀`: for each `λ ∈ [0, λ_max)` some
      supermartingale `L λ ≥ exp (λ S - ψ λ V)` with `L λ 0 ≤ l₀` [HRMS20, Definition 1]. The
      exponential supermartingales of Identification 4.2 and Freedman's (LMLExplore's
@@ -863,21 +1152,23 @@ on `[0, 1]`.
 Generalization: parameters of any type with set-valued truth, where [HRMS21] and [WSR24] state
 confidence sequences for a real functional.
 
-## Layer 6: Growth rates, power and expected stopping times
+## Layer 6: Growth rates, power, expected stopping times and designs
 
-The data are the coordinates of `ℕ → 𝓧` with the filtration `Filtration.piLE`, so that time `n`
-has seen `n + 1` observations, as in Statlib's `Testing/Sequential/`; the alternative is
-`Q = Measure.infinitePi (fun _ ↦ Q₁)` and the null contains the i.i.d. laws of `S₁`. Growth rates
-are per observation. Write
-$\mathrm{KL}_{\inf}(Q_1,\mathcal P_1)=\inf_{P\in\mathcal P_1}\mathrm{KL}(Q_1,P)$ in `ℝ≥0∞`, and
-`a n = maxUtility (Measure.pi (fun _ : Fin n ↦ Q₁)) {Measure.pi (fun _ ↦ P) | P ∈ S₁} logUtility`,
-the maximal expected logarithm of an `n`-sample e-variable, which Statlib's duality writes as the
-reverse information projection of `Q₁^{⊗n}` onto the effective null of the `n`-sample null. Write
+The data are the coordinates of `ℕ → 𝓧` with the filtration `Filtration.piLT` (item 1), so that
+time `n` has seen `n` observations; the alternative is `Q = Measure.infinitePi (fun _ ↦ Q₁)` and
+the null contains `iidNull S₁`. Growth rates are per observation. Write
+$\mathrm{KL}_{\inf}(Q_1,\mathcal P_1)$ for `klInf Q₁ S₁` (Layer 1.1), and
+`a n = maxEPower (Measure.pi (fun _ : Fin n ↦ Q₁)) (sampleNull S₁ n)`, the maximal expected
+logarithm of an `n`-sample e-variable, which Statlib's duality writes as `klInf` from `Q₁^{⊗n}` to
+the effective null of the `n`-sample null. Write
 `d` for the limit of `a n / n` (item 1); they are LMLExplore's `maxLogGrowth Q₁ S₁ n` and
 `bipolarRate Q₁ S₁`.
 
 1. **The optimal growth rate** [RR26, Proposition 3.1, Lemmas 3.2–3.3, Theorem 3.5, Theorem 4.1,
    Propositions 4.5, 5.4 and 7.1].
+   - **The clock.** Define `Filtration.piLT` on `ℕ → 𝓧`, LMLExplore's `Filtration.naturalLT` of the
+     coordinates, prove `piLT (n + 1) = piLE n`, and transport e-processes and test
+     supermartingales between the two filtrations by the shift.
    - Blockwise e-processes: for an increasing sequence of times `t k`, e-processes for the
      filtration `k ↦ ℱ (t k)`, lifted to `ℱ` [RR26, Definitions 2.3–2.5].
    - Prove that `a` is superadditive, from Statlib's `IsEVar.prod` [RR26, Lemma 3.2], so that
@@ -902,6 +1193,27 @@ reverse information projection of `Q₁^{⊗n}` onto the effective null of the `
      Proposition 7.1]. For `S₁` weakly compact and convex, `a 1 = KL_inf(Q₁, S₁)` [RR26,
      Proposition 4.5]; and for any nonempty `S₁`, if `KL_inf(Q₁, S₁) ≤ a 1` then `a n = n * a 1`
      for every `n`, so that `d = KL_inf(Q₁, S₁)` [EVR26, Note 11].
+   - The chain in one statement: `a 1 ≤ d ≤ KL_inf(Q₁, S₁)`, with equality on the right under the
+     semicontinuity criterion above. On a finite type `𝓧`, `d = KL_inf(Q₁, S₁)` for every null of
+     probability measures: `klDiv R P` is jointly lower semicontinuous and, for fixed `R`,
+     continuous in `P` with values in `[0, ∞]`, so `KL_inf(R, S₁)` equals `KL_inf` of the closure of
+     `S₁` and is lower semicontinuous in `R` by compactness, and the criterion applies; [RR26,
+     Theorem 4.1] assumes a finite `KL_inf` and weak lower semicontinuity. A weakly closed null on
+     `ℕ` can have `d ≤ log 2` and `KL_inf = ∞`: the laws `P j = ½ Q(· | ≠ j) + ½ δ_{j+1}` for
+     `Q {x} = 2^{-(x+1)}`; the gap is a failure of lower semicontinuity, not of closedness.
+   - On a countable type, `d` is the minimum of `∑' x, Q₁ {x} * log (Q₁ {x} / R {x})` over the
+     pointwise limits `R` of members of `S₁`, which are sub-probability measures: `d` is `klInf`
+     from `Q₁` to the pointwise closure of `S₁`; with probability measures only the corresponding
+     statement is false. On any measurable space,
+     `d = ⨆ k, ⨆ π, (1/k) * ⨅ P ∈ S₁, H_π (Q₁^k | P^k)` over the finite measurable partitions `π` of
+     the `k`-fold product, with `H_π` the relative entropy of the restrictions to `π` [EVR26,
+     Note 43].
+   - For a null that is a finite union of closed convex pieces of a parametric family, a test
+     supermartingale for the i.i.d. null is one for the i.i.d. null of the closed convex hull, so
+     its tests need `log (1/α) / a 1` observations in expectation and have no power inside the
+     hull; the minimum over the pieces of the likelihood ratios against the projections on the
+     pieces is an e-process whose `(1/n) log` tends to `KL_inf`, so that `d = KL_inf` there [EVR26,
+     Note 32].
    - The inequality `d ≤ KL_inf(Q₁, S₁)` can be strict [RR26, Proposition 5.4], and one
      observation may carry no evidence when `d = KL_inf(Q₁, S₁) > 0`. Instances on the circle
      `ℝ / ℤ`, with `Q₁` its Lebesgue measure and `ε ∈ (0, 1]`: for the null of the laws
@@ -945,6 +1257,14 @@ reverse information projection of `Q₁^{⊗n}` onto the effective null of the `
      $\int Q'^{\otimes n}\,\nu(dQ')$ have `(1/n) log` tending to `d(Q₁)` almost surely under the
      i.i.d. law of `Q₁` [EVR26, Note 14]: the asymptotic log-optimality of the mixture numeraires
      that [RW, Chapter 6] conjectures, with the rate `d`.
+   - **Block bets for a class of alternatives.** The lemma behind the previous bullet, as a
+     statement of its own: for a countably generated `𝓧`, any null and a σ-finite `ρ`, there are
+     bounded measurable `g i` on `𝓧^{m i}` with `∫ e^{g i} dP^{⊗ m i} ≤ 1` on the null and
+     `⨆ i, (1 / m i) ∫ g i dQ^{⊗ m i} = d Q` for every probability measure `Q ≪ ρ` [EVR26,
+     Note 13]. Item 3 and item 4 use it.
+   - **Bahadur slopes.** For every sequence of p-variables `p n` of the `n`-sample nulls,
+     `limsup (1/n) log (1 / p n) ≤ d` almost surely under `Q`, with convergence to `d` for the
+     inverses of the numeraires, so that the best exact slope in Bahadur's sense is `2 d`.
 2. **Power one** [Ram26, Theorem 3.1, Corollaries 3.2 and 3.6; RR26, Theorem 3.14, Lemma 3.9; RW,
    Proposition 3.12, Theorem 3.14].
    - Prove [Ram26, Theorem 3.1] for i.i.d. data on any measurable space, a null `S₁` and a set of
@@ -983,25 +1303,32 @@ reverse information projection of `Q₁^{⊗n}` onto the effective null of the `
    Corollary 2.4; Gut09].
    - Lower bound: for every level-`α` sequential test `τ` for the null (`P (τ < ∞) ≤ α` for the
      i.i.d. laws of `S₁`), the expected number of observations satisfies
-     $\mathbb E_Q[\tau+1]\ge\log(1/\alpha)/d$, with `d` the rate of item 1, for any `S₁` and
+     $\mathbb E_Q[\tau]\ge\log(1/\alpha)/d$, with `d` the rate of item 1, for any `S₁` and
      `Q₁`; the expectation is infinite when `d = 0` [EVR26, Note 01]. This is the case
      `E n = α⁻¹ * 𝟙{τ ≤ n}` of a Wald inequality: for every e-process `E` for the null and every
      stopping time `τ` with values in `ℕ`,
-     $\mathbb E_Q[\log E_\tau]\le d\,\mathbb E_Q[\tau+1]$ in `EReal`, with Statlib's `∫ᵉ` on the
+     $\mathbb E_Q[\log E_\tau]\le d\,\mathbb E_Q[\tau]$ in `EReal`, with Statlib's `∫ᵉ` on the
      left [EVR26, Note 01]. Its proof restarts the e-process `k` times on fresh observations: the
-     product of the `k` rounds, frozen at a time `N` close to `k` times the mean of `τ + 1`, is an
+     product of the `k` rounds, frozen at a time `N` close to `k` times the mean of `τ`, is an
      `N`-sample e-variable, whose expected logarithm is at most `a N ≤ N * d`. Since
      `d ≤ KL_inf(Q₁, S₁)`, this contains
-     $\mathbb E_Q[\tau+1]\ge\log(1/\alpha)/\mathrm{KL}_{\inf}(Q_1,\mathcal P_1)$. For a family
+     $\mathbb E_Q[\tau]\ge\log(1/\alpha)/\mathrm{KL}_{\inf}(Q_1,\mathcal P_1)$. For a family
      `(τ α)` of level-`α` tests, prove the almost sure form
      `liminf (τ (exp (-n)) / n) ≥ 1 / KL_inf(Q₁, S₁)` `Q`-almost surely [ARR26, Theorem 3.1].
    - The bound with `d` is attained to first order: for every real `d' > 0` strictly below `d`
      there are level-`α` tests `τ α`, `α ∈ (0, 1)`, with
-     $\limsup_{\alpha\to0}\mathbb E_Q[\tau_\alpha+1]/\log(1/\alpha)\le1/d'$; they bet an
+     $\limsup_{\alpha\to0}\mathbb E_Q[\tau_\alpha]/\log(1/\alpha)\le1/d'$; they bet an
      `m`-sample e-variable on successive blocks of `m` observations and stop when the product
      reaches `α⁻¹` [EVR26, Note 01]. The bound with $\mathrm{KL}_{\inf}$ is not attained in
      general: for the null of [RR26, Proposition 5.4], $\mathrm{KL}_{\inf}>1/2$ and no power-one
      test exists (item 2).
+   - **One test for every dominated alternative.** Under the hypotheses of the block bets of
+     item 1, one nondecreasing e-process, built from those bets with the adjusted running maximum
+     of [RW, Section 7.9], gives tests `τ α = inf {n | α⁻¹ ≤ E n}` with
+     `E_Q[τ α] / log (1/α) → 1 / d Q` and `τ α / log (1/α) → 1 / d Q` almost surely, for every
+     `Q ≪ ρ` with `0 < d Q < ∞`: the bound of the first bullet is attained in expectation at every
+     dominated alternative at once. The proof uses Wald's identity for one block bet with values in
+     a compact interval of `(0, ∞)` [EVR26, Note 13].
    - **First passage times.** For i.i.d. real increments with mean $D\in(0,\infty)$, the first time
      the partial sums reach `a` has expectation equivalent to `a / D` as `a → ∞` [Gut09]. Tau
      Ceti's elementary renewal theorem covers nonnegative increments; prove the signed case.
@@ -1028,12 +1355,50 @@ reverse information projection of `Q₁^{⊗n}` onto the effective null of the `
      at the second round with positive probability when `Q₁ {0} > 0` and `Q₁ (1, ∞) > 0`
      [EVR26, Note 07].
 
+4. **Designs** [GK16, Theorem 1; KCG16, Lemma 1; EVR26, Notes 41 and 49]. Data collected by an
+   algorithm that chooses which of finitely many sources to observe, as in the Conventions
+   (adaptively collected data).
+   - **Definitions.** An e-variable at a stopping time `τ` for a set `Λ` of instances is an
+     `ℋ τ`-measurable `Y : Ω → ℝ≥0∞` with `∫⁻ Y * 𝟙{τ < ⊤} ∂P_λ ≤ 1` for every `λ ∈ Λ`, with `P_λ`
+     the law of the run against `λ`. For `n : α → ℕ`, `a n` is the largest expected logarithm
+     under `⊗ a, (μ a)^{⊗ n a}` of an e-variable for the null `{⊗ a, (λ a)^{⊗ n a} | λ ∈ Λ}`;
+     `D* = ⨆ n ≠ 0, a n / ∑ a, n a`, and `D̄ x` is the growth of the designs proportional to
+     `x : α → ℝ≥0`. Prove that `a` is monotone and that `a (m • r)` is the `m`-sample value of the
+     null of blocks of shape `r`, so that `D* = ⨆ r ≠ 0, d (μ^(r), Λ^(r)) / |r|` with the rate `d`
+     of item 1, and `D* = d` for one source.
+   - **The Wald inequality with a design** [EVR26, Note 41]. If `E_μ[τ] < ∞`, then
+     `∫ᵉ log Y ∂P_μ ≤ D̄ (E_μ[N τ]) ≤ D* * E_μ[τ]`, with `N τ` the vector of the numbers of
+     observations of each source; if only `τ < ⊤` almost surely, the second bound still holds. The
+     proof runs the algorithm on disjoint rectangles of a table of observations and compares with a
+     design, as the proof of the Wald inequality of item 3, with the restart at a vector of counts.
+     It contains the Wald inequality of item 3 (one source) and, through
+     `a n ≤ ⨅ λ ∈ Λ, ∑ a, n a * klDiv (μ a) (λ a)`, the transportation lemma of Identification 2.2
+     [KCG16, Lemma 1] for stopping times of finite mean, for e-variables rather than events.
+   - **Consequences** [EVR26, Note 41]. A `δ`-correct algorithm (Identification 0.2) with
+     `δ ≤ 1/2` that stops almost surely at `μ` has `E_μ[τ] ≥ kl(δ, 1-δ) / D*` and
+     `kl(δ, 1-δ) ≤ D̄ (E_μ[N τ])`, with `D*` for `Λ` the alternatives of `μ`, and
+     `D* ≤ 1 / T* μ`, so that this is the sharp form of [GK16, Theorem 1]. For testing a known
+     instance, blocks of a near-optimal shape with the tests of item 3 attain `log (1/δ) / D*` to
+     first order, and no sampling rule does better. If `δ`-correct algorithms attain `c` at `μ`,
+     then `D* ≥ 1 / c`; with Identification 5.2 this gives `D* = 1 / T*` for best arm
+     identification in exponential families.
+   - **When `D*` is the entropy constant** [EVR26, Note 41]. On finite alphabets `D* = 1 / T* μ`,
+     and `D̄ x = ⨅ λ ∈ Λ, ∑ a, x a * klDiv (μ a) (λ a)`, from the finite-alphabet equality of
+     item 1; on countable alphabets `D*` is the same supremum with `klIntegral` in place of `klDiv`
+     and the pointwise closure of `Λ`, from the countable-alphabet description of item 1.
+   - **Instances with `D* < 1 / T*`** [EVR26, Note 41]: one source on `ℕ` against the null of
+     item 1 with `d ≤ log 2` and `KL_inf = ∞`, where `T* = 0` and `D* = log 2`; two sources, that
+     one and a Bernoulli one, where `D* ≈ 0.169` and `1 / T* = log (5/4) ≈ 0.223`. In such models
+     no algorithm attains the entropy bound, and the algorithm of Identification 5.4 attains `D*`.
+
 Generalization: arbitrary i.i.d. composite nulls with no domination, convexity or compactness, for
 the growth rate and the existence of power-one tests [RR26], where [RW, Proposition 7.12] and
 [WSJ26] treat a simple null and portfolio nulls; the rate `d` in the almost sure bound, the Stein
 lemma and the bounds on expected stopping times, where [WSJ26] and [ARR26] have
 $\mathrm{KL}_{\inf}$, which can be larger; the equality of `d` and $\mathrm{KL}_{\inf}$ on any
-measurable space, where [RR26] assumes a Polish space.
+measurable space, where [RR26] assumes a Polish space; the Wald inequality with a design for any
+observation spaces, any set of instances and the rate of blocks of observations, where [GK16]
+and [KCG16] state relative entropies for exponential families or real rewards.
 
 ## Layer 7: Merging e-values
 
@@ -1044,6 +1409,11 @@ measurable space, where [RR26] assumes a Polish space.
      expectation at most `1`. Prove that `F ∘ E` is an e-variable for every null on every
      measurable space and all e-variables `E i`, with no assumption on their dependence: the law of
      `E` under each member is such a `μ`.
+   - Define `mergingNull 𝒞`, for a set `𝒞` of measures on `ι → ℝ≥0∞`, the probability measures of
+     `𝒞` whose coordinates have expectation at most `1`, and prove
+     `IsEMerging F ↔ IsEVar F (mergingNull univ)`: merging functions are bets for a null on the
+     space of values, and an e-merging function is a merging function for every smaller set of
+     joint laws.
    - Values of merging functions at infinite arguments are irrelevant (e-variables are almost
      surely finite): domination and admissibility are statements on `ι → ℝ≥0`.
    - Prove that every e-merging function, monotone or not, is at most a weighted mean
@@ -1052,12 +1422,19 @@ measurable space, where [RR26] assumes a Polish space.
      are exactly the $M_\lambda$ [Wan25, Theorem 1; RW, Theorem 8.4]. Derive the symmetric case
      [VW21, Theorem 3.2] and the essential domination of symmetric e-merging functions by the
      arithmetic mean [VW21, Proposition 3.1; RW, Proposition 8.3].
+   - Derive the domination by weighted means also from the complete class theorem of Layer 1.4,
+     for the constraints `e i - 1` on `ι → ℝ≥0`, which admit no arbitrage on the whole type
+     [Cle26b, closing remark]. The derivation uses finite values: on `ι → ℝ≥0∞` the Dirac mass at
+     the point with every coordinate infinite is in the constraint null and not in
+     `mergingNull univ`.
 2. **Independent, co-valid and sequential e-values** [VW24, Proposition 1, Lemma 2, Theorems 1–3,
    Corollary 1; VW21, Propositions 4.1–4.2; MRS+26, Definition 3.1, Theorem 3.3; RW,
    Definitions 8.5, 8.9–8.10, Propositions 8.7 and 8.11, Theorem 8.12].
-   - Define ie-merging functions (laws that are products of laws with expectation at most `1`) and
-     se-merging functions (laws under which each coordinate is a conditional e-variable given the
-     previous ones, for `ι = Fin K`).
+   - Define ie-merging functions and se-merging functions as the e-variables of `mergingNull 𝒞`
+     (item 1) for `𝒞` the products of laws, and, for `ι = Fin K`, the laws under which each
+     coordinate has conditional mean at most one given the previous ones. The first null is the
+     e-variables of a product of constraint nulls, which is not convex, as is the null of the
+     i.i.d. samples of Layer 1.1.
    - Prove that the martingale merging functions $\prod_k(1-\lambda_k+\lambda_ke_k)$, with
      $\lambda_k\in[0,1]$ depending on $e_{<k}$, are se-merging (Layer 2.1) and that every
      se-merging function is dominated by one [VW24, Theorem 1], so that they are exactly the
@@ -1086,9 +1463,8 @@ measurable space, where [RR26] assumes a Polish space.
    admissible, for admissible calibrators `h`, with `0 * ∞ = ∞` in $h(p)e$.
 
 4. **Exchangeable e-values** [RM26; Wan25, Section 4 (d)]. For `ι = Fin K`, define the merging
-   functions for exchangeable e-values: the measurable `F` with `∫⁻ e, F e ∂μ ≤ 1` for every
-   probability measure `μ` on `ι → ℝ≥0∞` that is invariant under the permutations of the
-   coordinates and whose coordinates have expectation at most `1`.
+   functions for exchangeable e-values as the e-variables of `mergingNull 𝒞` for `𝒞` the
+   measures on `ι → ℝ≥0∞` that are invariant under the permutations of the coordinates.
    - Prove that a measurable `F` is one exactly when, for some `l ∈ [0, 1]`, its symmetrization
      `(∑ σ : Equiv.Perm ι, F (e ∘ σ)) / K !` is at most `(1 - l) + l * (∑ i, e i) / K` at every
      point `e` with finite coordinates [EVR26, Note 09].
@@ -1138,6 +1514,8 @@ measure `P` on `Ω`, with no assumption on the dependence of the e-values.
 2. **Compound e-values and e-BH** [IWR, Definition 2.1, Theorems 2.3, 4.3 and 4.4; WR22,
    Propositions 1–2, Theorem 2, §5.1; RW, Definitions 9.1, 9.8–9.9, Theorems 9.11 and 9.18–9.19,
    Proposition 9.16; XSF+26, Proposition 26].
+   - An e-collection is a family indexed by the truth (Conventions): prove
+     `IsECollection e H ↔ e ∅ = 0 ∧ ∀ N, IsEVar (e N) {P | IsProbabilityMeasure P ∧ trueNulls H P = N}`.
    - For finitely many hypotheses, `K = Fintype.card ι`, define `IsCompoundEVar E H`:
      `∑ i ∈ N P, ∫⁻ E i ∂P ≤ K` for every `P`. Unfolding the definitions, `S ↦ ∑ i ∈ S, E i / K`
      is an e-collection exactly when `E` is compound, and every self-consistent set `R` has
@@ -1154,6 +1532,16 @@ measure `P` on `Ω`, with no assumption on the dependence of the e-values.
    - Universality: every rejection procedure with false discovery rate at most `α` is e-BH applied
      to the compound e-variables `K * 𝟙{i ∈ R} / (α * max #R 1)` [IWR, Theorem 4.4; RW,
      Theorems 9.18–9.19].
+   - **Adaptive e-BH** [EVR26, Note 33; MD26; IWR26]. For independent `Y i ∈ [0, 1]` with means at
+     least `q`, `E[1 / (1 + ∑ i, Y i)] ≤ (1 - (1 - q)^{m+1}) / ((m + 1) q)`. Deduce that the
+     e-values divided by a null-proportion estimate `π̂₀` are compound e-variables when the e-values
+     of the true hypotheses are independent, so that every set self-consistent at the level
+     `α / π̂₀`, in particular e-BH at that level, controls the false discovery rate at `α`; with a
+     leave-one-out improvement, and the class of functions that can replace the estimate.
+   - **Rounding e-values** [EVR26, Note 30; XR23]. The largest expected number of rejections of a
+     rounding scheme of e-values is an explicit value `V x`, attained by a nested scheme; U-eBH is
+     optimal among the comonotone schemes, which include the joint stochastic rounding of [XR23],
+     and not among all.
 3. **Closed e-BH, closed BH, closed testing for the family-wise error rate and online e-BH**
    [XSF+26, Theorem 17, Lemma 52; RW, Definition 9.31, Theorem 9.32; Goe26, Theorems 5, 8, 12
    and 13; HL25, Proposition 2.2, Theorems 2.3–2.5; VW21, Theorem 5.1; VW23; XFR26, Theorem 1;
@@ -1187,6 +1575,12 @@ measure `P` on `Ω`, with no assumption on the dependence of the e-values.
      the condition fails [Goe26, Theorem 13].
    - The online closed procedure SeqE-Guard for sequential e-variables controls the true
      discoveries uniformly in time [FR25, Theorem 3.1].
+   - **BH at random times** [EVR26, Note 34; Su18, Theorems 2 and 3; FXR26]. For p-processes whose
+     running infima satisfy the Simes inequality on the true hypotheses, the set that BH rejects
+     at any time is self-consistent for the running infima, and at every random time `T`, a stopping
+     time or not, `E[FDP T] ≤ E[sup t, FDP t] ≤ a (1 + log (1/a))` with `a = π₀ α`, and `≤ α` when
+     every hypothesis is true; the clock instance shows that the bound is attained at a stopping
+     time, and a time independent of the true hypotheses can lose the level.
 4. **False coverage rate** [RW, Definitions 13.1 and 13.6, Theorem 13.7; XWR24]. Define
    e-confidence intervals `{θ | E θ < α⁻¹}`, level-free when `E` does not depend on `α`
    [RW, Definition 13.1], and the e-BY procedure [RW, Definition 13.6], and prove that for
@@ -1286,6 +1680,16 @@ symmetry separately.
   and [RR26, Theorem 3.14] the case of one alternative of Layer 6.2.
 - `LMLExplore.predictorLikelihoodRatio` and its three theorems are derived from Layer 4.2, and
   Statlib's `IsEVar.prod` is the product case of Layer 0.1.
+- For a null of probability measures `klInf` is `⨅ P ∈ S, klDiv Q P`, and
+  `maxEPower Q S = klInf Q (effectiveSet S)` is Statlib's duality; the effective null is
+  `polarNull {X | IsEVar X S}` by definition.
+- The closure properties of e-processes of Layer 3.2 that hold for e-variables follow from
+  `IsEProcess E ℱ S ↔ IsEVar (Function.uncurry E) (stoppedNull ℱ S)` (Layer 3.1).
+- The domination of e-merging functions by weighted means (Layer 7.1) is also a case of the complete
+  class theorem of Layer 1.4.
+- The Wald inequality of Layer 6.3 is the case of one source of Layer 6.4, and the transportation
+  lemma of Identification 2.2, for stopping times of finite mean, and the lower bound of
+  Identification 2.3 follow from Layer 6.4.
 
 Compilation of the suggested signatures checks their types, not the truth of their admitted
 theorems or the completion of these milestones.
@@ -1321,16 +1725,19 @@ Original sources cited in the layers:
 - [DdRSSVV11] A. P. Dawid, S. de Rooij, G. Shafer, A. Shen, N. Vereshchagin and V. Vovk, *Insuring
   against loss of evidence in game-theoretic probability*, Statist. Probab. Lett. 81 (2011)
   (Layer 3.4).
+- [Del06] F. Delbaen, *The structure of m-stable sets and in particular of the set of risk neutral
+  measures*, In Memoriam Paul-André Meyer, Séminaire de Probabilités XXXIX, Lecture Notes in Math.
+  1874, Springer, 2006, 215–258 (Layer 3.6).
 - [dH26] R. de Heide, *Dynamic e-closure for online hypotheses with any-time-valid evidence:
   closure principles and projective mergers*, arXiv:2608.09927v1 (Layer 8).
 - [dlP+26] V. H. de la Peña, M. J. Klass, V. H. de la Peña, A. Ly, A. Neishloss and Y. Lin, *The
   exact Ville identity with applications to e-values*, arXiv:2607.04620v2 (Layer 2.3).
 - [DR67] D. A. Darling and H. Robbins, *Confidence sequences for mean, variance, and median*,
   PNAS 58 (1967) (Layer 5.1).
-- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 34 and
+- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 49 and
   the Lean library `EValuesResearch` of github.com/RemyDegenne/evalues_research, 2026; written and
-  refereed by AI agents, with the results cited here proved in Lean (Existing formalizations)
-  (Layers 1–4, 6–8).
+  refereed by AI agents, with part of the results cited here proved in Lean (Existing
+  formalizations) (Layers 0–8).
 - [FR25] L. Fischer and A. Ramdas, *Admissible online closed testing must employ e-values*,
   arXiv:2407.15733v4 (Layer 8.3).
 - [FS16] H. Föllmer and A. Schied, *Stochastic Finance: An Introduction in Discrete Time*, 4th
@@ -1343,6 +1750,8 @@ Original sources cited in the layers:
   arXiv:2606.01854v2 (Layer 8.3).
 - [GdHK24] P. Grünwald, R. de Heide and W. M. Koolen, *Safe testing*, J. R. Stat. Soc. Ser. B 86
   (2024), arXiv:1906.07801 (Layers 1.2, 2.1, 4.5).
+- [GK16] A. Garivier and E. Kaufmann, *Optimal best arm identification with fixed confidence*,
+  COLT 2016, arXiv:1602.04589 (Layer 6.4).
 - [GLHBdJ24] P. Grünwald, T. Lardy, Y. Hao, S. K. Bar-Lev and M. de Jong, *Optimal e-values for
   exponential families: the simple case*, arXiv:2404.19465v2 (Layer 1.5).
 - [Gru24] P. Grünwald, *Beyond Neyman–Pearson: e-values enable hypothesis testing with a
@@ -1363,6 +1772,10 @@ Original sources cited in the layers:
   and empirical Bayes*, arXiv:2409.19812v4 (Layer 8.2).
 - [IWR24] N. Ignatiadis, R. Wang and A. Ramdas, *E-values as unnormalized weights in multiple
   testing*, Biometrika 111 (2024), arXiv:2204.12447v6 (Layer 7.3).
+- [IWR26] N. Ignatiadis, R. Wang and A. Ramdas, *Tiny but uniform improvements of adaptive BH
+  procedures via compound e-values*, arXiv:2603.21424 (Layer 8.2).
+- [KCG16] E. Kaufmann, O. Cappé and A. Garivier, *On the complexity of best-arm identification in
+  multi-armed bandit models*, J. Mach. Learn. Res. 17 (2016), arXiv:1407.4443 (Layer 6.4).
 - [KG22] W. M. Koolen and P. Grünwald, *Log-optimal anytime-valid e-values*, Int. J. Approx.
   Reason. 141 (2022) (Layers 1.2, 4.5).
 - [Kon23] N. W. Koning, *Post-hoc α hypothesis testing and the post-hoc p-value*,
@@ -1378,6 +1791,8 @@ Original sources cited in the layers:
 - [LRR26] M. Larsson, A. Ramdas and J. Ruf, *Testing hypotheses generated by constraints*, Math.
   Oper. Res. (2026), arXiv:2504.02974v5 (Layers 1.4, 4.4, 9.1).
 - [Lue69] D. G. Luenberger, *Optimization by Vector Space Methods*, Wiley, 1969 (Layer 1.4).
+- [MD26] I. Meah and S. Döhler, *Improved null proportion estimators for multiple discrete tests
+  with plug-in FDR control*, Comput. Statist. Data Anal. 224 (2026), arXiv:2307.13557 (Layer 8.2).
 - [MRS+26] W. Ming, A. Ramdas, Y. Shen, R. Wang and I. Waudby-Smith, *Combining e-values using
   demi-supermartingales*, arXiv:2603.10329v4 (Layer 7.2).
 - [PBKR23] A. Podkopaev, P. Blöbaum, S. Kasiviswanathan and A. Ramdas, *Sequential kernelized
@@ -1413,6 +1828,7 @@ Original sources cited in the layers:
   arXiv:2310.14293 (Layer 9.1).
 - [SRR24] J. Shin, A. Ramdas and A. Rinaldo, *E-detectors: a nonparametric framework for sequential
   change detection*, New England J. Statist. Data Sci. 2 (2024), arXiv:2203.03532 (Layer 9.3).
+- [Su18] W. J. Su, *The FDR-linking theorem*, arXiv:1812.08965 (Layer 8.3).
 - [TGdH25] Y. Tavyrikov, J. J. Goeman and R. de Heide, *Carefree multiple testing with
   e-processes*, arXiv:2501.19360 (Layer 8.3).
 - [Vil39] J. Ville, *Étude critique de la notion de collectif*, Gauthier-Villars, 1939
@@ -1450,6 +1866,8 @@ Original sources cited in the layers:
   Ann. Math. Statist. 19 (1948) (outside the roadmap).
 - [XFR26] Z. Xu, L. Fischer and A. Ramdas, *Improving online FDR procedures via online analogs of
   e-closure and compound e-values*, arXiv:2603.24792v3 (Layer 8.3).
+- [XR23] Z. Xu and A. Ramdas, *More powerful multiple testing under dependence via randomization*,
+  arXiv:2305.11126 (Layer 8.2).
 - [XR24] Z. Xu and A. Ramdas, *Online multiple testing with e-values*, AISTATS 2024,
   arXiv:2311.06412 (Layer 8.3).
 - [XSF+26] Z. Xu, A. Solari, L. Fischer, R. de Heide, A. Ramdas and J. Goeman, *Bringing closure to

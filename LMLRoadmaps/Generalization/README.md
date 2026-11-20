@@ -32,14 +32,16 @@ In scope:
   `LMLExplore/Probability/Martingale/SelfNormalized.lean`;
 - dynamic programming and Markov decision processes: `LMLExplore/Analysis/FixedPoint/`,
   `LMLExplore/Probability/Kernel/Resolvent.lean` and `LMLExplore/MarkovDecisionProcess/`;
+- e-values: `LMLExplore/EValues/`, and the files of `LMLExplore/Probability/Martingale/` and
+  `Probability/Process/` that it shares with the bandit areas;
 - declarations of LMLExplore that Tau Ceti provides at the pinned version (Layer 2). LMLExplore's
   scan for overlaps covers Mathlib only.
 
-**Relation to the other roadmaps.** The Identification, Bandits, OnlineLearning and
-ReinforcementLearning roadmaps specify the mathematics, and each target here points to the item that
-specifies its general form. This roadmap restates merged code in that generality and adds no item of
-those roadmaps. Where a target needs a general statement that is not merged, it lists that item as a
-prerequisite.
+**Relation to the other roadmaps.** The Identification, Bandits, OnlineLearning,
+ReinforcementLearning and EValues roadmaps specify the mathematics, and each target here points to
+the item that specifies its general form. This roadmap restates merged code in that generality and
+adds no item of those roadmaps. Where a target needs a general statement that is not merged, it
+lists that item as a prerequisite.
 
 **Restatements that the other roadmaps own.** Some items of the other roadmaps specify a general
 statement that LMLExplore does not have yet, and say which merged declarations become its
@@ -111,8 +113,8 @@ targets here:
 
 | Layer | Content | Prerequisites | Unblocks |
 | --- | --- | --- | --- |
-| 0 | Generalizations that new work builds on | merged LMLExplore code | Identification 1.1, 1.4, 2.1, 4.1–4.5, 5, 6, 7, 9.1; Bandits 6.3–6.6, 7, 8.2–8.5, 9, 10; ReinforcementLearning 6, 8–12, 23 |
-| 1 | Consolidation of finished developments | Layer 0 targets as listed; Identification 0.5, 1.1, 3.6; ReinforcementLearning 0.6, 8.1 | Identification 3.6, 4.4, 5.2–5.3, 7, 8.1–8.2; Bandits 4.5, 6.4, 7.2–7.4, 8.4; ReinforcementLearning 1.4–1.5, 9.4, 10, 12.2 |
+| 0 | Generalizations that new work builds on | merged LMLExplore code; EValues 0.1, 0.5, 0.6, 1.1, 3.2, 3.3, 4.5, 6.1 for the e-values targets | Identification 1.1, 1.4, 2.1, 4, 5, 6, 7, 9.1; Bandits 6.3–6.6, 7, 8.2–8.5, 9, 10; ReinforcementLearning 6, 8–12, 23; EValues 1.1, 1.3, 3.6, 4.4, 5.3, 6.1–6.4 |
+| 1 | Consolidation of finished developments | Layer 0 targets as listed; Identification 0.5, 1.1, 3.6; ReinforcementLearning 0.6, 8.1; EValues 0.1, 0.2, 1.2, 1.4, 5.3, 6.4, 7, 8; Bandits 4.4 | Identification 3.6, 4.2, 4.4, 5.2–5.3, 7, 8.1–8.2; Bandits 4.5, 6.4, 7.2–7.4, 8.4; ReinforcementLearning 1.4–1.5, 9.4, 10, 12.2; EValues 6.1, 6.3, 6.4 |
 | 2 | Material Tau Ceti provides | merged LMLExplore code | none |
 
 ## Layer 0: Generalizations that new work builds on
@@ -350,6 +352,116 @@ targets here:
       `Episodic/PerformanceDifference.lean`, `Occupancy.lean`, `Episodic/Pessimism.lean`,
       `Episodic/Value.lean` and `Comparison.lean`.
     - Unblocks: ReinforcementLearning 7.3–7.6, 8.2–8.4, 11.4, 12.
+
+### E-values
+
+17. **Operations on nulls.** Prerequisite: EValues 0.6.
+    - Restate `maxLogGrowth`, `bipolarRate` and every statement that writes one of the images of
+      EValues 0.6 inline with `sampleNull`, `iidNull`, `indepNull`, `mapNull` and the product of
+      two nulls: at `05afda8`, 50 occurrences of the `n`-sample image in 11 files and 28 of the
+      i.i.d. image in 9 files, the independent image, and the three spellings of the image by a
+      map. Replace the private `isProbabilityMeasure_of_mem_image_pi`
+      (`EffectiveSet/TotalVariation.lean`) and `measure_univ_le_one_of_mem_image_pi`
+      (`BipolarRate/Basic.lean`) by the membership lemmas of `sampleNull`.
+    - Why: no inclusion between two sequential nulls can be stated while they are written inline.
+    - Unblocks: the other e-values targets; EValues 6.1.
+18. **The polarity, and the hypotheses that the pairing makes unnecessary.** After 0.17.
+    Prerequisite: EValues 0.6.
+    - Derive `effectiveSet_mono`, `convexHull_subset_effectiveSet`, `isLowerSet_effectiveSet`,
+      `mem_effectiveSet_of_tendsto` and `maxUtility_eq_zero_of_mem_effectiveSet`
+      (`EffectiveSet/Basic.lean`) from the properties of polars and
+      `effectiveSet S = polarNull {X | IsEVar X S}`. Delete `IsEVar.effectiveSet_inter`,
+      `isEVar_effectiveSet_inter_iff` and `effectiveSet_effectiveSet_inter`, stated for the
+      probability measures of the effective null: Statlib's `isEVar_effectiveSet_iff` and
+      `effectiveSet_effectiveSet` hold for the whole effective null of every null, and give them.
+    - Sort the 98 theorems that carry `∀ P ∈ S, IsProbabilityMeasure P` (33 files at `05afda8`).
+      Remove the hypothesis where the proof no longer uses it, including where it is introduced by
+      `have := hS P hP` before a lemma that no longer needs the instance (`IsEVar.isPVar_inv` is
+      one, which the linters do not report); weaken it to `∀ P ∈ S, P univ ≤ 1` where the proof
+      only bets the constant `1`; keep it where a member is normalized or compared with a
+      conditional expectation, as in `IsEProcess.isCondEVar_of_one_le`.
+    - Why: the effective null is a bipolar and nothing says so; four files prove properties of
+      bipolars that hold for every polar.
+    - Unblocks: the bipolar theorem of EValues 1.1; targets 1.26, 1.27, 1.29.
+19. **The quasi-sure filter.** After 0.18. Prerequisites: EValues 0.5, 0.6.
+    - Restate with `=ᶠ[quasiSure S]` and `≤ᶠ[quasiSure S]` the statements that write "almost
+      surely under every member": the `congr` and `mono_ae` lemmas of `IsPVar`, `IsCondEVar`,
+      `IsTestSupermartingale` and `IsEProcess`, and the conclusions of the complete class theorems
+      (`ConstraintNull/CompleteClass.lean`, `ConstraintNull/Admissible.lean`).
+    - Restate `IsAdmissibleEVar`, `IsAdmissiblePToECalibrator`, `IsAdmissibleEMerging` and
+      `IsAdmissibleEProcess` with the one notion of admissibility of EValues 0.5 (Mathlib's
+      `Maximal` where the order is pointwise), and prove the minimal complete class lemma
+      [LRR26, Lemma 6.2] once.
+    - Restate `forall_ae_iff_of_noArbitrageOn` as: the quasi-sure filter of the constraint null is
+      the principal filter of the set that carries it. The pointwise and the quasi-sure forms of
+      each complete class theorem then follow from one another.
+    - Why: four definitions of admissibility, and eight structures with their own `congr`.
+20. **Tests.** Prerequisite: EValues 0.1.
+    - Restate `IsEVar.lintegral_indicator_le` and `IsEVar.lintegral_min_mul_le` as "the tests
+      `𝟙{α⁻¹ ≤ E}` and `min (α E) 1` have level `α`", and `exists_powered_test_iff`,
+      `IsPostHocValid.lintegral_le`, `isECollection_indicator` and
+      `measure_pi_le_of_forall_exists_etvDist_lt` with `IsTest`.
+    - Why: "level-`α` test" is written in five shapes.
+    - Unblocks: EValues 1.3.
+21. **`klInf` and `maxEPower`.** Prerequisite: EValues 1.1.
+    - Migrate the occurrences of `maxUtility _ _ logUtility` (16 at `05afda8`) to `maxEPower` and
+      the 12 of `⨅ P ∈ S, klDiv Q P`, with their casts to `EReal`, to `klInf` through
+      `klInf_eq_iInf_klDiv`. Prove that `dInf` (`Bandits/LaiRobbins.lean`), `kInfLower` and
+      `kInfUpper` (`Identification/Task/ProductModel.lean`) are `klInf` of their sets of laws.
+    - Why: one name for a quantity the library defines three times.
+22. **Nonnegative supermartingales for a family of measures, in `Probability/`.**
+    - Move `IsENNSupermartingale`, `IsTestSupermartingale`, `IsTestMartingale` with their basic
+      API, and `IsCondEVar`, `IsExactCondEVar`, to `Probability/Martingale/`, in one namespace.
+      Derive `MeasureTheory.Supermartingale.measure_exists_le_le` (`Martingale/Ville.lean`) from
+      `IsENNSupermartingale.measure_exists_le_le` through an unnormalized form of
+      `Supermartingale.isTestSupermartingale_ofReal` (which asks `∫ M 0 ≤ 1`), and
+      `supermartingale_integral_of_integrable`, `supermartingale_integral`
+      (`Martingale/Mixture.lean`) from `isENNSupermartingale_lintegral`. No statement used
+      downstream changes.
+    - Why: six files of `Probability/Martingale/` depend on an e-values file; two Ville
+      inequalities and three mixture lemmas.
+    - Unblocks: targets 0.23, 1.34; Identification 4.2.
+23. **One conditional null, which may depend on the past.** Prerequisite: EValues 4.5.
+    - Restate `sequentialNull` with the definition of EValues 4.5: a one-step null
+      `S₁ : ℕ → Ω → Set (Measure 𝓧)` that depends on the round and on the past, and Mathlib's
+      `HasCondDistrib (X k) id κ P` with a kernel `κ` from `(Ω, ℱ k)`. The present definition,
+      whose `HasCondLaw` asks no measurability of the conditional law, contains the new null for a
+      constant one-step null; the proofs of `isCondEVar_comp_sequentialNull` and of the product
+      theorems keep their steps through the bridge of EValues 4.5 between `HasCondDistrib` and
+      `HasCondLaw`.
+    - State `sequentialConstraintNull Φ X ℱ` and `oneSidedCondSubgaussianNull` as instances, or
+      prove them equal to instances, and derive `supermartingale_exp_sum_of_lintegral_exp_le_one`
+      (`SequentialLearning/LikelihoodRatio.lean`) from `isTestSupermartingale_prod_of_hasCondLaw`.
+    - Why: three conditional nulls with no lemma between them, and the first theorem shared by the
+      e-values and the bandit sides.
+    - Unblocks: EValues 3.6, 4.4, 5.3; Identification 4.
+24. **Time-uniform validity, and the sequential test as a stopping time.** Prerequisites:
+    EValues 3.2, 3.3.
+    - Derive `isPProcess_iff_measure_exists_le_le`, `isSequentialTest_iff_forall_isStoppingTime`,
+      `isConfSeq_tfae` and the two `mono_filtration` from time-uniform validity (EValues 3.2).
+    - Restate with the sequential test as a stopping time (EValues 3.3) the three theorems that
+      write it inline (`BipolarRate/SequentialTest.lean`, `BipolarRate/StoppingTime.lean`,
+      `CompositeStrongLaw.lean`). Keep `IsSequentialTest` as the adapted family of rejection
+      events, for the duality with confidence sequences.
+    - Why: one lemma unfolded into three equivalence theorems, and no vocabulary for power.
+    - Unblocks: EValues 6.2, 6.3, 6.4.
+25. **One type of random time, and e-processes from bounded stopping times.** After 0.24.
+    - Define `IsEProcess` by validity at the bounded stopping times, derive validity at every
+      stopping time with `stoppedValueLimsup` and with the `liminf` convention (EValues 3.1), and
+      keep the present field as a constructor; the same for `IsPProcess`. Replace `τ : Ω → ℕ` with
+      a cast by `τ : Ω → WithTop ℕ` with a hypothesis in the places that use it, and the `ℕ∞` of
+      `SequentialLearning/Wald.lean`.
+    - Why: three types of time, and three values of a process at a time.
+26. **The count of observations as the clock.** After 0.17. Prerequisite: EValues 6.1 (the
+    clock).
+    - Restate with `Filtration.piLT`, so that time `n` has seen `n` observations:
+      `TestSupermartingale/IID.lean`, `BipolarRate/`, `Numeraire/Sequential*`, `SubGaussian/`,
+      `PowerOne/`, `CompositeStrongLaw.lean`. Proofs are transported by the shift, not redone.
+    - Keep one encoding of "a function of the first `n` observations" (measurability for
+      `piLT n`) and delete the `_of_dependsOn` twins of `BipolarRate/{AlmostSure, Numeraire,
+      EProcess}.lean`.
+    - Why: `n + 1` in every i.i.d. statement, two canonical filtrations never related, and every
+      theorem of three files stated twice.
 
 ## Layer 1: Consolidation of finished developments
 
@@ -668,6 +780,106 @@ targets here:
       for every single-answer task on exponential-family product models derives them from it.
     - Unblocks: the Identification completion checks on Track-and-Stop.
 
+### E-values
+
+26. **Calibrators, adjusters and merging functions as bets for canonical nulls.** After 0.17,
+    0.18. Prerequisites: EValues 0.1, 0.2, 7.1, 7.2, 7.4.
+    - Derive the four `isEVar_comp`, the three `of_le`, `isEMerging_iff_forall_isEVar` and
+      `isIEMerging_iff_forall_isEVar` from the characterizations of EValues 0.2 and 7 as
+      e-variables for `superUniformNull` and `mergingNull 𝒞`, with Statlib's `IsEVar.comp` and
+      `IsEVar.anti_set`. New and immediate: an e-merging function is a merging function for
+      exchangeable and for independent e-values, and the product is a merging function for
+      independent e-values. Derive `isAdjuster_iff_isPToECalibrator` as the change of variable
+      `x = p⁻¹` between two presentations of one null.
+    - Why: four structures with the same API and no theorem relating them.
+27. **The e-merging theorem from the complete class theorem.** After 1.26. Prerequisite:
+    EValues 7.1.
+    - Derive `IsEMerging.exists_le_add_sum_mul` and `isEMerging_iff_exists_le_add_sum_mul` from
+      `exists_mem_nonredundantWeights_le_of_noArbitrageOn` with the constraints `e i - 1` on
+      `ι → ℝ≥0` (EValues 7.1), and state `IsAdmissibleEMerging` as admissibility for
+      `mergingNull univ`. Delete the two Lagrange lemmas once `Merging/Exchangeable.lean` no
+      longer uses `exists_forall_toReal_lintegral_le_add_sum_mul`.
+    - Why: one theorem proved twice [Cle26b, closing remark], and merging stated as an instance.
+28. **The conditional numeraire theorem.** Prerequisite: EValues 1.2.
+    - In `CondEVariable/Statistic.lean`, prove the conditional numeraire theorem of EValues 1.2
+      from `isEVar_rnDeriv_comp_map`, `isNumeraire_of_ae_eq_rnDeriv` and
+      `ripr_eq_of_isEVar_rnDeriv`, and derive `isNumeraire_rnDeriv_segmentUniform_comp`,
+      `ripr_prod_expMeasure` (`TwoSample/Exponential.lean`) and
+      `isNumeraire_rnDeriv_antidiagonalUniform_comp` (`TwoSample/Geometric.lean`) from it.
+    - Why: two files make the same derivation by hand.
+29. **Named nulls, and the bridge between the two presentations.** After 0.18. Prerequisite:
+    EValues 1.4.
+    - Define the one-sided and two-sided sub-Gaussian nulls with a variance parameter once,
+      shared with `Identification.subgaussianLaws` and `oneSidedSubgaussianNull`, and the
+      mean-constraint nulls on `[0, 1]` as constraint nulls, with the bridge
+      `constraintNull {Y - 1 | Y ∈ 𝓔₀} = polarNull 𝓔₀ ∩ {probability measures}` of EValues 1.4.
+    - Why: three representations of sub-Gaussian laws.
+30. **One theorem on products of one-step bets.** After 0.23, 0.26.
+    - Derive `IsEVar.isTestSupermartingale_prod_piLE` (`TestSupermartingale/IID.lean`) and the
+      private `isTestSupermartingale_expProcess` (`SubGaussian/AdmissibleEProcess.lean`) from
+      `IsEVar.isTestSupermartingale_prod_sequentialNull` through the inclusion of the i.i.d. null
+      (EValues 4.5).
+    - Why: four proofs of one theorem.
+31. **A public algebra of bets on prefixes.** After 0.26.
+    - State publicly, for functions of the first `n` observations with null mean at most one:
+      concatenation with a shifted continuation, countable mixtures, restart at a stopping time,
+      parsing into blocks, holding a value, and the lifting of an e-process for a subsampled
+      filtration to the full one [RR26, Definitions 2.3–2.5]. Derive the private `coverMixture`,
+      `shiftMixture` (`BipolarRate/AlmostSure.lean`), `restartTime`, `restartPayoff`,
+      `restartMixture` (`Round.lean`), `blockSum`, `blockMixture` (`Universal.lean`) and
+      `seqBlockProd` as instances, with one set of the lemmas `measurable_…`, `dependsOn_…` and
+      `lintegral_…_le_one`.
+    - Why: four constructions that each prove the same three lemmas, kept private; every
+      extension of the rate theorems needs them.
+    - Unblocks: EValues 6.1, 6.3, 6.4.
+32. **Multiple testing.** Prerequisites: EValues 8.1, 8.2.
+    - Restate the three `RunningMaxima` files with `eBH` (17 events written out), and prove the
+      characterization of e-collections of EValues 8.2 from `IsECollection`.
+    - Why: `eBH` and `IsSelfConsistent` have no use outside their file.
+33. **Small duplicates.**
+    - Replace the private `truncLog` of `BipolarRate/Numeraire.lean` by `ENNReal.truncLog`,
+      `⨆ k ≤ n, E k` by `partialSups`, and the private `stopTime` of `CompositeStrongLaw.lean` by
+      the hitting time of `Process/HittingTime.lean`. Make `piMass` public or replace it, removing
+      the `import all`. Replace the statements that hold for non-probability members only because
+      `Measure.infinitePi` is then zero by honest hypotheses.
+34. **Exponential supermartingales as test supermartingales for sub-ψ nulls.** After 0.22, 0.23.
+    Prerequisite: EValues 5.3.
+    - Restate `supermartingale_exp_mul_sum_sub_sum_of_hasCondMGFBound` (`Martingale/MGFBound.lean`)
+      as the statement of EValues 5.3, on any measurable space, and keep the present statements as
+      corollaries (`HasCondMGFBound` implies membership). Derive the Freedman, Hoeffding,
+      sub-Gaussian and Bernoulli cases as instances that give confidence sequences through
+      `isConfSeq_of_isEProcess`.
+    - Why: the set-integral form needs no `[StandardBorelSpace Ω]`, which 18 files assume;
+      `IsConfSeq` has one instance in the library.
+    - Unblocks: Identification 4.2.
+35. **Theory and examples.**
+    - Move to `EValues/Examples/` the files that answer open questions on top of the theory:
+      `Merging/Independent.lean` (three counterexamples), the three `RunningMaxima` files, the
+      refutation in `TwoSample/Exponential.lean`, `MeanZeroNull.lean`, `BipolarRate/Circle.lean`,
+      `BipolarRate/FiniteSupport.lean`, `Numeraire/Sequential/Bernoulli.lean`. Moves only.
+36. **Lower bounds with relative entropies as corollaries of the Wald inequality with a design.**
+    Prerequisite: EValues 6.4.
+    - Derive the one-stream Wald inequality
+      `IsEProcess.eintegral_log_stoppedValue_le_mul_bipolarRate` and its bound on stopping times `toENNReal_log_inv_div_bipolarRate_le_lintegral`
+      (`BipolarRate/StoppingTime.lean`) as the case of one source, after transport from the
+      filtration of the observations to the filtration of the run.
+    - Derive `IdentTask.IsDeltaCorrect.charTime_mul_le_expectedStoppingTime`
+      (`Identification/LowerBound.lean`) from `E[τ] ≥ kl(δ, 1-δ) / D*` and `D* ≤ 1 / T*`: when
+      `E[τ] = ∞` there is nothing to prove, and otherwise the algorithm stops almost surely. Keep
+      `klBer_measureReal_histOutputMeasure_le` (`Identification/ChangeOfMeasure.lean`): it holds for
+      stopping times of infinite mean, which the Wald inequality with a design does not cover.
+    - Why: three lower bounds proved separately, one with the rate and two with relative
+      entropies, for one inequality whose constant is the rate of designs.
+37. **The Lai–Robbins bound as a case of the bounds with `d` and `d_σ`.** Prerequisite:
+    Bandits 4.4.
+    - State `eventually_mul_log_le_integral_pullCount_of_isConsistent` and
+      `eventually_mul_log_le_integral_regret_of_isConsistent` (`Bandits/LaiRobbins.lean`) as the
+      case of real rewards, a countably generated space, where the constant `1 / d_σ` of
+      consistency at each model equals `1 / klInf`, with `dInf` as `klInf` of the laws with a larger
+      mean (target 0.21).
+    - Why: the Lai–Robbins theorem is the countably generated case of a bound that holds on every
+      space, and its constant `dInf` is a third name for `klInf`.
+
 ## Layer 2: Material Tau Ceti provides
 
 1. **Exponential tilts and generating functions of standard laws.**
@@ -742,6 +954,10 @@ targets here:
 - No declaration `abs_sub_le_of_monotone_of_add_const` or `eq_of_forall_abs_sub_le_mul` remains.
 - No declaration of `Probability/Moments/Tilted.lean`, `Probability/Distributions/` or
   `Probability/Kernel/Composition/Comp.lean` restates one of Tau Ceti.
+- No statement of `EValues/` writes the `n`-sample, i.i.d. or independent image of a null inline;
+  `effectiveSet S = polarNull {X | IsEVar X S}` holds by `rfl`; no theorem carries
+  `∀ P ∈ S, IsProbabilityMeasure P` where its proof uses only `∫⁻ E ∂P ≤ 1`; time `n` of every
+  i.i.d. statement has seen `n` observations; `dInf`, `kInfLower` and `kInfUpper` are `klInf`.
 
 ## References
 
@@ -759,5 +975,5 @@ targets here:
 - [Ora] F. Orabona, *Online learning: a modern introduction using convex optimization*,
   arXiv:1912.13213v10, 2026, Lemma 7.1, Corollary 7.6, Theorem 6.11.
 
-The identification, bandit and planning results restated here are those of the references of the
-three roadmaps they belong to.
+The identification, bandit, planning and e-values results restated here are those of the
+references of the roadmaps they belong to.

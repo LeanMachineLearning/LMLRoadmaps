@@ -173,7 +173,7 @@ case; that development may be adapted to it.
 | 1 | Concentration and maximal inequalities | Layer 0; Identification roadmap Layers 1.2, 4.1 and 4.2 |
 | 2 | UCB-type algorithms for sub-Gaussian rewards | Layers 0–1; LML UCB |
 | 3 | KL-UCB for exponential families | Layers 0–1; Identification roadmap Layer 1.2 |
-| 4 | Lower bounds for finitely many arms | Layer 0; LML divergence decomposition; Layers 2–3 for item 5 |
+| 4 | Lower bounds for finitely many arms | Layer 0; LML divergence decomposition; Layers 2–3 for item 5; EValues roadmap Layers 1.1, 6.1 and 6.4 for item 4 |
 | 5 | Thompson sampling | Layers 0–1; Identification roadmap Layer 1.2; Layer 4 for asymptotic optimality |
 | 6 | Convex analysis, online linear and convex optimization | Layer 0 |
 | 7 | Adversarial bandits with finitely many arms and expert advice | Layers 0, 6; Layer 4.5 for the lower bound; OnlineLearning roadmap Layer 6.1 for item 5 |
@@ -409,7 +409,21 @@ variances.
    $\mu\in M_\rho$ and $m\ge\mu$, $d_{\inf}(\rho_{(\mu)},m,\mathcal M_\rho)=d_\rho(\mu,m)$ if
    $m\in M_\rho$ and $\infty$ if $m\ge\sup M_\rho$. The Gaussian (known variance) and Bernoulli
    entries of [LS, Table 16.1] are instances. Prove [LS, Lemma 16.3] and the finite-time bound
-   [LS, Theorem 16.4], for Gaussian bandits with variance $\sigma^2$.
+   [LS, Theorem 16.4], for Gaussian bandits with variance $\sigma^2$. $d_{\inf}$ is the EValues
+   roadmap's `klInf` (Layer 1.1) of the laws of $\mathcal M$ with a larger mean.
+   - **Any observation space** [EVR26, Notes 41, 44 and 47]. For a model with one informative arm,
+     whose law is `Q` (the worse arm) or in a set `𝒫` (the better arm), on any measurable space:
+     algorithms consistent uniformly over the models pull the worse arm at least
+     `(1 - o(1)) log T / d(Q, 𝒫)` times, with `d` the optimal growth rate of the EValues roadmap's
+     Layer 6.1, and algorithms consistent at each model at least `(1 - o(1)) log T / d_σ(Q, 𝒫)`
+     times, where `d_σ` is the supremum over the countable covers `𝒫 = ⋃ m, 𝒫 m` of
+     `⨅ m, d(Q, 𝒫 m)`; both constants are approached within any factor `1 + η` by algorithms of
+     the corresponding kind. The lower bounds come from the Wald inequality with a design of
+     EValues 6.4.
+     `d ≤ d_σ ≤ klInf`, and `d_σ` is the largest value of `⨅ P ∈ 𝒫, klDiv (Q|_𝒢) (P|_𝒢)` over the
+     countably generated sub-σ-algebras `𝒢`, so `d_σ = klInf` on every countably generated space
+     and the constant of [BK96] is the right one for consistency at each model there. There is a
+     model with `klInf = ∞` and `d = log 2` [EVR26, Note 44].
 5. **Asymptotic optimality and the adversarial lower bound.** For families $(\rho_a)_a$ with a
    common set of means $M$ (one family for all arms, or Gaussian families with different
    variances), prove that KL-UCB (Layer 3) is consistent over the bandits whose arm $a$ has a law in
@@ -783,6 +797,9 @@ T. L. Lai and H. Robbins, *Asymptotically efficient adaptive allocation rules* (
   problems*, Adv. Appl. Math. 17 (1996).
 - [CGMMS13] O. Cappé, A. Garivier, O.-A. Maillard, R. Munos and G. Stoltz, *Kullback–Leibler upper
   confidence bounds for optimal sequential allocation*, Ann. Statist. 41(3), 2013.
+- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 49 and
+  the Lean library `EValuesResearch` of github.com/RemyDegenne/evalues_research, 2026; written and
+  refereed by AI agents. The EValues roadmap cites it in full.
 - [GC11] A. Garivier and O. Cappé, *The KL-UCB algorithm for bounded stochastic bandits and
   beyond*, COLT 2011.
 - [KKM13] N. Korda, E. Kaufmann and R. Munos, *Thompson sampling for 1-dimensional exponential

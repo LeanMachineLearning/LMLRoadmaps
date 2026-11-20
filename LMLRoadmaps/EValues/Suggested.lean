@@ -6,6 +6,7 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Martingale.Convergence
 import Mathlib.Probability.Process.HittingTime
 import Mathlib.Probability.ConditionalProbability
+import Mathlib.Probability.HasCondDistrib
 import Mathlib.Probability.ProductMeasure
 import Statlib.EValues.RIPr
 
@@ -516,14 +517,24 @@ theorem IsEProcess.exists_betting_dominates {𝓧 : Type*} [MeasurableSpace 𝓧
   sorry
 
 /-- The sequential null of one-step nulls that may depend on the round and on the past
-(Layer 4.5): the probability measures under which each observation `X k` has a conditional law
-given `ℱ k`, a kernel measurable for `ℱ k`, that lies almost surely in `S₁ k ω`. -/
+(Layer 4.5): the probability measures under which, for every `k`, the observation `X k` has
+Mathlib's conditional distribution `κ` given the identity of `Ω` into `(Ω, ℱ k)`, a kernel from
+`(Ω, ℱ k)`, with `κ ω ∈ S₁ k ω` almost surely. -/
 def sequentialNull {𝓧 : Type*} [m𝓧 : MeasurableSpace 𝓧] (S₁ : ℕ → Ω → Set (Measure 𝓧))
     (X : ℕ → Ω → 𝓧) (ℱ : Filtration ℕ mΩ) : Set (Measure Ω) :=
-  {P | IsProbabilityMeasure P ∧ ∀ k, ∃ κ : Ω → Measure 𝓧, Measurable[ℱ k] κ ∧
-    (∀ g : Ω → 𝓧 → ℝ≥0∞, Measurable[(ℱ k).prod m𝓧] (Function.uncurry g) →
-      ∫⁻ ω, g ω (X k ω) ∂P = ∫⁻ ω, ∫⁻ x, g ω x ∂(κ ω) ∂P) ∧
-    ∀ᵐ ω ∂P, κ ω ∈ S₁ k ω}
+  {P | IsProbabilityMeasure P ∧ ∀ k, ∃ κ : @Kernel Ω 𝓧 (ℱ k) m𝓧,
+    @HasCondDistrib Ω Ω 𝓧 mΩ (ℱ k) m𝓧 (X k) id κ P ∧ ∀ᵐ ω ∂P, κ ω ∈ S₁ k ω}
+
+/-- The conditional distribution given a σ-algebra, in the set-integral form of LMLExplore's
+`HasCondLaw` (Layer 4.5). -/
+theorem hasCondDistrib_id_iff {𝓧 : Type*} [m𝓧 : MeasurableSpace 𝓧] {m : MeasurableSpace Ω}
+    (hm : m ≤ mΩ) {Y : Ω → 𝓧} (hY : Measurable[mΩ] Y) {P : @Measure Ω mΩ}
+    [@IsFiniteMeasure Ω mΩ P]
+    (κ : @Kernel Ω 𝓧 m m𝓧) [@IsFiniteKernel Ω 𝓧 m m𝓧 κ] :
+    @HasCondDistrib Ω Ω 𝓧 mΩ m m𝓧 Y id κ P ↔
+      ∀ g : Ω → 𝓧 → ℝ≥0∞, Measurable[m.prod m𝓧] (Function.uncurry g) →
+        ∫⁻ ω, g ω (Y ω) ∂P = ∫⁻ ω, ∫⁻ x, g ω x ∂(κ ω) ∂P := by
+  sorry
 
 /-- The dual form of the sequential null: the probability measures under which every bet of `𝓔`,
 applied to each observation, is a conditional e-variable given the past (Layer 4.5). -/

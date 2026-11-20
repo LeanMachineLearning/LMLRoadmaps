@@ -215,8 +215,12 @@ functions are `ℝ≥0∞`-valued, and expectations are lower integrals `∫⁻`
 **Conditional statements.** Conditional expectations of `ℝ≥0∞`-valued variables are not used.
 "$\mathbb E_P[X\mid m]\le Y$" is stated as
 `∀ s, MeasurableSet[m] s → ∫⁻ ω in s, X ω ∂P ≤ ∫⁻ ω in s, Y ω ∂P`, the form of LMLExplore's
-`supermartingale_of_setLIntegral_succ_le`. A conditional law is given by a kernel through the same
-set-integral identity, or Mathlib's `HasCondDistrib`.
+`supermartingale_of_setLIntegral_succ_le`. A conditional law of `Y` given a σ-algebra `m` is
+Mathlib's `HasCondDistrib Y id κ P`, with `id` the identity of `Ω` into `(Ω, m)` and `κ` a kernel
+from `(Ω, m)`; equivalently, the set-integral identity
+`∫⁻ ω, g ω (Y ω) ∂P = ∫⁻ ω, ∫⁻ y, g ω y ∂(κ ω) ∂P` for every `g` jointly measurable for `m` and the
+σ-algebra of the values, with `κ` measurable for `m`. Without that measurability the identity
+holds for the point mass at the observation itself, `κ ω = δ_{Y ω}`, for every `m`.
 
 **Time, filtrations and stopping times.**
 - Time is `ℕ` and filtrations are arbitrary: `ℱ : Filtration ℕ mΩ`. Observations need not be
@@ -1076,13 +1080,19 @@ e-processes for every null, where [KG22] assumes domination.
 5. **Sequential nulls and sequential numeraires** [GdHK24, Proposition 2, Corollary 1; KG22,
    Theorem 12].
    - For one-step nulls `S₁ : ℕ → Ω → Set (Measure 𝓧)` that may depend on the round and on the
-     past, define `sequentialNull S₁ X ℱ`: the probability measures under which, for every `k`, the
-     observation `X k` has a conditional law given `ℱ k` that is a kernel measurable for `ℱ k`
-     (through the set-integral identity of the Conventions) and lies almost surely in `S₁ k ω`. The
-     constant one-step null is the case of LMLExplore's present `sequentialNull`; the sequential
-     constraint null of item 4 and the one-sided conditionally sub-Gaussian null are its cases
-     `S₁ = constraintNull Φ` and the sub-Gaussian laws. Prove the bridge from Mathlib's
-     `HasCondDistrib` to the set-integral form.
+     past, define `sequentialNull S₁ X ℱ`: the probability measures `P` such that, for every `k`,
+     some kernel `κ` from `(Ω, ℱ k)` to `𝓧` has `HasCondDistrib (X k) id κ P` (the Conventions) and
+     `κ ω ∈ S₁ k ω` for `P`-almost every `ω`. LMLExplore's present `sequentialNull`, whose
+     conditional law (`HasCondLaw`) need not be measurable for the past, contains it with a
+     constant one-step null; the sequential constraint null of item 4 and the one-sided
+     conditionally sub-Gaussian null are its cases `S₁ = constraintNull Φ` and the sub-Gaussian
+     laws.
+   - Prove that, for a kernel `κ` from `(Ω, ℱ k)`, `HasCondDistrib (X k) id κ P` holds exactly
+     when LMLExplore's `HasCondLaw (X k) κ (ℱ k) P` does, so that the proofs written with the
+     set-integral identity apply; and that for a standard Borel `𝓧`, the coordinates
+     `X k ω = ω k` of `ℕ → 𝓧` with `Filtration.piLT` and any probability measure `P` on `ℕ → 𝓧`,
+     Mathlib's `condDistrib` of `ω k` given the first `k` coordinates, composed with the
+     restriction to them, is such a kernel.
    - Define the dual form `condEVarNull 𝓔 X ℱ`: the probability measures under which every
      `e (X k)`, `e ∈ 𝓔`, is a conditional e-variable given `ℱ k`. Prove the chain
      `iidNull S₁ ⊆ indepNull S₁ ⊆ sequentialNull (fun _ _ ↦ S₁) X ℱ ⊆ condEVarNull 𝓔 X ℱ` for bets

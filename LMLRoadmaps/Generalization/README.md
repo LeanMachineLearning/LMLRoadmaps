@@ -423,10 +423,12 @@ targets here:
     - Unblocks: targets 0.23, 1.34; Identification 4.2.
 23. **One conditional null, which may depend on the past.** Prerequisite: EValues 4.5.
     - Restate `sequentialNull` with the definition of EValues 4.5: a one-step null
-      `S₁ : ℕ → Ω → Set (Measure 𝓧)` that depends on the round and on the past, and a conditional
-      law that is a kernel measurable for the past. The present definition, whose `HasCondLaw`
-      asks no measurability of the conditional law, is the case of a constant one-step null; the
-      proofs of `isCondEVar_comp_sequentialNull` and of the product theorems keep their steps.
+      `S₁ : ℕ → Ω → Set (Measure 𝓧)` that depends on the round and on the past, and Mathlib's
+      `HasCondDistrib (X k) id κ P` with a kernel `κ` from `(Ω, ℱ k)`. The present definition,
+      whose `HasCondLaw` asks no measurability of the conditional law, contains the new null for a
+      constant one-step null; the proofs of `isCondEVar_comp_sequentialNull` and of the product
+      theorems keep their steps through the bridge of EValues 4.5 between `HasCondDistrib` and
+      `HasCondLaw`.
     - State `sequentialConstraintNull Φ X ℱ` and `oneSidedCondSubgaussianNull` as instances, or
       prove them equal to instances, and derive `supermartingale_exp_sum_of_lintegral_exp_le_one`
       (`SequentialLearning/LikelihoodRatio.lean`) from `isTestSupermartingale_prod_of_hasCondLaw`.

@@ -8,6 +8,7 @@ import Mathlib.Probability.Process.HittingTime
 import Mathlib.Probability.ConditionalProbability
 import Mathlib.Probability.HasCondDistrib
 import Mathlib.Probability.ProductMeasure
+import Statlib.EValues.NumeraireExistence
 import Statlib.EValues.RIPr
 
 /-!
@@ -275,6 +276,22 @@ theorem constraintNull_image_sub_one {𝓧 : Type*} [MeasurableSpace 𝓧] {𝓔
     (h𝓔₀ : ∀ Y ∈ 𝓔₀, Measurable Y) (h𝓔₀_top : ∀ Y ∈ 𝓔₀, ∀ x, Y x ≠ ∞) :
     constraintNull ((fun Y x ↦ (Y x).toReal - 1) '' 𝓔₀) =
       polarNull 𝓔₀ ∩ {μ | IsProbabilityMeasure μ} := by
+  sorry
+
+/-- The pointwise closure of a set of measures on a countable space (Layer 1.1): the measures whose
+masses of points are in the closure, for the product topology, of those of the members. -/
+def pointwiseClosure {𝓧 : Type*} [MeasurableSpace 𝓧] (S : Set (Measure 𝓧)) : Set (Measure 𝓧) :=
+  {R | (fun x ↦ R {x}) ∈ closure ((fun P : Measure 𝓧 ↦ fun x ↦ P {x}) '' S)}
+
+/-- On a countable alphabet, the effective null of `n` i.i.d. observations is the set of the
+measures below a mixture of the products of the members of the pointwise closure (Layer 1.1)
+[EVR26, Note 43, Theorem 2]. -/
+theorem effectiveSet_sampleNull_eq_of_countable {𝓧 : Type*} [MeasurableSpace 𝓧] [Countable 𝓧]
+    [MeasurableSingletonClass 𝓧] {S₁ : Set (Measure 𝓧)} (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P)
+    (hS₁_ne : S₁.Nonempty) (n : ℕ) :
+    effectiveSet (sampleNull S₁ n) = {μ | ∃ π : Measure (Measure 𝓧), IsProbabilityMeasure π ∧
+      π (pointwiseClosure S₁)ᶜ = 0 ∧
+      ∀ A, MeasurableSet A → μ A ≤ ∫⁻ R, (Measure.pi fun _ : Fin n ↦ R) A ∂π} := by
   sorry
 
 /-! ## Layer 2: test supermartingales, optional stopping and Ville's inequality -/
@@ -631,6 +648,90 @@ theorem log_inv_le_lintegral_mul_klInf {𝓧 : Type*} [MeasurableSpace 𝓧]
     ((Real.log α⁻¹ : ℝ) : EReal) ≤
       ((∫⁻ ω, ENat.toENNReal (τ ω) ∂Measure.infinitePi (fun _ : ℕ ↦ Q₁) : ℝ≥0∞) : EReal) *
         klInf Q₁ S₁ := by
+  sorry
+
+/-- The i.i.d. saturation of a null (Layer 6.1): the finite measures whose `n`-fold products lie
+in the effective null of the `n`-sample null, for every `n ≥ 1`. -/
+def iidSaturation {𝓧 : Type*} [MeasurableSpace 𝓧] (S₁ : Set (Measure 𝓧)) : Set (Measure 𝓧) :=
+  {R | IsFiniteMeasure R ∧
+    ∀ n ≠ 0, (Measure.pi fun _ : Fin n ↦ R) ∈ effectiveSet (sampleNull S₁ n)}
+
+/-- The optimal growth rate is zero exactly on the i.i.d. saturation (Layer 6.1) [EVR26, Note 43,
+Proposition 1]. -/
+theorem bipolarRate_eq_zero_iff_mem_iidSaturation {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] {S₁ : Set (Measure 𝓧)}
+    (hS₁ : ∀ P ∈ S₁, P univ ≤ 1) :
+    bipolarRate Q₁ S₁ = 0 ↔ Q₁ ∈ iidSaturation S₁ := by
+  sorry
+
+/-- The infimum of `Φ` over the probability measures of a basic neighbourhood of `Q` for the
+integrals of bounded measurable functions (Layer 6.1). -/
+def nbhdInf (Φ : Measure Ω → EReal) (Q : Measure Ω) {k : ℕ} (g : Fin k → Ω → ℝ) (ε : ℝ) :
+    EReal :=
+  ⨅ (R : Measure Ω) (_ : IsProbabilityMeasure R)
+    (_ : ∀ i, |∫ x, g i x ∂R - ∫ x, g i x ∂Q| ≤ ε), Φ R
+
+/-- The neighbourhood envelope of `Φ` at `Q` (Layer 6.1): the supremum over the basic
+neighbourhoods of `Q` of the infimum of `Φ` over them. -/
+def tauEnvelope (Φ : Measure Ω → EReal) (Q : Measure Ω) : EReal :=
+  ⨆ (k : ℕ) (g : Fin k → Ω → ℝ) (_ : ∀ i, Measurable (g i)) (_ : ∀ i, ∃ C, ∀ x, |g i x| ≤ C)
+    (ε : ℝ) (_ : 0 < ε), nbhdInf Φ Q g ε
+
+/-- The sequential envelope of `Φ` at `Q` (Layer 6.1): the infimum of `liminf Φ (R k)` over the
+sequences of probability measures that converge to `Q` on every measurable set. -/
+def seqTauEnvelope (Φ : Measure Ω → EReal) (Q : Measure Ω) : EReal :=
+  ⨅ (R : ℕ → Measure Ω) (_ : ∀ k, IsProbabilityMeasure (R k))
+    (_ : ∀ A, MeasurableSet A → Tendsto (fun k ↦ R k A) atTop (𝓝 (Q A))),
+    liminf (fun k ↦ Φ (R k)) atTop
+
+/-- The optimal growth rate is the supremum over `n` of the neighbourhood envelopes of the
+smallest relative entropy to the `n`-sample null, divided by `n` (Layer 6.1) [EVR26, Note 15]. -/
+theorem bipolarRate_eq_iSup_tauEnvelope_div {𝓧 : Type*} [MeasurableSpace 𝓧] (Q₁ : Measure 𝓧)
+    [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧)) (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) :
+    bipolarRate Q₁ S₁ = ⨆ n : ℕ, tauEnvelope (fun R ↦ klInf R (sampleNull S₁ (n + 1)))
+      (Measure.pi fun _ : Fin (n + 1) ↦ Q₁) / ((n + 1 : ℕ) : EReal) := by
+  sorry
+
+/-- The optimal growth rate is at most the sequential envelope of the smallest relative entropy
+(Layer 6.1) [EVR26, Note 19]. -/
+theorem bipolarRate_le_seqTauEnvelope {𝓧 : Type*} [MeasurableSpace 𝓧] (Q₁ : Measure 𝓧)
+    [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧)) (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) :
+    bipolarRate Q₁ S₁ ≤ seqTauEnvelope (fun R ↦ klInf R S₁) Q₁ := by
+  sorry
+
+/-- The regret of the numeraire of the `n`-sample null against a mixture of i.i.d. laws
+(Layer 6.1) [EVR26, Note 14, Theorem (1)]. -/
+theorem maxLogGrowth_le_eintegral_log_numeraire_bind_add {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧))
+    (hS₁ : ∀ P ∈ S₁, P univ ≤ 1) (ν : Measure (Measure 𝓧)) [IsProbabilityMeasure ν]
+    (hν : ∀ᵐ Q' ∂ν, IsProbabilityMeasure Q') (n : ℕ) {B : Set (Measure 𝓧)} (hνB : ν B ≠ 0)
+    (hKL : ∫⁻ Q' in B, klDiv Q₁ Q' ∂ν ≠ ⊤) :
+    maxLogGrowth Q₁ S₁ n ≤
+      ∫ᵉ x, ENNReal.log (numeraire (ν.bind fun Q' ↦ Measure.pi fun _ : Fin n ↦ Q')
+        (sampleNull S₁ n) x) ∂Measure.pi (fun _ : Fin n ↦ Q₁) +
+      ENNReal.log (ν B)⁻¹ + n * (((ν B)⁻¹ * ∫⁻ Q' in B, klDiv Q₁ Q' ∂ν : ℝ≥0∞) : EReal) := by
+  sorry
+
+/-- The time mixture of a sequence of `n`-sample e-variables, evaluated at the first `n`
+observations (Layer 6.1). -/
+def timeMixture {𝓧 : Type*} [MeasurableSpace 𝓧] (G : (n : ℕ) → (Fin n → 𝓧) → ℝ≥0∞) (n : ℕ)
+    (ω : ℕ → 𝓧) : ℝ≥0∞ :=
+  ∑ j ∈ Finset.Icc 1 n, G j (fun i ↦ ω i) / ((j : ℝ≥0∞) * (j + 1))
+
+/-- The time mixture of the numeraires against a prior is an e-process for the i.i.d. null that
+attains the optimal growth rate on the Kullback–Leibler support of the prior, on any measurable
+space (Layer 6.1). -/
+theorem isEProcess_timeMixture_and_ae_tendsto_log_div {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧))
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) (ν : Measure (Measure 𝓧)) [IsFiniteMeasure ν]
+    (hν : ∀ᵐ Q' ∂ν, IsProbabilityMeasure Q')
+    (hsupp : ∀ ε : ℝ≥0∞, 0 < ε → ν {Q' | klDiv Q₁ Q' ≤ ε} ≠ 0) :
+    IsEProcess (timeMixture fun n ↦ numeraire (ν.bind fun Q' ↦ Measure.pi fun _ : Fin n ↦ Q')
+        (sampleNull S₁ n)) piLT (iidNull S₁) ∧
+      ∀ᵐ ω ∂Measure.infinitePi (fun _ : ℕ ↦ Q₁),
+        Tendsto (fun n : ℕ ↦ ENNReal.log (timeMixture
+          (fun n ↦ numeraire (ν.bind fun Q' ↦ Measure.pi fun _ : Fin n ↦ Q') (sampleNull S₁ n))
+          n ω) / (n : EReal)) atTop (𝓝 (bipolarRate Q₁ S₁)) := by
   sorry
 
 section Designs

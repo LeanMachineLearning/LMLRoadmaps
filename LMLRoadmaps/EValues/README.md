@@ -509,6 +509,18 @@ of nulls of the literature.
      a null, and its one-observation e-variables are the measurable functions bounded by `1`
      everywhere [EVR26, Note 22], the form for e-variables of the theorem of Bahadur and Savage
      [BS56]. Layer 6.2 states its consequences for power.
+   - **The effective null of a sample on a countable alphabet.** For a countable `𝓧` with
+     measurable singletons, the pointwise closure of a set `S₁` of measures on `𝓧` is the set of the
+     measures `R` such that `x ↦ R {x}` lies in the closure of `{x ↦ P {x} | P ∈ S₁}` for the
+     product topology of `𝓧 → ℝ≥0∞`. Prove that it is the set of the pointwise limits of
+     sequences of members of `S₁`, that its members have mass at most one when those of `S₁` have,
+     and, for a nonempty `S₁` of probability measures and every `n`, that
+     `effectiveSet (sampleNull S₁ n)` is the set of the measures `μ` with
+     `μ A ≤ ∫⁻ R, (Measure.pi fun _ : Fin n ↦ R) A ∂π` for every measurable `A`, for some
+     probability measure `π` on the measures of `𝓧` carried by the pointwise closure [EVR26,
+     Note 43, Theorem 2]. The inclusion `⊇` is the closure of the effective null under mixtures
+     and setwise limits; `⊆` uses the compactness of the pointwise closure in `𝓧 → [0, 1]` and of
+     the probability measures on it.
 2. **Identifying numeraires** [LRR25, Theorem 4.1, Corollary 4.2, Theorem 4.7, Corollary 4.11;
    RW, Theorem 6.15, Corollary 6.16].
    - Say that `Q ≪ S` when every measurable set charged by `Q` is charged by some `P ∈ S`. For
@@ -1208,6 +1220,19 @@ the effective null of the `n`-sample null. Write
      `d = ⨆ k, ⨆ π, (1/k) * ⨅ P ∈ S₁, H_π (Q₁^k | P^k)` over the finite measurable partitions `π` of
      the `k`-fold product, with `H_π` the relative entropy of the restrictions to `π` [EVR26,
      Note 43].
+   - **The i.i.d. saturation.** Define the saturation of `S₁` as the set of the finite measures `R`
+     on `𝓧` with `Measure.pi (fun _ : Fin n ↦ R) ∈ effectiveSet (sampleNull S₁ n)` for every
+     `n ≥ 1` [EVR26, Note 43]. Prove: it contains `S₁`, it is solid, and its members have mass at
+     most one when those of `S₁` have; it is closed under geometric mixtures, `ρ.withDensity sᵢ`
+     in the saturation (`ρ` σ-finite) and weights `wᵢ ≥ 0` with `∑ wᵢ = 1` giving
+     `ρ.withDensity (∏ i, sᵢ ^ wᵢ)` in it (Hölder's inequality on each `n`-fold product), along
+     which `klIntegral Q₁` is affine; for every `n` the `n`-sample nulls of `S₁` and of the
+     probability measures of its saturation have the same e-variables; `d ≤ klIntegral Q₁ R` for
+     every `R` in the saturation, and `d = 0` exactly when `Q₁` is in it, which is the case of one
+     alternative of item 2 written with the saturation. On a countable type, the pointwise closure
+     of `S₁` (Layer 1.1) lies in the saturation and `d` is `klInf` from `Q₁` to the saturation;
+     for the weakly closed null on `ℕ` of the bullet on finite types, the probability measures of
+     the saturation are the null itself [EVR26, Note 43, Proposition 1, Theorem 2, Example 3].
    - For a null that is a finite union of closed convex pieces of a parametric family, a test
      supermartingale for the i.i.d. null is one for the i.i.d. null of the closed convex hull, so
      its tests need `log (1/α) / a 1` observations in expectation and have no power inside the
@@ -1220,6 +1245,30 @@ the effective null of the `n`-sample null. Write
      `(1 - ε) U + ε Q₁` with `U` uniform on a coset `x₀ + (1/N) ℤ`, `a 1 = 0` and
      `d = KL_inf(Q₁, S₁) = log (1/ε)`; for the null of the laws `(1 - ε) F + ε Q₁` with `F`
      finitely supported, `d = 0` and `KL_inf(Q₁, S₁) = log (1/ε)` [EVR26, Note 19].
+   - **Envelopes.** For `n ≥ 1`, write `Φₙ R = klInf R (sampleNull S₁ n)` for the probability
+     measures `R` on `Fin n → 𝓧`, and `Φ R = klInf R S₁` on `𝓧`. The neighbourhood envelope `Φₙ^τ`
+     at `Q₁^{⊗n}` is the supremum, over the basic neighbourhoods
+     `U = {R | ∀ i, |∫ gᵢ ∂R - ∫ gᵢ ∂Q₁^{⊗n}| ≤ ε}` (finitely many bounded measurable `gᵢ`,
+     `ε > 0`), of the infimum of `Φₙ` over the probability measures in `U`; `Φ^τ` at `Q₁` is defined
+     in the same way, and the sequential envelope `Φ^{τ,seq}` at `Q₁` is the infimum of
+     `liminf Φ (R k)` over the sequences of probability measures with `R k A → Q₁ A` for every
+     measurable `A`. On any measurable space and for any null of probability measures, prove [EVR26,
+     Notes 15 and 19]: `a n ≤ Φₙ^τ ≤ n * d`, hence `d` is the supremum, and the limit, of
+     `Φₙ^τ / n`; `a 1 ≤ Φ^τ ≤ d ≤ Φ^{τ,seq} ≤ KL_inf(Q₁, S₁)`, so that `d = KL_inf(Q₁, S₁)` forces
+     the lower semicontinuity of `KL_inf(·, S₁)` at `Q₁` in the sequential sense. When
+     `KL_inf(Q₁, S₁) < ∞`, `d = KL_inf(Q₁, S₁)` exactly when for every `η > 0` some `n ≥ 1` and
+     basic neighbourhood `U` of `Q₁^{⊗n}` have `n * (KL_inf(Q₁, S₁) - η) ≤ klDiv R P^{⊗n}` for every
+     probability measure `R ∈ U` and every `P ∈ S₁`. The finiteness is needed: for
+     `Q₁ {j} = 6 / (π² (j + 1)²)` on `ℕ` and the null `{P}` of the geometric law
+     `P {x} = 2^{-(x+1)}`, `d = KL_inf = ∞` while every basic neighbourhood of every `Q₁^{⊗n}`
+     contains a law at finite relative entropy from `P^{⊗n}`. For the two nulls on the circle of the
+     previous bullet, `Φ^τ = 0` and `Φ^{τ,seq} = log (1/ε)`, and for `ε ∈ (0, 1)` they have the same
+     `a 1`, envelopes and `KL_inf` and different rates: `d` is no function of these four numbers.
+     The bound `Φₙ^τ ≤ n * d` is the Sanov-type bound of the semicontinuity criterion above, on
+     blocks of `n` observations. The bound `d ≤ Φ^{τ,seq}` needs, and this item builds, dominated
+     convergence along setwise-convergent probability measures (`∫ f k ∂R k → ∫ g ∂Q` for uniformly
+     bounded measurable `f k` tending pointwise to `g`, when `R k A → Q A` for every measurable
+     `A`), and the setwise convergence of `R k^{⊗n}` to `Q^{⊗n}` that it gives.
    - For the sequential null of Layer 4.5, `a n = n * maxUtility Q₁ S₁ logUtility` (Statlib's
      `maxUtility_prod_eq_add`), and the product of the numeraires has
      `(1/n) log (E n) → maxUtility Q₁ S₁ logUtility` almost surely when
@@ -1257,6 +1306,30 @@ the effective null of the `n`-sample null. Write
      $\int Q'^{\otimes n}\,\nu(dQ')$ have `(1/n) log` tending to `d(Q₁)` almost surely under the
      i.i.d. law of `Q₁` [EVR26, Note 14]: the asymptotic log-optimality of the mixture numeraires
      that [RW, Chapter 6] conjectures, with the rate `d`.
+   - **Mixture numeraires: regret and growth in expectation.** On any measurable space, for a null
+     `T` of measures of mass at most one, probability measures `μ`, `Qbar` and `R` with
+     `∫⁻ Z ∂R ≤ c * ∫⁻ Z ∂Qbar` for every measurable `Z` and some `c < ∞`, `klDiv μ R < ∞`, and an
+     e-variable `Y` for `T`, prove
+     `∫ᵉ log Y ∂μ ≤ ∫ᵉ log (numeraire Qbar T) ∂μ + log c + klDiv μ R` [EVR26, Note 14]. Derive,
+     for a probability measure `ν` on the probability measures of `𝓧`, a set `B` of them with
+     `ν B > 0` (an outer measure) and `E n` the numeraire of the `n`-sample null of `S₁` under
+     $\int Q'^{\otimes n}\,\nu(dQ')$, that `a n` is at most the expected logarithm of `E n` under
+     `Q₁^{⊗n}` plus `log (1 / ν B) + n * (ν B)⁻¹ * ∫⁻ Q' in B, klDiv Q₁ Q' ∂ν`, for every `n` and
+     every null of measures of mass at most one, when the last integral is finite [EVR26, Note 14,
+     Theorem (1)]; an atom of `ν` at `Q₁` thus costs at most `log (1 / ν {Q₁})` at every `n`. When
+     `Q' ↦ klDiv Q₁ Q'` is measurable and `ν` charges every Kullback–Leibler neighbourhood of `Q₁`,
+     `(1/n)` times that expected logarithm tends to `d(Q₁)`, also when `d(Q₁) = ∞` [EVR26,
+     Note 14, Theorem (2)].
+   - **One e-process from a prior, on any space.** For `n`-sample e-variables `G n` for the i.i.d.
+     laws of `S₁`, the time mixture `M n = ∑ j ∈ Finset.Icc 1 n, G j / (j * (j + 1))` of their
+     values at the first `j` observations is nondecreasing, and `⨆ n, M n` is an e-variable for the
+     i.i.d. null, so that `M` is an e-process valid at every random time (the time mixtures of Layer
+     3.2; [RW, Section 7.9]). With `G n` the mixture numeraires of the previous bullet, for a finite
+     measure `ν` carried by the probability measures, prove that `(1/n) log (M n)` tends to `d(Q₁)`
+     almost surely under the i.i.d. law of every `Q₁` in the Kullback–Leibler support of `ν`
+     (`ν {Q' | klDiv Q₁ Q' ≤ ε} > 0` for every `ε > 0`, as an outer measure), on any measurable
+     space. For a countable class `{Q j}` and `ν = ∑ j, 2^{-(j+1)} • δ (Q j)`, this is one e-process
+     at the rate at every `Q j`, with no countable generation and no dominating measure.
    - **Block bets for a class of alternatives.** The lemma behind the previous bullet, as a
      statement of its own: for a countably generated `𝓧`, any null and a σ-finite `ρ`, there are
      bounded measurable `g i` on `𝓧^{m i}` with `∫ e^{g i} dP^{⊗ m i} ≤ 1` on the null and
@@ -1353,7 +1426,17 @@ the effective null of the `n`-sample null. Write
      $\prod_{k<n}(1+\lambda_k(E_k-1))$ has `(1/n) log` tending almost surely to
      $\sup_{\lambda\in[0,1]}\mathbb E_{Q_1}\log(1+\lambda(E-1))$ when `Q₁ {0} = 0`, and vanishes
      at the second round with positive probability when `Q₁ {0} > 0` and `Q₁ (1, ∞) > 0`
-     [EVR26, Note 07].
+     [EVR26, Note 07]. With a cap `γ ∈ [0, 1)`, fractions in `[0, γ]` that maximize the same sums
+     over `[0, γ]` give a wealth whose `(1/n) log` tends almost surely to
+     $\sup_{\lambda\in[0,\gamma]}\mathbb E_{Q_1}\log(1+\lambda(E-1))$, for every choice of the
+     maximizers and with no condition on `Q₁` (the limit may be `∞`): the map `e ↦ 1 - γ + γ e`
+     reduces it to the uncapped statement. For `γ ∈ [0, 1]`, no wealth with predictable fractions
+     in `[0, γ]` has a larger `limsup (1/n) log` almost surely. When `Q₁ {0} = 0` and
+     `log (1 + E)` is `Q₁`-integrable, uncapped follow-the-leader has
+     `liminf (1/n) (log (W n) - log (W' n)) ≥ 0` almost surely for every e-process `W'` for the
+     i.i.d. null of the laws on `[0, ∞)` of mean at most one (the constraint null of `e ↦ e - 1`,
+     Layer 1.4), from the almost sure bound of item 1 and the dual formula of Layer 1.4 [EVR26,
+     Note 07].
 
 4. **Designs** [GK16, Theorem 1; KCG16, Lemma 1; EVR26, Notes 41 and 49]. Data collected by an
    algorithm that chooses which of finitely many sources to observe, as in the Conventions
@@ -1669,6 +1752,9 @@ symmetry separately.
 - The rate `d` of Layer 6 is `klDiv Q₁ P₁` for a simple null `{P₁}`, for which the Stein lemma of
   Layer 6.1 is the Chernoff–Stein lemma with its strong converse; the bounds of Layers 6.1 and 6.3
   with $\mathrm{KL}_{\inf}$ are derived from the bounds with `d`.
+- The semicontinuity criterion of Layer 6.1 is the case `Φ^τ = KL_inf(Q₁, S₁)` of the envelope
+  bound `Φ^τ ≤ d`; the growth in expectation of the mixture numeraires comes from their regret
+  bound; and the capped follow-the-leader growth of Layer 6.3 comes from the uncapped one.
 - For a simple null and a simple alternative, Layer 6 gives the rate $\mathrm{KL}(Q_1,P_1)$ and
   $\mathbb E_Q[\tau_\alpha]\sim\log(1/\alpha)/\mathrm{KL}(Q_1,P_1)$ of the sequential probability
   ratio test; for one mean constraint on `[0, 1]` it gives the rate `klBer` on Bernoulli

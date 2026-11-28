@@ -114,7 +114,7 @@ targets here:
 | Layer | Content | Prerequisites | Unblocks |
 | --- | --- | --- | --- |
 | 0 | Generalizations that new work builds on | merged LMLExplore code; EValues 0.1, 0.5, 0.6, 1.1, 3.2, 3.3, 4.5, 6.1 for the e-values targets | Identification 1.1, 1.4, 2.1, 4, 5, 6, 7, 9.1; Bandits 6.3–6.6, 7, 8.2–8.5, 9, 10; ReinforcementLearning 6, 8–12, 23; EValues 1.1, 1.3, 3.6, 4.4, 5.3, 6.1–6.4 |
-| 1 | Consolidation of finished developments | Layer 0 targets as listed; Identification 0.5, 1.1, 3.6; ReinforcementLearning 0.6, 8.1; EValues 0.1, 0.2, 1.2, 1.4, 5.3, 6.4, 7, 8; Bandits 4.4 | Identification 3.6, 4.2, 4.4, 5.2–5.3, 7, 8.1–8.2; Bandits 4.5, 6.4, 7.2–7.4, 8.4; ReinforcementLearning 1.4–1.5, 9.4, 10, 12.2; EValues 6.1, 6.3, 6.4 |
+| 1 | Consolidation of finished developments | Layer 0 targets as listed; Identification 0.5, 1.1, 3.6, 5.4; ReinforcementLearning 0.6, 8.1; EValues 0.1, 0.2, 1.2, 1.4, 5.3, 6.1, 6.4, 7, 8; Bandits 4.4 | Identification 3.6, 4.2, 4.4, 5.2–5.3, 7, 8.1–8.2; Bandits 4.5, 6.4, 7.2–7.4, 8.4; ReinforcementLearning 1.4–1.5, 9.4, 10, 12.2; EValues 6.1, 6.3, 6.4 |
 | 2 | Material Tau Ceti provides | merged LMLExplore code | none |
 
 ## Layer 0: Generalizations that new work builds on
@@ -879,6 +879,21 @@ targets here:
       mean (target 0.21).
     - Why: the Lai–Robbins theorem is the countably generated case of a bound that holds on every
       space, and its constant `dInf` is a third name for `klInf`.
+38. **One e-process at the rate from a family of block bets.** Prerequisite: EValues 6.1, "The
+    classes on which one e-process attains the rate".
+    - Derive `exists_isEProcess_ae_tendsto_log_div_bipolarRate` (`BipolarRate/Universal.lean`), and
+      the tests at the rate built from the same e-process, as the case of the family of block bets
+      of `exists_iSup_integral_div_eq_bipolarRate`: the construction uses the domination only
+      through that family.
+    - Why: one construction proved for the dominated alternatives, when it holds for every class
+      on which a countable family of block bets determines the rate.
+39. **The lower bound with `D*` for algorithms `δ`-correct when they stop.** Prerequisite:
+    Identification 5.4, "Correctness when stopping".
+    - Derive `IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime`
+      (`Identification/LowerBound.lean`) from the bound of Identification 2.3 for algorithms
+      `δ`-correct when they stop, a `δ`-correct algorithm being one.
+    - Why: one inequality proved under the stronger of two notions of correctness, when the
+      algorithm of Identification 5.4 only has the weaker one.
 
 ## Layer 2: Material Tau Ceti provides
 

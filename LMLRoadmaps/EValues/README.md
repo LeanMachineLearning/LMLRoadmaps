@@ -52,7 +52,8 @@ Build the surrounding library at the generality of the literature:
 - conditional e-variables and test supermartingales stated with set integrals, with no
   integrability side conditions;
 - Lagrange duality for finitely many constraints, the essential supremum of a family of functions,
-  and the discrete-time Snell envelope.
+  the discrete-time Snell envelope, and the Yosida–Hewitt decomposition of finitely additive set
+  functions.
 
 `README.md` is the definitive specification; `Suggested.lean` records selected interfaces and is
 not an exhaustive checklist.
@@ -62,19 +63,21 @@ Suggested homes: `LMLExplore/EValues/` for the material of this roadmap, mirrori
 `ProbabilityTheory.IsEVar`; and the mathematical home of each general tool:
 `LMLExplore/Probability/Martingale/` for the convergence and optional stopping of `ℝ≥0∞`-valued
 supermartingales, the exact Ville identity and the Snell envelope,
-`LMLExplore/MeasureTheory/Function/` for the essential supremum of a family of functions, and
+`LMLExplore/MeasureTheory/Function/` for the essential supremum of a family of functions,
+`LMLExplore/MeasureTheory/Measure/` for the Yosida–Hewitt decomposition, and
 `LMLExplore/Analysis/Convex/` for Lagrange duality.
 
 ## Scope and dependencies
 
 This roadmap owns e-values and e-processes: their definitions for composite nulls, their
 validity, optimality and growth, their merging, and their use in sequential testing, confidence
-sequences, multiple testing, conformal prediction and change detection. It also owns four general
-tools that it needs and that no dependency provides: Lagrange duality for convex programs with
-finitely many constraints (Layer 1.4), the convergence and optional stopping of `ℝ≥0∞`-valued
-supermartingales at arbitrary stopping times (Layer 2.2), the essential supremum of a family of
-functions with the discrete-time Snell envelope (Layer 3.1), and first-passage times of random
-walks with positive drift (Layer 6.3). It owns the dual formula of $\mathrm K_{\inf}$ for
+sequences, multiple testing, conformal prediction and change detection. It also owns five general
+tools that it needs and that no dependency provides: the Yosida–Hewitt decomposition of finitely
+additive set functions (Layer 1.1), Lagrange duality for convex programs with finitely many
+constraints (Layer 1.4), the convergence and optional stopping of `ℝ≥0∞`-valued supermartingales at
+arbitrary stopping times (Layer 2.2), the essential supremum of a family of functions with the
+discrete-time Snell envelope (Layer 3.1), and first-passage times of random walks with positive
+drift (Layer 6.3). It owns the dual formula of $\mathrm K_{\inf}$ for
 nonparametric classes (Layer 1.4), which the Identification roadmap's Layer 1.4 defines and does not
 compute, and the Wald inequality with a design (Layer 6.4), which the Identification roadmap's
 Layers 2.3 and 5.4 and the Bandits roadmap's Layer 4.4 use.
@@ -212,6 +215,15 @@ functions are `ℝ≥0∞`-valued, and expectations are lower integrals `∫⁻`
   null, `klDiv` adds the difference of the masses and `klIntegral` is the divergence that the
   theory produces.
 
+**Finitely additive measures.** A finitely additive measure on `Ω` is an additive content on its
+measurable sets, Mathlib's `AddContent ℝ≥0∞ {s | MeasurableSet s}`. The limits of measures of mass
+at most one for the convergence on every measurable set (which, on them, is the convergence of the
+integrals of the bounded measurable functions) are finitely additive measures (Layers 1.1 and 6.1).
+Such closures may be taken among all set functions `Set Ω → ℝ≥0∞` with the product topology: by
+compactness, their restrictions to the measurable sets are the closure of the restrictions. The
+countably additive part of a set function is the supremum of the measures below it on the
+measurable sets (Layer 1.1).
+
 **Conditional statements.** Conditional expectations of `ℝ≥0∞`-valued variables are not used.
 "$\mathbb E_P[X\mid m]\le Y$" is stated as
 `∀ s, MeasurableSet[m] s → ∫⁻ ω in s, X ω ∂P ≤ ∫⁻ ω in s, Y ω ∂P`, the form of LMLExplore's
@@ -278,7 +290,7 @@ names keep their names.
 ## Restatements of merged code
 
 The Generalization roadmap's e-values targets (its Layer 0, targets 0.17–0.26, and Layer 1,
-targets 1.26–1.37) restate the merged e-values code in the conventions above: the operations on
+targets 1.26–1.39) restate the merged e-values code in the conventions above: the operations on
 nulls, the polarity, the quasi-sure filter, tests, `klInf` and `maxEPower`, the filtration `piLT`,
 one conditional null that may depend on the past, and the canonical nulls of calibrators and
 merging functions. The items of this roadmap that define those objects are their prerequisites.
@@ -291,6 +303,14 @@ with one law `ν` and independent of the past) to sequential predictors on any o
 against any conditional law of the observations. The Generalization roadmap lists this restatement;
 the pull request that builds Layer 4.2 derives the four declarations from the general statement,
 and `laplacePredictor` and its time-uniform bound from them.
+
+Layer 6.1's characterization of the classes on which one e-process attains the rate generalizes
+`ProbabilityTheory.exists_isEProcess_ae_tendsto_log_div_bipolarRate`
+(`EValues/BipolarRate/Universal.lean`: the alternatives dominated by an s-finite measure on a
+countably generated space), whose proof uses the domination only through the family of block bets
+`ProbabilityTheory.exists_iSup_integral_div_eq_bipolarRate`. The pull request that builds the
+e-process from a family derives the merged theorem from it and from that family (Generalization
+1.38).
 
 ## Layers and dependencies
 
@@ -482,13 +502,40 @@ of nulls of the literature.
      smallest subset of `L⁰₊(μ)` that contains `𝓔` and is convex, solid and closed in
      `μ`-probability. With all of `polarNull 𝓔` in place of its dominated members the statement is
      false: for `𝓔 = {1}` the bets must then be at most one everywhere.
+   - **Finitely additive set functions** [YH52]. Let `m` be an additive content of finite mass on
+     the measurable sets of `Ω` (Conventions) and `m_c` its countably additive part.
+     - A content dominated by a finite measure is countably additive: Mathlib's
+       `VectorMeasure.of_additive_of_le_measure` states it for real values; derive the form in
+       `ℝ≥0∞` from it. Prove that `m_c` is at most `m` on the measurable sets, so that it is the
+       largest measure below `m`: every measure below `m` is below the measure induced by `m`
+       (Mathlib's `OuterMeasure.ofFunction`, for which the measurable sets are Carathéodory
+       measurable by finite additivity), which is at most `m` on the measurable sets.
+     - **The Yosida–Hewitt decomposition.** The remainder `p = m - m_c` is purely finitely additive
+       (the only measure below it on the measurable sets is `0`); `m = m_c + p` is the only
+       decomposition of `m`, on the measurable sets, into a measure and a purely finitely additive
+       set function; and `p` is singular to every finite measure `R`: for every `ε > 0` some
+       measurable `E` has `R E + p Eᶜ < ε`. For the last, the set function
+       `A ↦ ⨅ B ⊆ A, R B + p (A \ B)`, over the measurable `B`, is finitely additive and below `R`,
+       hence a measure by the previous bullet, and below `p`, hence `0`.
+     - **The divergence to a set function.** For a measure `R` and a set function `ν`, let
+       `H(R | ν)` be the supremum, over the finite measurable partitions of `Ω` (measurable maps
+       `f : Ω → Fin k`), of `klIntegral` from `R.map f` to the measure on `Fin k` with the masses
+       `ν (f ⁻¹' {j})`. For a probability measure `R` and `m` of mass at most one, prove
+       `H(R | m) = klIntegral R m_c`. The inequality `≤` is data processing, the masses of `m`
+       being at least those of `m_c`. For `≥`, Tau Ceti's variational formula
+       `TauCeti.klDiv_eq_iSup_integral_sub_integral_exp_sub_one` reduces to bounded measurable
+       functions, approximated by step functions on a finite partition, which is then refined by a
+       set `E` as above where `R` and `p` are small.
+
+     The generalized null laws of Layer 6.1 use the maximality of `m_c`, the singularity of `p` and
+     the inequality `klIntegral R m_c ≤ H(R | m)`; the next bullet uses `m_c`.
    - **No domination.** For any null on any measurable space, a measure is in `effectiveSet S`
      exactly when it is setwise below a member of the weak-* closed convex hull of `S` among the
      finitely additive measures of mass at most one; and the smallest relative entropy from a
      probability measure `Q` to the effective null equals the smallest one to that closure, the
      second minimum being attained at a finitely additive measure whose countably additive part
-     dominates the reverse information projection [EVR26, Note 40; RLRR26, Corollary 3.6, for the
-     equality of the minima].
+     (previous bullet) dominates the reverse information projection [EVR26, Note 40; RLRR26,
+     Corollary 3.6, for the equality of the minima].
    - Under domination, the effective null is the closure of the countable mixtures of `S` under
      limits in probability of the densities, made solid. Without domination this fails: a null on
      the countable ordinals, with the countable–co-countable σ-algebra, has a probability measure
@@ -1233,12 +1280,70 @@ the effective null of the `n`-sample null. Write
      of `S₁` (Layer 1.1) lies in the saturation and `d` is `klInf` from `Q₁` to the saturation;
      for the weakly closed null on `ℕ` of the bullet on finite types, the probability measures of
      the saturation are the null itself [EVR26, Note 43, Proposition 1, Theorem 2, Example 3].
-   - For a null that is a finite union of closed convex pieces of a parametric family, a test
-     supermartingale for the i.i.d. null is one for the i.i.d. null of the closed convex hull, so
-     its tests need `log (1/α) / a 1` observations in expectation and have no power inside the
-     hull; the minimum over the pieces of the likelihood ratios against the projections on the
-     pieces is an e-process whose `(1/n) log` tends to `KL_inf`, so that `d = KL_inf` there [EVR26,
-     Note 32].
+   - **Generalized null laws** [EVR26, Note 43, Theorem 4 and Corollary 5]. The laws of the blocks
+     of a measure `P` on `𝓧` are the family `k ↦ P^{⊗(k+1)}` of set functions on
+     `Fin (k + 1) → 𝓧`. The generalized null laws of `S₁` are the closure of the families of the
+     members of `S₁` for the convergence on every set of every block (Conventions). For a null of
+     probability measures, prove that every block of a generalized null law `ν` is an additive
+     content of mass one on the measurable sets; that, on the measurable sets, `ν` is symmetric
+     under the permutations of the coordinates and a product on rectangles (its value at `a + b`
+     observations on `A × B` is the product of its values at `a` observations on `A` and at `b`
+     observations on `B`), hence consistent, conditions that hold for the laws of the blocks of a
+     member and are closed; and that the divergence `H(Q₁^{⊗(k+1)} | ν k)` (Layer 1.1) from the
+     power of `Q₁` to the block of `k + 1` observations is superadditive in the number `k + 1` of
+     observations. Prove, on any measurable space and for any null of probability measures,
+     `d = ⨅ ν, ⨆ k, H(Q₁^{⊗(k+1)} | ν k) / (k + 1)` over the generalized null laws, the infimum
+     being attained when the null is nonempty: the rate is the smallest divergence rate from `Q₁`
+     to a generalized null law. The partition formula of the bullet on countable types is the other
+     expression of [EVR26, Note 43, Theorem 4]; the minimizer comes from the compactness of the
+     closure and the closed sets of the `ν` with `H_π(Q₁^{⊗(k+1)} | ν k) ≤ (k + 1) (d + ε)`, for
+     the finite measurable partitions `π` of the blocks and `ε > 0`. Corollary: if, for every
+     generalized null law `ν` and every `k`, the countably additive part of `ν k` is the
+     `(k + 1)`-th power of that of the first block `ν 0` (read on `𝓧`), then
+     `d = ⨅ ν, klIntegral Q₁ (ν 0)_c = klInf Q₁ (iidSaturation S₁)` [EVR26, Note 43, Corollary 5].
+     The countably additive parts of the blocks are below limits of laws of blocks of members,
+     hence in the effective nulls of the sample nulls (Layer 1.1), so that `(ν 0)_c` is in the
+     saturation; and the inequality `klIntegral R m_c ≤ H(R | m)` of Layer 1.1 at the minimizer
+     gives `klIntegral Q₁ (ν 0)_c ≤ d` there.
+   - **Unions of convex pieces** [EVR26, Note 32]. For a null that is a finite union of closed
+     convex pieces of a parametric family, a test supermartingale for the i.i.d. null is one for the
+     i.i.d. null of the closed convex hull, so its tests need `log (1/α) / a 1` observations in
+     expectation and have no power inside the hull; the minimum over the pieces of the likelihood
+     ratios against the projections on the pieces is an e-process whose `(1/n) log` tends to
+     `KL_inf`, so that `d = KL_inf` there.
+     - **Tests between two nulls** [EVR26, Note 32, Statement 1]. For nulls `H₀` and `H₁` of
+       probability measures on a countable `𝓧` with measurable singletons, the members of `H₁`
+       charging every point, an e-process `M` for `iidNull H₀`, a test supermartingale `M'` for
+       `iidNull H₁`, and levels `α, β ∈ (0, 1)` with `α + β ≤ 1`, the test `τ` that stops the
+       first time `α⁻¹ ≤ M` (rejecting `H₀`) or `β⁻¹ ≤ M'` (rejecting `H₁`) has
+       `kl(1 - α, β) / a 1(Q, H₁) ≤ E_Q[τ]` in `ℝ≥0∞` under the i.i.d. law of every `Q ∈ H₀`, with
+       `kl` the relative entropy of Bernoulli laws and `a 1(Q, H₁) = maxEPower Q H₁`; if moreover
+       `Q` is a pointwise limit of mixtures of members of `H₁`, the test stops with probability at
+       most `α + β` under the i.i.d. law of `Q`. The proof bounds, under the i.i.d. law of each
+       countable mixture `R` of members of `H₁` (for which `M'` is a test supermartingale, by the
+       closure above), the bet on the event that the test stops by rejecting `H₁` (LMLExplore's
+       `ProbabilityTheory.testBet`) with the Wald inequality of item 3 for the simple null `{R}`;
+       the infimum of `klDiv Q R` over these `R` is `a 1(Q, H₁)` (Layer 1.2).
+     - **The plug-in intersection–union test** [EVR26, Note 32, Statement 4]. An observation is a
+       vector of independent coins indexed by a finite `ι`, with law `prodBernoulli θ`. Let `C j`,
+       for `j` in a finite type, be convex sets of parameters in the open cube, `λ j φ ∈ C j` a
+       minimizer of `θ ↦ klDiv (prodBernoulli φ) (prodBernoulli θ)` over `C j` for every `φ` in the
+       open cube, and `ψ̂ k` any estimate with values in the open cube that is a function of the
+       observations before `k`. Prove that
+       `∏ k < n, prodBernoulli (ψ̂ k) {X k} / prodBernoulli (λ j (ψ̂ k)) {X k}` is a test
+       supermartingale for the sequential null of the piece `C j`, whatever the estimate, so that
+       the minimum `M n` over `j` is an e-process for the union of the sequential nulls of the
+       pieces and its test at `α⁻¹` has level `α`. If `ψ̂ k → ψ` almost surely under the i.i.d. law
+       of `prodBernoulli ψ`, with `ψ` in the open cube, prove that almost surely `(1/n) log (M n)`
+       tends to `KL_inf`, from `prodBernoulli ψ` to the union of the pieces, and
+       `τ α / log (1/α) → 1 / KL_inf` as `α → 0`, with `1 / 0 = ∞`. Given the past, the factor of
+       round `k` is the likelihood ratio against the projection on the piece, with the alternative
+       `ψ̂ k` fixed.
+     - Instance [EVR26, Note 32, Statement 3]: three coins with parameters in `[1/20, 19/20]³` and
+       the null `{θ 0 ≤ 1/2} ∪ {θ 1 ≤ 1/2}` ("candidate 1 is not the Condorcet winner"). The law of
+       the coins `(7/10, 3/5, c)` is a mixture of three laws of the null, so that `a 1 = 0` and the
+       tests of the test supermartingales for the i.i.d. null have no power against it, while
+       `d = KL_inf = kl(3/5, 1/2)`.
    - The inequality `d ≤ KL_inf(Q₁, S₁)` can be strict [RR26, Proposition 5.4], and one
      observation may carry no evidence when `d = KL_inf(Q₁, S₁) > 0`. Instances on the circle
      `ℝ / ℤ`, with `Q₁` its Lebesgue measure and `ε ∈ (0, 1]`: for the null of the laws
@@ -1269,6 +1374,30 @@ the effective null of the `n`-sample null. Write
      convergence along setwise-convergent probability measures (`∫ f k ∂R k → ∫ g ∂Q` for uniformly
      bounded measurable `f k` tending pointwise to `g`, when `R k A → Q A` for every measurable
      `A`), and the setwise convergence of `R k^{⊗n}` to `Q^{⊗n}` that it gives.
+   - **The game between bets and the null, and large deviations.** For a null `T` of probability
+     measures on any measurable space `Ω` and a probability measure `Q`, the bet `e^g`, with `g`
+     bounded measurable, pays `∫ g ∂Q - log ∫ e^g ∂P` against `P ∈ T`. Prove that the max–min value
+     `⨆ g, ⨅ P ∈ T` of the payoff is `maxEPower Q T`, by dividing a bet by its upper expectation
+     (Layer 0.6), and that the min–max value `⨅ P ∈ T, ⨆ g` is `klInf Q T`, by Tau Ceti's
+     Donsker–Varadhan formula `TauCeti.klDiv_eq_iSup_integral_sub_log_integral_exp` for each `P`
+     [EVR26]. For `n` observations, `T = sampleNull S₁ n` and `Q = Q₁^{⊗n}`, the values are `a n`
+     and `n * KL_inf(Q₁, S₁)`: `d` is the limit of the max–min values divided by `n`, while the
+     min–max values divided by `n` are all `KL_inf(Q₁, S₁)`. For finitely many bounded measurable
+     `gᵢ` on `Ω` and a real `δ`, let `π m` be the largest probability, under `P^{⊗m}` for `P ∈ T`,
+     of the event that the average of each `gᵢ` over `m` observations is within `δ` of `∫ gᵢ ∂Q`,
+     and `c δ` the infimum of `klInf R T` over the probability measures `R` with
+     `|∫ gᵢ ∂R - ∫ gᵢ ∂Q| ≤ δ` for every `i`. Prove `π m ≤ exp (-m * c δ)` for every `m` and every
+     `δ`, and, for `δ > 0`, `limsup (1/m) log (1 / π m) ≤ c (δ / 2)`, by a change of measure to a
+     law of the smaller neighbourhood, under whose powers the event has probability tending to
+     one. So the suprema over the basic neighbourhoods of `Q` of the lower and of the upper
+     exponents of `π m` are both the neighbourhood envelope of `R ↦ klInf R T` at `Q` [EVR26,
+     Note 15]. For blocks of `n` observations (`T = sampleNull S₁ n`, `Q = Q₁^{⊗n}`), the exponents
+     per observation are at most `d`, and their supremum over `n ≥ 1` and the basic neighbourhoods
+     is `d`, by the previous bullet: the rate is the exponent, at `Q₁`, of the upper probability
+     under the null of the events given by statistics of blocks. Instance: for the coset null on
+     the circle with `ε ∈ (0, 1)`, the largest probability under the null of the event that the
+     empirical measure of `m` observations lies in a given basic neighbourhood of `Q₁` tends to `1`
+     for every such neighbourhood, while `d = log (1/ε) > 0` [EVR26, Note 19].
    - For the sequential null of Layer 4.5, `a n = n * maxUtility Q₁ S₁ logUtility` (Statlib's
      `maxUtility_prod_eq_add`), and the product of the numeraires has
      `(1/n) log (E n) → maxUtility Q₁ S₁ logUtility` almost surely when
@@ -1305,7 +1434,34 @@ the effective null of the `n`-sample null. Write
      `{Q' | klDiv Q₁ Q' ≤ ε}` of `Q₁`, the numeraires of the `n`-sample nulls under the mixtures
      $\int Q'^{\otimes n}\,\nu(dQ')$ have `(1/n) log` tending to `d(Q₁)` almost surely under the
      i.i.d. law of `Q₁` [EVR26, Note 14]: the asymptotic log-optimality of the mixture numeraires
-     that [RW, Chapter 6] conjectures, with the rate `d`.
+     that [RW, Chapter 6] conjectures, with the rate `d`. The first statement is the case of the
+     alternatives `Q₁ ≪ ρ` of the classes on which the rate is attained (two bullets below), with
+     the family of block bets of the next bullet.
+   - **Block bets for a class of alternatives.** The lemma behind the first statement of the
+     previous bullet, as a statement of its own: for a countably generated `𝓧`, any null and a
+     σ-finite `ρ`, there are bounded measurable `g i` on `𝓧^{m i}` with `∫ e^{g i} dP^{⊗ m i} ≤ 1`
+     on the null and `⨆ i, (1 / m i) ∫ g i dQ^{⊗ m i} = d Q` for every probability measure
+     `Q ≪ ρ` [EVR26, Note 13]. Item 3 and item 4 use it.
+   - **The classes on which one e-process attains the rate** [EVR26, Note 55, Proposition 1]. A
+     process `E` attains the rate on a set `𝒬` of probability measures on `𝓧` when
+     `(1/n) log (E n)` tends to `d(Q)` almost surely under the i.i.d. law of every `Q ∈ 𝒬`. On any
+     measurable space, for any null `S₁` of probability measures and any `𝒬`, prove that the
+     following are equivalent: some e-process for the i.i.d. null, in the filtration `piLT`,
+     attains the rate on `𝒬`; some `n`-sample e-variables `M n`, `n ≥ 1`, evaluated at the first
+     `n` observations, have `d(Q) ≤ liminf (1/n) log (M n)` almost surely under the i.i.d. law of
+     every `Q ∈ 𝒬`; countably many bounded measurable `g i` on `𝓧^{m i}`, `m i ≥ 1`, with
+     `∫ e^{g i} dP^{⊗ m i} ≤ 1` for every `P ∈ S₁`, have `⨆ i, (1 / m i) ∫ g i dQ^{⊗ m i} = d(Q)`
+     for every `Q ∈ 𝒬`. From the second condition to the third, take the bets
+     `log (1/2 + min (M n) (exp (n²)) / 2)` of `n` observations and apply Fatou's lemma. From such
+     a family, with only `d(Q) ≤ ⨆ i, …` (the other inequality holds for every such family), build
+     one e-process for the i.i.d. null, nondecreasing in time, whose supremum over time is an
+     e-variable for the i.i.d. null, with `(1/n) log (E n) → d(Q)` almost surely and
+     `(1/n) E_Q[log (E n)] → d(Q)` at every `Q ∈ 𝒬`; item 3 gives its tests. The construction of the
+     dominated case applies, domination serving only to build the family. Instances: the
+     alternatives dominated by an s-finite measure on a countably generated space, with the family
+     of the previous bullet; and every countable class, with the union of families that approach
+     each `a n (Q) / n` at one alternative `Q`. [Ram26, Theorem 3.1] (item 2) is the analogue for
+     power one, with countably many finite-block events in place of block bets.
    - **Mixture numeraires: regret and growth in expectation.** On any measurable space, for a null
      `T` of measures of mass at most one, probability measures `μ`, `Qbar` and `R` with
      `∫⁻ Z ∂R ≤ c * ∫⁻ Z ∂Qbar` for every measurable `Z` and some `c < ∞`, `klDiv μ R < ∞`, and an
@@ -1330,11 +1486,6 @@ the effective null of the `n`-sample null. Write
      (`ν {Q' | klDiv Q₁ Q' ≤ ε} > 0` for every `ε > 0`, as an outer measure), on any measurable
      space. For a countable class `{Q j}` and `ν = ∑ j, 2^{-(j+1)} • δ (Q j)`, this is one e-process
      at the rate at every `Q j`, with no countable generation and no dominating measure.
-   - **Block bets for a class of alternatives.** The lemma behind the previous bullet, as a
-     statement of its own: for a countably generated `𝓧`, any null and a σ-finite `ρ`, there are
-     bounded measurable `g i` on `𝓧^{m i}` with `∫ e^{g i} dP^{⊗ m i} ≤ 1` on the null and
-     `⨆ i, (1 / m i) ∫ g i dQ^{⊗ m i} = d Q` for every probability measure `Q ≪ ρ` [EVR26,
-     Note 13]. Item 3 and item 4 use it.
    - **Bahadur slopes.** For every sequence of p-variables `p n` of the `n`-sample nulls,
      `limsup (1/n) log (1 / p n) ≤ d` almost surely under `Q`, with convergence to `d` for the
      inverses of the numeraires, so that the best exact slope in Bahadur's sense is `2 d`.
@@ -1395,13 +1546,15 @@ the effective null of the `n`-sample null. Write
      reaches `α⁻¹` [EVR26, Note 01]. The bound with $\mathrm{KL}_{\inf}$ is not attained in
      general: for the null of [RR26, Proposition 5.4], $\mathrm{KL}_{\inf}>1/2$ and no power-one
      test exists (item 2).
-   - **One test for every dominated alternative.** Under the hypotheses of the block bets of
-     item 1, one nondecreasing e-process, built from those bets with the adjusted running maximum
-     of [RW, Section 7.9], gives tests `τ α = inf {n | α⁻¹ ≤ E n}` with
-     `E_Q[τ α] / log (1/α) → 1 / d Q` and `τ α / log (1/α) → 1 / d Q` almost surely, for every
-     `Q ≪ ρ` with `0 < d Q < ∞`: the bound of the first bullet is attained in expectation at every
+   - **One test for every alternative of a class.** For a countable family of bounded block bets
+     with `d(Q) ≤ ⨆ i, (1 / m i) ∫ g i dQ^{⊗ m i}` at every `Q` of a class `𝒬` (item 1, the classes
+     on which the rate is attained), the nondecreasing e-process of item 1 built from it gives
+     tests `τ α = inf {n | α⁻¹ ≤ E n}` of level `α` with `E_Q[τ α] / log (1/α) → 1 / d Q` and
+     `τ α / log (1/α) → 1 / d Q` almost surely as `α → 0`, for every `Q ∈ 𝒬`, in `ℝ≥0∞` with
+     `1 / 0 = ∞` and `1 / ∞ = 0` [EVR26, Notes 13 and 55]. With the block bets of item 1 for the
+     alternatives `Q ≪ ρ`, the bound of the first bullet is attained in expectation at every
      dominated alternative at once. The proof uses Wald's identity for one block bet with values in
-     a compact interval of `(0, ∞)` [EVR26, Note 13].
+     a compact interval of `(0, ∞)`.
    - **First passage times.** For i.i.d. real increments with mean $D\in(0,\infty)$, the first time
      the partial sums reach `a` has expectation equivalent to `a / D` as `a → ∞` [Gut09]. Tau
      Ceti's elementary renewal theorem covers nonnegative increments; prove the signed case.
@@ -1457,14 +1610,16 @@ the effective null of the `n`-sample null. Write
      It contains the Wald inequality of item 3 (one source) and, through
      `a n ≤ ⨅ λ ∈ Λ, ∑ a, n a * klDiv (μ a) (λ a)`, the transportation lemma of Identification 2.2
      [KCG16, Lemma 1] for stopping times of finite mean, for e-variables rather than events.
-   - **Consequences** [EVR26, Note 41]. A `δ`-correct algorithm (Identification 0.2) with
+   - **Consequences** [EVR26, Note 41]. An algorithm `δ`-correct when it stops (Identification,
+     Conventions; the `δ`-correct algorithms of Identification 0.2 are such algorithms) with
      `δ ≤ 1/2` that stops almost surely at `μ` has `E_μ[τ] ≥ kl(δ, 1-δ) / D*` and
      `kl(δ, 1-δ) ≤ D̄ (E_μ[N τ])`, with `D*` for `Λ` the alternatives of `μ`, and
      `D* ≤ 1 / T* μ`, so that this is the sharp form of [GK16, Theorem 1]. For testing a known
      instance, blocks of a near-optimal shape with the tests of item 3 attain `log (1/δ) / D*` to
-     first order, and no sampling rule does better. If `δ`-correct algorithms attain `c` at `μ`,
-     then `D* ≥ 1 / c`; with Identification 5.2 this gives `D* = 1 / T*` for best arm
-     identification in exponential families.
+     first order, and no sampling rule does better. If algorithms `δ`-correct when they stop and
+     stopping almost surely at `μ` attain `c` at `μ`, then `D* ≥ 1 / c`; with Identification 5.2
+     this gives `D* = 1 / T*` for best arm identification in exponential families, which
+     Identification 5.4 also gives with no algorithm.
    - **When `D*` is the entropy constant** [EVR26, Note 41]. On finite alphabets `D* = 1 / T* μ`,
      and `D̄ x = ⨅ λ ∈ Λ, ∑ a, x a * klDiv (μ a) (λ a)`, from the finite-alphabet equality of
      item 1; on countable alphabets `D*` is the same supremum with `klIntegral` in place of `klDiv`
@@ -1773,6 +1928,10 @@ symmetry separately.
   `IsEProcess E ℱ S ↔ IsEVar (Function.uncurry E) (stoppedNull ℱ S)` (Layer 3.1).
 - The domination of e-merging functions by weighted means (Layer 7.1) is also a case of the complete
   class theorem of Layer 1.4.
+- The e-process at the rate for the alternatives dominated by `ρ` (Layer 6.1) and its tests
+  (Layer 6.3) are the case of the block bets of the dominated alternatives in the characterization
+  of the classes on which the rate is attained; the max–min value `a n` and the min–max value
+  `n * KL_inf` of the game of Layer 6.1 are the two ends of the chain `a n ≤ n * d ≤ n * KL_inf`.
 - The Wald inequality of Layer 6.3 is the case of one source of Layer 6.4, and the transportation
   lemma of Identification 2.2, for stopping times of finite mean, and the lower bound of
   Identification 2.3 follow from Layer 6.4.
@@ -1820,7 +1979,7 @@ Original sources cited in the layers:
   exact Ville identity with applications to e-values*, arXiv:2607.04620v2 (Layer 2.3).
 - [DR67] D. A. Darling and H. Robbins, *Confidence sequences for mean, variance, and median*,
   PNAS 58 (1967) (Layer 5.1).
-- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 49 and
+- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 55 and
   the Lean library `EValuesResearch` of github.com/RemyDegenne/evalues_research, 2026; written and
   refereed by AI agents, with part of the results cited here proved in Lean (Existing
   formalizations) (Layers 0–8).
@@ -1898,7 +2057,7 @@ Original sources cited in the layers:
 - [Rob70] H. Robbins, *Statistical methods related to the law of the iterated logarithm*, Ann.
   Math. Statist. 41 (1970) (Layer 4.2).
 - [Ram26] A. Ramdas, *A complete characterization of sequential testability and change
-  detectability in i.i.d. models*, arXiv:2609.05752v1 (Layer 6.2).
+  detectability in i.i.d. models*, arXiv:2609.05752v1 (Layers 6.1, 6.2).
 - [RR26] A. Ram and A. Ramdas, *The optimal betting wealth growth rate*, arXiv:2604.25280v1
   (Layer 6).
 - [RRLK] A. Ramdas, J. Ruf, M. Larsson and W. M. Koolen, *Admissible anytime-valid sequential
@@ -1961,5 +2120,7 @@ Original sources cited in the layers:
   (Layer 8).
 - [XWR24] Z. Xu, R. Wang and A. Ramdas, *Post-selection inference for e-value based confidence
   intervals*, Electron. J. Statist. 18(1) (2024), 2292–2338 (Layer 8.4).
+- [YH52] K. Yosida and E. Hewitt, *Finitely additive measures*, Trans. Amer. Math. Soc. 72 (1952),
+  46–66 (Layer 1.1).
 - [ZRW24] Z. Zhang, A. Ramdas and R. Wang, *On the existence of powerful p-values and e-values for
   composite hypotheses*, Ann. Statist. 52 (2024) (Layers 1.1, 6.2).

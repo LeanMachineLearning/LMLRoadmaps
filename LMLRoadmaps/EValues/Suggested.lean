@@ -1,7 +1,9 @@
 import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLog
 import Mathlib.Analysis.SpecialFunctions.Log.PosLog
 import Mathlib.Basic.Real.ENatENNReal
+import Mathlib.Data.List.TFAE
 import Mathlib.InformationTheory.KullbackLeibler.Basic
+import Mathlib.MeasureTheory.Measure.AddContent
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Martingale.Convergence
 import Mathlib.Probability.Process.HittingTime
@@ -292,6 +294,54 @@ theorem effectiveSet_sampleNull_eq_of_countable {𝓧 : Type*} [MeasurableSpace 
     effectiveSet (sampleNull S₁ n) = {μ | ∃ π : Measure (Measure 𝓧), IsProbabilityMeasure π ∧
       π (pointwiseClosure S₁)ᶜ = 0 ∧
       ∀ A, MeasurableSet A → μ A ≤ ∫⁻ R, (Measure.pi fun _ : Fin n ↦ R) A ∂π} := by
+  sorry
+
+/-- The countably additive part of a set function: the supremum of the measures below it on the
+measurable sets (Layer 1.1, Conventions). -/
+def countablyAdditivePart (ν : Set Ω → ℝ≥0∞) : Measure Ω :=
+  sSup {μ : Measure Ω | ∀ s, MeasurableSet s → μ s ≤ ν s}
+
+/-- The countably additive part of an additive content on the measurable sets is below it, so that
+it is the largest measure below the content (Layer 1.1). -/
+theorem countablyAdditivePart_apply_le (m : AddContent ℝ≥0∞ {s : Set Ω | MeasurableSet s})
+    {s : Set Ω} (hs : MeasurableSet s) : (countablyAdditivePart ⇑m : Measure Ω) s ≤ m s := by
+  sorry
+
+/-- **The Yosida–Hewitt decomposition** [YH52] (Layer 1.1): the remainder of an additive content of
+finite mass after its countably additive part is singular to every finite measure. -/
+theorem exists_measurableSet_add_sub_countablyAdditivePart_lt
+    (m : AddContent ℝ≥0∞ {s : Set Ω | MeasurableSet s}) (hm : m univ ≠ ∞) (R : Measure Ω)
+    [IsFiniteMeasure R] {ε : ℝ≥0∞} (hε : 0 < ε) :
+    ∃ E, MeasurableSet E ∧ R E + (m Eᶜ - (countablyAdditivePart ⇑m : Measure Ω) Eᶜ) < ε := by
+  sorry
+
+/-- The Yosida–Hewitt decomposition is unique [YH52] (Layer 1.1): if an additive content of finite
+mass is, on the measurable sets, the sum of a measure `μ` and of a set function below which the
+only measure is `0`, then `μ` is its countably additive part. -/
+theorem countablyAdditivePart_eq_of_eq_add (m : AddContent ℝ≥0∞ {s : Set Ω | MeasurableSet s})
+    (hm : m univ ≠ ∞) (μ : Measure Ω) (p : Set Ω → ℝ≥0∞)
+    (hp : ∀ μ' : Measure Ω, (∀ s, MeasurableSet s → μ' s ≤ p s) → μ' = 0)
+    (hmp : ∀ s, MeasurableSet s → m s = μ s + p s) :
+    countablyAdditivePart ⇑m = μ := by
+  sorry
+
+/-- The measure on the cells of a finite partition `f : Ω → Fin k` with the masses of a set
+function `ν` (Layer 1.1). -/
+def cellMeasure (ν : Set Ω → ℝ≥0∞) {k : ℕ} (f : Ω → Fin k) : Measure (Fin k) :=
+  Measure.sum fun j ↦ ν (f ⁻¹' {j}) • Measure.dirac j
+
+/-- The divergence `H(R | ν)` from a measure to a set function: the supremum, over the finite
+measurable partitions, of the divergence from the image of `R` to the cell masses of `ν`
+(Layer 1.1). -/
+def partitionDivergence (R : Measure Ω) (ν : Set Ω → ℝ≥0∞) : EReal :=
+  ⨆ (k : ℕ) (f : Ω → Fin k) (_ : Measurable f), klIntegral (R.map f) (cellMeasure ν f)
+
+/-- The divergence to an additive content of mass at most one is the divergence to its countably
+additive part (Layer 1.1). The generalized null laws of Layer 6.1 use the inequality `≥`. -/
+theorem partitionDivergence_eq_klIntegral_countablyAdditivePart (R : Measure Ω)
+    [IsProbabilityMeasure R] (m : AddContent ℝ≥0∞ {s : Set Ω | MeasurableSet s})
+    (hm : m univ ≤ 1) :
+    partitionDivergence R ⇑m = klIntegral R (countablyAdditivePart ⇑m) := by
   sorry
 
 /-! ## Layer 2: test supermartingales, optional stopping and Ville's inequality -/
@@ -664,6 +714,39 @@ theorem bipolarRate_eq_zero_iff_mem_iidSaturation {𝓧 : Type*} [MeasurableSpac
     bipolarRate Q₁ S₁ = 0 ↔ Q₁ ∈ iidSaturation S₁ := by
   sorry
 
+/-- The laws of the blocks of `k + 1` observations of `P`, as set functions (Layer 6.1). -/
+def blockSetFunction {𝓧 : Type*} [MeasurableSpace 𝓧] (P : Measure 𝓧) :
+    (k : ℕ) → Set (Fin (k + 1) → 𝓧) → ℝ≥0∞ :=
+  fun k A ↦ Measure.pi (fun _ : Fin (k + 1) ↦ P) A
+
+/-- The generalized null laws of `S₁`: the closure of the laws of the blocks of its members, for the
+convergence on every set of every block (Layer 6.1, Conventions) [EVR26, Note 43]. -/
+def generalizedNullLaws {𝓧 : Type*} [MeasurableSpace 𝓧] (S₁ : Set (Measure 𝓧)) :
+    Set ((k : ℕ) → Set (Fin (k + 1) → 𝓧) → ℝ≥0∞) :=
+  closure (blockSetFunction '' S₁)
+
+/-- The optimal growth rate is the smallest divergence rate from the alternative to a generalized
+null law, and the smallest value is attained (Layer 6.1) [EVR26, Note 43, Theorem 4]. -/
+theorem isLeast_iSup_partitionDivergence_generalizedNullLaws {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] {S₁ : Set (Measure 𝓧)}
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) (hS₁_ne : S₁.Nonempty) :
+    IsLeast ((fun ν ↦ ⨆ k : ℕ, partitionDivergence (Measure.pi fun _ : Fin (k + 1) ↦ Q₁) (ν k) /
+      ((k + 1 : ℕ) : EReal)) '' generalizedNullLaws S₁) (bipolarRate Q₁ S₁) := by
+  sorry
+
+/-- When the countably additive parts of the generalized null laws are powers, the optimal growth
+rate is the smallest divergence to the i.i.d. saturation (Layer 6.1) [EVR26, Note 43,
+Corollary 5]. -/
+theorem bipolarRate_eq_klInf_iidSaturation_of_countablyAdditivePart_eq_pi {𝓧 : Type*}
+    [MeasurableSpace 𝓧] (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] {S₁ : Set (Measure 𝓧)}
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P)
+    (h : ∀ ν ∈ generalizedNullLaws S₁, ∀ k : ℕ, countablyAdditivePart (ν k) =
+      Measure.pi fun _ : Fin (k + 1) ↦ (countablyAdditivePart (ν 0)).map (fun x ↦ x 0)) :
+    bipolarRate Q₁ S₁ = ⨅ ν ∈ generalizedNullLaws S₁,
+        klIntegral Q₁ ((countablyAdditivePart (ν 0)).map (fun x ↦ x 0)) ∧
+      bipolarRate Q₁ S₁ = klInf Q₁ (iidSaturation S₁) := by
+  sorry
+
 /-- The infimum of `Φ` over the probability measures of a basic neighbourhood of `Q` for the
 integrals of bounded measurable functions (Layer 6.1). -/
 def nbhdInf (Φ : Measure Ω → EReal) (Q : Measure Ω) {k : ℕ} (g : Fin k → Ω → ℝ) (ε : ℝ) :
@@ -699,6 +782,81 @@ theorem bipolarRate_le_seqTauEnvelope {𝓧 : Type*} [MeasurableSpace 𝓧] (Q�
     bipolarRate Q₁ S₁ ≤ seqTauEnvelope (fun R ↦ klInf R S₁) Q₁ := by
   sorry
 
+/-- The payoff of the bet `exp g` against `P`, under the alternative `Q` (Layer 6.1). -/
+def gamePayoff (Q P : Measure Ω) (g : Ω → ℝ) : ℝ :=
+  ∫ x, g x ∂Q - Real.log (∫ x, Real.exp (g x) ∂P)
+
+/-- The max–min value of the game between bounded bets and a null is the largest expected
+logarithm of an e-variable (Layer 6.1). -/
+theorem iSup_iInf_gamePayoff_eq_maxEPower (Q : Measure Ω) [IsProbabilityMeasure Q]
+    {T : Set (Measure Ω)} (hT : ∀ P ∈ T, IsProbabilityMeasure P) :
+    ⨆ (g : Ω → ℝ) (_ : Measurable g) (_ : ∃ C, ∀ x, |g x| ≤ C),
+      ⨅ P ∈ T, (gamePayoff Q P g : EReal) = maxEPower Q T := by
+  sorry
+
+/-- The min–max value of the game between bounded bets and a null is the smallest relative entropy
+to the null (Layer 6.1). -/
+theorem iInf_iSup_gamePayoff_eq_klInf (Q : Measure Ω) [IsProbabilityMeasure Q]
+    {T : Set (Measure Ω)} (hT : ∀ P ∈ T, IsProbabilityMeasure P) :
+    ⨅ P ∈ T, ⨆ (g : Ω → ℝ) (_ : Measurable g) (_ : ∃ C, ∀ x, |g x| ≤ C),
+      (gamePayoff Q P g : EReal) = klInf Q T := by
+  sorry
+
+/-- The event that the average of each statistic `g i` over `m` observations is within `δ` of its
+mean under `Q` (Layer 6.1). -/
+def blockEvent (Q : Measure Ω) {k : ℕ} (g : Fin k → Ω → ℝ) (δ : ℝ) (m : ℕ) : Set (Fin m → Ω) :=
+  {y | ∀ i, |(m : ℝ)⁻¹ * ∑ b, g i (y b) - ∫ x, g i x ∂Q| ≤ δ}
+
+/-- The largest probability of `blockEvent Q g δ m` under the laws of `m` independent observations
+with one law in `T` (Layer 6.1). -/
+def blockUpperProb (T : Set (Measure Ω)) (Q : Measure Ω) {k : ℕ} (g : Fin k → Ω → ℝ) (δ : ℝ)
+    (m : ℕ) : ℝ≥0∞ :=
+  ⨆ P ∈ T, (Measure.pi fun _ : Fin m ↦ P) (blockEvent Q g δ m)
+
+/-- The suprema over the basic neighbourhoods of the lower and of the upper exponents of the upper
+probability of the empirical events are the neighbourhood envelope of the smallest relative
+entropy to the null (Layer 6.1) [EVR26, Note 15]. -/
+theorem iSup_liminf_limsup_neg_log_blockUpperProb_eq_tauEnvelope (Q : Measure Ω)
+    {T : Set (Measure Ω)} (hT : ∀ P ∈ T, IsProbabilityMeasure P) :
+    (⨆ (k : ℕ) (g : Fin k → Ω → ℝ) (_ : ∀ i, Measurable (g i))
+        (_ : ∀ i, ∃ C, ∀ x, |g i x| ≤ C) (δ : ℝ) (_ : 0 < δ),
+        liminf (fun m : ℕ ↦ ENNReal.log (blockUpperProb T Q g δ m)⁻¹ / (m : EReal)) atTop) =
+        tauEnvelope (fun R ↦ klInf R T) Q ∧
+      (⨆ (k : ℕ) (g : Fin k → Ω → ℝ) (_ : ∀ i, Measurable (g i))
+        (_ : ∀ i, ∃ C, ∀ x, |g i x| ≤ C) (δ : ℝ) (_ : 0 < δ),
+        limsup (fun m : ℕ ↦ ENNReal.log (blockUpperProb T Q g δ m)⁻¹ / (m : EReal)) atTop) =
+        tauEnvelope (fun R ↦ klInf R T) Q := by
+  sorry
+
+/-- The optimal growth rate is the exponent of the upper probability under the null of the events
+given by statistics of blocks of observations (Layer 6.1) [EVR26, Note 15]. -/
+theorem iSup_liminf_neg_log_blockUpperProb_eq_bipolarRate {𝓧 : Type*} [MeasurableSpace 𝓧]
+    (Q₁ : Measure 𝓧) [IsProbabilityMeasure Q₁] (S₁ : Set (Measure 𝓧))
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) :
+    ⨆ (n : ℕ) (k : ℕ) (g : Fin k → (Fin (n + 1) → 𝓧) → ℝ) (_ : ∀ i, Measurable (g i))
+        (_ : ∀ i, ∃ C, ∀ x, |g i x| ≤ C) (δ : ℝ) (_ : 0 < δ),
+        liminf (fun m : ℕ ↦ ENNReal.log (blockUpperProb (sampleNull S₁ (n + 1))
+          (Measure.pi fun _ : Fin (n + 1) ↦ Q₁) g δ m)⁻¹ / (((n + 1) * m : ℕ) : EReal)) atTop =
+      bipolarRate Q₁ S₁ := by
+  sorry
+
+/-- **Tests between two nulls** (Layer 6.1) [EVR26, Note 32, Statement 1]. On a countable alphabet,
+the members of `H₁` charging every point, the test that stops when an e-process for the i.i.d. null
+of `H₀` reaches `α⁻¹` or a test supermartingale for the i.i.d. null of `H₁` reaches `β⁻¹` makes at
+least `kl(1 - α, β) / a₁(Q, H₁)` observations in expectation under the i.i.d. law of every
+`Q ∈ H₀`, with `kl` the relative entropy of Bernoulli laws. -/
+theorem ofReal_kl_div_maxEPower_le_lintegral_min_hittingAfter {𝓧 : Type*} [MeasurableSpace 𝓧]
+    [Countable 𝓧] [MeasurableSingletonClass 𝓧] {H₀ H₁ : Set (Measure 𝓧)}
+    (hH₁ : ∀ P ∈ H₁, IsProbabilityMeasure P) (hpos : ∀ P ∈ H₁, ∀ x, P {x} ≠ 0)
+    {M M' : ℕ → (ℕ → 𝓧) → ℝ≥0∞} (hM : IsEProcess M piLT (iidNull H₀))
+    (hM' : IsTestSupermartingale M' piLT (iidNull H₁)) {α β : ℝ} (hα : α ∈ Ioo 0 1)
+    (hβ : β ∈ Ioo 0 1) (hαβ : α + β ≤ 1) {Q : Measure 𝓧} [IsProbabilityMeasure Q] (hQ : Q ∈ H₀) :
+    ENNReal.ofReal ((1 - α) * Real.log ((1 - α) / β) + α * Real.log (α / (1 - β))) /
+        (maxEPower Q H₁).toENNReal ≤
+      ∫⁻ ω, ENat.toENNReal (min (hittingAfter M (Ici (ENNReal.ofReal α)⁻¹) 0 ω)
+        (hittingAfter M' (Ici (ENNReal.ofReal β)⁻¹) 0 ω)) ∂Measure.infinitePi (fun _ : ℕ ↦ Q) := by
+  sorry
+
 /-- The regret of the numeraire of the `n`-sample null against a mixture of i.i.d. laws
 (Layer 6.1) [EVR26, Note 14, Theorem (1)]. -/
 theorem maxLogGrowth_le_eintegral_log_numeraire_bind_add {𝓧 : Type*} [MeasurableSpace 𝓧]
@@ -732,6 +890,59 @@ theorem isEProcess_timeMixture_and_ae_tendsto_log_div {𝓧 : Type*} [Measurable
         Tendsto (fun n : ℕ ↦ ENNReal.log (timeMixture
           (fun n ↦ numeraire (ν.bind fun Q' ↦ Measure.pi fun _ : Fin n ↦ Q') (sampleNull S₁ n))
           n ω) / (n : EReal)) atTop (𝓝 (bipolarRate Q₁ S₁)) := by
+  sorry
+
+/-- A process attains the optimal growth rate on a class `𝒬` of alternatives when, under the
+i.i.d. law of every probability measure of `𝒬`, `(1/n) log (E n)` tends to the rate almost surely
+(Layer 6.1) [EVR26, Note 55]. -/
+def AttainsBipolarRate {𝓧 : Type*} [MeasurableSpace 𝓧] (E : ℕ → (ℕ → 𝓧) → ℝ≥0∞)
+    (S₁ 𝒬 : Set (Measure 𝓧)) : Prop :=
+  ∀ (Q : Measure 𝓧) [IsProbabilityMeasure Q], Q ∈ 𝒬 →
+    ∀ᵐ ω ∂Measure.infinitePi (fun _ : ℕ ↦ Q),
+      Tendsto (fun n : ℕ ↦ ENNReal.log (E n ω) / (n : EReal)) atTop (𝓝 (bipolarRate Q S₁))
+
+/-- **The classes on which one e-process attains the rate** (Layer 6.1) [EVR26, Note 55,
+Proposition 1]: an e-process at the rate on `𝒬`, sample e-variables at the rate on `𝒬`, and a
+countable family of bounded block bets that determines the rate on `𝒬` exist together. -/
+theorem exists_attainsBipolarRate_tfae {𝓧 : Type*} [MeasurableSpace 𝓧] {S₁ : Set (Measure 𝓧)}
+    (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) (𝒬 : Set (Measure 𝓧)) :
+    List.TFAE [
+      ∃ E : ℕ → (ℕ → 𝓧) → ℝ≥0∞, IsEProcess E piLT (iidNull S₁) ∧ AttainsBipolarRate E S₁ 𝒬,
+      ∃ M : (n : ℕ) → (Fin n → 𝓧) → ℝ≥0∞, (∀ n ≠ 0, IsEVar (M n) (sampleNull S₁ n)) ∧
+        ∀ (Q : Measure 𝓧) [IsProbabilityMeasure Q], Q ∈ 𝒬 →
+          ∀ᵐ ω ∂Measure.infinitePi (fun _ : ℕ ↦ Q), bipolarRate Q S₁ ≤
+            liminf (fun n : ℕ ↦ ENNReal.log (M n fun i ↦ ω i) / (n : EReal)) atTop,
+      ∃ (len : ℕ → ℕ) (g : (i : ℕ) → (Fin (len i) → 𝓧) → ℝ), (∀ i, 1 ≤ len i) ∧
+        (∀ i, Measurable (g i)) ∧ (∀ i, ∃ C, ∀ x, |g i x| ≤ C) ∧
+        (∀ i, IsEVar (fun x ↦ ENNReal.ofReal (Real.exp (g i x))) (sampleNull S₁ (len i))) ∧
+        ∀ (Q : Measure 𝓧) [IsProbabilityMeasure Q], Q ∈ 𝒬 →
+          ⨆ i, (((∫ x, g i x ∂Measure.pi (fun _ : Fin (len i) ↦ Q)) / len i : ℝ) : EReal) =
+            bipolarRate Q S₁] := by
+  sorry
+
+/-- From a countable family of bounded block bets with the rate below the supremum of their
+normalized means on a class `𝒬`, one nondecreasing e-process, valid at every random time, attains
+the rate on `𝒬` almost surely and in expectation, and its tests attain the bound on expected
+stopping times (Layers 6.1 and 6.3) [EVR26, Notes 13 and 55]. -/
+theorem exists_isEProcess_monotone_attainsBipolarRate_of_le_iSup {𝓧 : Type*} [MeasurableSpace 𝓧]
+    {S₁ : Set (Measure 𝓧)} (hS₁ : ∀ P ∈ S₁, IsProbabilityMeasure P) {𝒬 : Set (Measure 𝓧)}
+    {len : ℕ → ℕ} {g : (i : ℕ) → (Fin (len i) → 𝓧) → ℝ} (hgb : ∀ i, ∃ C, ∀ x, |g i x| ≤ C)
+    (hge : ∀ i, IsEVar (fun x ↦ ENNReal.ofReal (Real.exp (g i x))) (sampleNull S₁ (len i)))
+    (hsup : ∀ (Q : Measure 𝓧) [IsProbabilityMeasure Q], Q ∈ 𝒬 → bipolarRate Q S₁ ≤
+      ⨆ i, (((∫ x, g i x ∂Measure.pi (fun _ : Fin (len i) ↦ Q)) / len i : ℝ) : EReal)) :
+    ∃ E : ℕ → (ℕ → 𝓧) → ℝ≥0∞, IsEProcess E piLT (iidNull S₁) ∧ Monotone E ∧
+      IsEVar (fun ω ↦ ⨆ n, E n ω) (iidNull S₁) ∧ AttainsBipolarRate E S₁ 𝒬 ∧
+      ∀ (Q : Measure 𝓧) [IsProbabilityMeasure Q], Q ∈ 𝒬 →
+        Tendsto (fun n : ℕ ↦
+            (∫ᵉ ω, ENNReal.log (E n ω) ∂Measure.infinitePi (fun _ : ℕ ↦ Q)) / (n : EReal))
+          atTop (𝓝 (bipolarRate Q S₁)) ∧
+        (∀ᵐ ω ∂Measure.infinitePi (fun _ : ℕ ↦ Q),
+          Tendsto (fun α : ℝ≥0∞ ↦ ENat.toENNReal (hittingAfter E (Ici α⁻¹) 0 ω) /
+              (ENNReal.log α⁻¹).toENNReal) (𝓝[>] 0) (𝓝 (bipolarRate Q S₁).toENNReal⁻¹)) ∧
+        Tendsto (fun α : ℝ≥0∞ ↦
+            (∫⁻ ω, ENat.toENNReal (hittingAfter E (Ici α⁻¹) 0 ω)
+              ∂Measure.infinitePi (fun _ : ℕ ↦ Q)) / (ENNReal.log α⁻¹).toENNReal)
+          (𝓝[>] 0) (𝓝 (bipolarRate Q S₁).toENNReal⁻¹) := by
   sorry
 
 section Designs

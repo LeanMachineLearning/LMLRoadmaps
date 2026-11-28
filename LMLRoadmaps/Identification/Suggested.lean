@@ -16,6 +16,7 @@ import LeanMachineLearning.SequentialLearning.IonescuTulceaSpace
 import LeanMachineLearning.SequentialLearning.Means
 import LeanMachineLearning.SequentialLearning.StationaryEnv
 import LeanMachineLearning.SequentialLearning.SumRewards
+import Statlib.EValues.DPI
 
 /-!
 # Bandit identification: suggested target signatures
@@ -28,7 +29,10 @@ the helper `armObs` are admitted definitions: constructing them, with their run 
 target, and their docstrings and the README specify them.
 
 The names of the LML framework (`IdentAlg`, `Environment.bandit`, `stoppedHistMeasure`, ...) are
-those of the LML version pinned by LMLExplore.
+those of the LML version pinned by LMLExplore. The designs of the EValues roadmap's Layer 6.4
+(`designLaw`, `designValue`, `designRate`, `designGrowth`) are restated in the present form of
+LMLExplore's, with Statlib's `maxUtility` and `logUtility`, so that this file imports only Mathlib,
+LML (with Statlib) and Tau Ceti.
 -/
 
 noncomputable section
@@ -466,5 +470,359 @@ theorem trackAndStop_asymptotic (task : IdentTask α (α → ℝ) ℐ 𝓨) (ρ 
       (trackAndStop task (empMeanStat T) w rec (expFamilyEvidence κ T) β δ)
       (Environment.bandit (task.ν μ)) ≤ c * ENNReal.ofReal (log (1 / δ)) :=
   sorry
+
+/-! ## Layer 5.4: learning the design -/
+
+section LearningTheDesign
+
+/-! ### The designs of the EValues roadmap's Layer 6.4, as in LMLExplore -/
+
+/-- The law of the table `(Σ a, Fin (n a)) → 𝓨` of the design `n` under the instance `μ`
+(LMLExplore's `designLaw`). -/
+def designLaw (μ : α → Measure 𝓨) (n : α → ℕ) : Measure ((Σ a, Fin (n a)) → 𝓨) :=
+  Measure.pi fun p ↦ μ p.1
+
+/-- The value of the design `n`: the largest expected logarithm under `μ` of an e-variable of its
+table for the instances of `Λ` (LMLExplore's `designValue`). -/
+def designValue (μ : α → Measure 𝓨) (Λ : Set (α → Measure 𝓨)) (n : α → ℕ) : EReal :=
+  maxUtility (designLaw μ n) ((fun ν ↦ designLaw ν n) '' Λ) logUtility
+
+/-- The rate `D*` of the designs (LMLExplore's `designRate`). -/
+def designRate (μ : α → Measure 𝓨) (Λ : Set (α → Measure 𝓨)) : EReal :=
+  ⨆ n : α → ℕ, designValue μ Λ n / ((∑ a, n a : ℕ) : EReal)
+
+/-- The design `⌈m (x + ε 𝟙_{supp x})⌉` (LMLExplore's `proportionalDesign`). -/
+def proportionalDesign (x : α → ℝ≥0) (ε : ℝ≥0) (m : ℕ) : α → ℕ :=
+  fun a ↦ if x a = 0 then 0 else ⌈(m : ℝ≥0) * (x a + ε)⌉₊
+
+/-- The growth `D̄ x` of the designs proportional to `x` (LMLExplore's `designGrowth`). -/
+def designGrowth (μ : α → Measure 𝓨) (Λ : Set (α → Measure 𝓨)) (x : α → ℝ≥0) : EReal :=
+  ⨅ (ε : ℝ≥0) (_ : 0 < ε),
+    liminf (fun m : ℕ ↦ designValue μ Λ (proportionalDesign x ε m) / (m : EReal)) atTop
+
+/-! ### Correctness when stopping and experts -/
+
+namespace IdentTask
+
+/-- `A` is `δ`-correct when it stops (README Conventions) [EVR26, Notes 49 and 55]: on every
+admissible model, with probability at most `δ`, it stops and outputs an answer that is not
+correct. Nothing is asked when it does not stop. -/
+def IsDeltaCorrectOnStop (task : IdentTask α Θ ℐ 𝓨) (A : IdentAlg Unit α 𝓨 ℐ) (δ : ℝ) : Prop :=
+  ∀ θ ∈ task.M, (histOutputMeasure A (Environment.bandit (task.ν θ))).real
+    {p | p.1 ∈ A.stopSet ∧ p.2 ∉ task.correct θ} ≤ δ
+
+/-- A `δ`-correct algorithm is `δ`-correct when it stops. -/
+theorem IsDeltaCorrect.isDeltaCorrectOnStop (task : IdentTask α Θ ℐ 𝓨)
+    {A : IdentAlg Unit α 𝓨 ℐ} {δ : ℝ} (hA : task.IsDeltaCorrect A δ) :
+    task.IsDeltaCorrectOnStop A δ :=
+  sorry
+
+/-- An algorithm is `δ`-PAC exactly when it is `δ`-correct when it stops and stops almost surely
+on every admissible model (README Conventions). -/
+theorem isDeltaPAC_iff_isDeltaCorrectOnStop (task : IdentTask α Θ ℐ 𝓨)
+    {A : IdentAlg Unit α 𝓨 ℐ} {δ : ℝ} :
+    task.IsDeltaPAC A δ ↔ task.IsDeltaCorrectOnStop A δ ∧ ∀ θ ∈ task.M,
+      ∀ᵐ ω ∂(trajMeasure A.alg (Environment.bandit (task.ν θ))),
+        A.stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤ :=
+  sorry
+
+/-- The laws of the arms at the alternatives to the answer `i`. -/
+def altInstances (task : IdentTask α Θ ℐ 𝓨) (i : ℐ) : Set (α → Measure 𝓨) :=
+  (fun θ' a ↦ task.ν θ' a) '' task.alt i
+
+/-- **The lower bound with the rate of the designs**, for algorithms `δ`-correct when they stop
+(README Layers 2.3 and 5.4) [EVR26, Notes 41 and 55]: `kl(δ, 1 - δ) ≤ D* E_θ[τ]`. LMLExplore's
+`IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime` is the case of
+`δ`-correct algorithms. -/
+theorem IsDeltaCorrectOnStop.klBer_le_designRate_mul_expectedStoppingTime
+    [MeasurableSingletonClass ℐ] (task : IdentTask α Θ ℐ 𝓨) {A : IdentAlg Unit α 𝓨 ℐ} {δ : ℝ}
+    (hA : task.IsDeltaCorrectOnStop A δ) (hδ : δ ∈ Set.Ioc 0 (1 / 2)) {θ : Θ} (hθ : θ ∈ task.M)
+    {i : ℐ} (hi : task.correct θ = {i}) (h_alt : (task.alt i).Nonempty)
+    (hstop : ∀ᵐ ω ∂(trajMeasure A.alg (Environment.bandit (task.ν θ))),
+      A.stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤) :
+    ((ENNReal.ofReal ((1 - 2 * δ) * log ((1 - δ) / δ)) : ℝ≥0∞) : EReal) ≤
+      designRate (fun a ↦ task.ν θ a) (task.altInstances i) *
+        (expectedStoppingTime A (Environment.bandit (task.ν θ)) : EReal) :=
+  sorry
+
+/-- A sequence of experts (README Layer 5.4) [EVR26, Note 55, Definition 4]: for every `e`, the
+answer `j e`, the block shape `S e ≠ 0` and the bounded measurable function `g e` on the tables of
+the design `S e` form an expert: `exp (g e)` is an e-variable of one table for the laws of the
+arms at every alternative to `j e`. -/
+structure IsExpertSeq (task : IdentTask α Θ ℐ 𝓨) (j : ℕ → ℐ) (S : ℕ → α → ℕ)
+    (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ) : Prop where
+  shape_ne_zero (e : ℕ) : S e ≠ 0
+  measurable (e : ℕ) : Measurable (g e)
+  bounded (e : ℕ) : ∃ c : ℝ, ∀ y, |g e y| ≤ c
+  lintegral_exp_le_one (e : ℕ) : ∀ θ ∈ task.alt (j e),
+    ∫⁻ y, ENNReal.ofReal (exp (g e y)) ∂(designLaw (fun a ↦ task.ν θ a) (S e)) ≤ 1
+
+/-- The value `∫ g e dθ^(S e) / |S e|` of the expert `e` at the model `θ`. -/
+def expertValue (task : IdentTask α Θ ℐ 𝓨) (S : ℕ → α → ℕ)
+    (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ) (θ : Θ) (e : ℕ) : ℝ :=
+  (∫ y, g e y ∂(designLaw (fun a ↦ task.ν θ a) (S e))) / (∑ a, S e a : ℕ)
+
+/-- The experts determine `D*` at `θ` for the answer `i`: the values at `θ` of the experts of the
+answer `i` have supremum the rate of the designs of `θ` against the alternatives to `i`. -/
+def DeterminesDesignRate (task : IdentTask α Θ ℐ 𝓨) (j : ℕ → ℐ) (S : ℕ → α → ℕ)
+    (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ) (θ : Θ) (i : ℐ) : Prop :=
+  ⨆ (e : ℕ) (_ : j e = i), (task.expertValue S g θ e : EReal) =
+    designRate (fun a ↦ task.ν θ a) (task.altInstances i)
+
+/-- The value of an expert is at most `D*` against the alternatives to its answer, at every model,
+and at most `0` at those alternatives. -/
+theorem IsExpertSeq.expertValue_le (task : IdentTask α Θ ℐ 𝓨) {j : ℕ → ℐ} {S : ℕ → α → ℕ}
+    {g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ} (hg : task.IsExpertSeq j S g) (θ : Θ) (e : ℕ) :
+    (task.expertValue S g θ e : EReal) ≤
+        designRate (fun a ↦ task.ν θ a) (task.altInstances (j e)) ∧
+      (θ ∈ task.alt (j e) → task.expertValue S g θ e ≤ 0) :=
+  sorry
+
+end IdentTask
+
+/-! ### The algorithm -/
+
+/-- The sampling rule of the algorithm that learns the design (README Layer 5.4) [EVR26, Note 49,
+Section 3], for the block shapes `S e`, the functions `g e` and the integer bounds `c e` of the
+experts: round `t` occupies a window of time fixed in advance, in which every admitted expert
+(`e + |S e| + c e ≤ log₂ t`) reads `t²` fresh blocks to estimate its value, then the admitted
+expert of largest estimate reads `⌊2^t / |S e|⌋` fresh blocks, and a fixed arm fills the window. -/
+def learnDesignAlg (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ) (c : ℕ → ℕ) :
+    Algorithm Unit α 𝓨 :=
+  sorry
+
+/-- The algorithm that learns the design at level `δ` (README Layer 5.4): the sampling rule
+`learnDesignAlg`, the blocks read by the selected expert `e` multiplying the product of its answer
+`j e` by `exp (g e)`, and the rule that stops when the product of an answer `i` reaches
+`1 / (δ w i)` and answers the first such `i` in a fixed order. -/
+def learnDesign (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ)
+    (c : ℕ → ℕ) (w : ℐ → ℝ≥0) (δ : ℝ) : IdentAlg Unit α 𝓨 ℐ :=
+  sorry
+
+/-- The sampling rule of the algorithm that learns the design does not depend on the level. -/
+theorem learnDesign_alg (j : ℕ → ℐ) (S : ℕ → α → ℕ)
+    (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ) (c : ℕ → ℕ) (w : ℐ → ℝ≥0) (δ : ℝ) :
+    (learnDesign j S g c w δ).alg = learnDesignAlg S g c :=
+  sorry
+
+namespace IdentTask
+
+variable [Countable ℐ] [MeasurableSingletonClass ℐ] {j : ℕ → ℐ} {S : ℕ → α → ℕ}
+  {g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ} {c : ℕ → ℕ} {w : ℐ → ℝ≥0}
+
+/-- **Validity of the algorithm that learns the design** [EVR26, Note 55, Theorem 5; Note 49,
+Theorem 2]: for every sequence of experts, on every model, dominated or not, it is `δ`-correct when
+it stops. -/
+theorem isDeltaCorrectOnStop_learnDesign (task : IdentTask α Θ ℐ 𝓨)
+    (hg : task.IsExpertSeq j S g) (hc : ∀ e y, |g e y| ≤ c e) (hw : ∀ i, 0 < w i)
+    (hw1 : ∑' i, (w i : ℝ≥0∞) ≤ 1) {δ : ℝ} (hδ : δ ∈ Set.Ioo 0 1) :
+    task.IsDeltaCorrectOnStop (learnDesign j S g c w δ) δ :=
+  sorry
+
+/-- **The algorithm that learns the design attains `D*` wherever its experts determine it**
+[EVR26, Note 55, Theorem 5; Note 49, Theorem 3]: at every admissible model `θ` with a single
+correct answer `i`, at which the experts determine `D* > 0`, it stops almost surely; almost surely,
+for every `t > 1 / D*`, `τ_δ ≤ t log (1/δ)` for all small `δ`; and `E_θ[τ_δ] / log (1/δ) → 1 / D*`,
+with `1 / ∞ = 0`. -/
+theorem tendsto_expectedStoppingTime_learnDesign_div_log [Nonempty α]
+    (task : IdentTask α Θ ℐ 𝓨) (hg : task.IsExpertSeq j S g) (hc : ∀ e y, |g e y| ≤ c e)
+    (hw : ∀ i, 0 < w i) (hw1 : ∑' i, (w i : ℝ≥0∞) ≤ 1) {θ : Θ} (hθ : θ ∈ task.M) {i : ℐ}
+    (hi : task.correct θ = {i}) (hpos : 0 < designRate (fun a ↦ task.ν θ a) (task.altInstances i))
+    (hdet : task.DeterminesDesignRate j S g θ i) :
+    (∀ δ ∈ Set.Ioo (0 : ℝ) 1,
+      ∀ᵐ ω ∂(trajMeasure (learnDesignAlg S g c) (Environment.bandit (task.ν θ))),
+        (learnDesign j S g c w δ).stoppingTime IT.obs IT.action IT.feedback ω ≠ ⊤) ∧
+    (∀ᵐ ω ∂(trajMeasure (learnDesignAlg S g c) (Environment.bandit (task.ν θ))),
+      ∀ t : ℝ≥0, (designRate (fun a ↦ task.ν θ a) (task.altInstances i)).toENNReal⁻¹ < t →
+        ∀ᶠ δ in 𝓝[>] 0,
+          ENat.toENNReal ((learnDesign j S g c w δ).stoppingTime IT.obs IT.action IT.feedback ω) ≤
+            t * ENNReal.ofReal (log (1 / δ))) ∧
+    Tendsto (fun δ ↦ expectedStoppingTime (learnDesign j S g c w δ)
+        (Environment.bandit (task.ν θ)) / ENNReal.ofReal (log (1 / δ))) (𝓝[>] 0)
+      (𝓝 (designRate (fun a ↦ task.ν θ a) (task.altInstances i)).toENNReal⁻¹) :=
+  sorry
+
+omit [MeasurableSingletonClass ℐ] in
+/-- **Experts for the dominated models** [EVR26, Note 55, Lemma 6; Note 49, Lemma 1]: on a countably
+generated observation space, with an s-finite measure `ρ a` for each arm, one sequence of experts
+determines `D*` at every model whose laws are dominated by the `ρ a`, for every answer. -/
+theorem exists_isExpertSeq_determinesDesignRate_of_absolutelyContinuous [Nonempty α] [Nonempty ℐ]
+    [MeasurableSpace.CountablyGenerated 𝓨] (task : IdentTask α Θ ℐ 𝓨) (ρ : α → Measure 𝓨)
+    [∀ a, SFinite (ρ a)] :
+    ∃ (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ),
+      task.IsExpertSeq j S g ∧
+        ∀ θ, (∀ a, task.ν θ a ≪ ρ a) → ∀ i, task.DeterminesDesignRate j S g θ i :=
+  sorry
+
+omit [Countable ℐ] [MeasurableSingletonClass ℐ] in
+/-- **Experts for countably many models** [EVR26, Note 55, Section 2], on any spaces. -/
+theorem exists_isExpertSeq_determinesDesignRate_of_countable [Nonempty α] [Nonempty ℐ]
+    (task : IdentTask α Θ ℐ 𝓨) {T : Set (Θ × ℐ)} (hT : T.Countable) :
+    ∃ (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ),
+      task.IsExpertSeq j S g ∧ ∀ p ∈ T, task.DeterminesDesignRate j S g p.1 p.2 :=
+  sorry
+
+/-- **The classes of models on which `D*` is attained** [EVR26, Note 55, Theorem 7]: one sequence
+of experts determines `D*` on a set `M'` of admissible models exactly when some algorithms,
+`δ`-correct when they stop, have `limsup_{δ → 0} E_θ[τ_δ] / log (1/δ) ≤ 1 / D*` on `M'`. -/
+theorem exists_isExpertSeq_iff_exists_identAlg_limsup_le (task : IdentTask α Θ ℐ 𝓨)
+    {M' : Set Θ} (hM' : M' ⊆ task.M) :
+    (∃ (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ),
+        task.IsExpertSeq j S g ∧
+          ∀ θ ∈ M', ∀ i, task.correct θ = {i} → task.DeterminesDesignRate j S g θ i) ↔
+      ∃ A : ℝ → IdentAlg Unit α 𝓨 ℐ,
+        (∀ δ ∈ Set.Ioo (0 : ℝ) (1 / 2), task.IsDeltaCorrectOnStop (A δ) δ) ∧
+        ∀ θ ∈ M', ∀ i, task.correct θ = {i} →
+          0 < designRate (fun a ↦ task.ν θ a) (task.altInstances i) →
+          limsup (fun δ ↦ expectedStoppingTime (A δ) (Environment.bandit (task.ν θ)) /
+              ENNReal.ofReal (log (1 / δ))) (𝓝[>] 0) ≤
+            (designRate (fun a ↦ task.ν θ a) (task.altInstances i)).toENNReal⁻¹ :=
+  sorry
+
+end IdentTask
+
+/-! ### Experts from test functions -/
+
+/-- The weighted smallest relative entropy `Ψ_x(κ) = ⨅ ν ∈ Λ, ∑ a, x a * KL(κ a, ν a)`, with
+`0 * ∞ = 0` (README Layer 5.4). -/
+def weightedKLInf (Λ : Set (α → Measure 𝓨)) (x : α → ℝ≥0) (κ : α → Measure 𝓨) : ℝ≥0∞ :=
+  ⨅ ν ∈ Λ, ∑ a, (x a : ℝ≥0∞) * klDiv (κ a) (ν a)
+
+/-- The box of the instances of probability measures `κ` under which every test function `g` of
+`F a` is integrable with `|∫ g dκ a - q a g| ≤ ε`, for every arm `a`. -/
+def testBox (F : α → Finset (𝓨 → ℝ)) (q : α → (𝓨 → ℝ) → ℝ) (ε : ℝ) : Set (α → Measure 𝓨) :=
+  {κ | ∀ a, IsProbabilityMeasure (κ a) ∧
+    ∀ g ∈ F a, Integrable g (κ a) ∧ |∫ y, g y ∂(κ a) - q a g| ≤ ε}
+
+/-- The box of `(F, q, ε)` is around `μ`: its inequalities are strict at `μ`. -/
+def IsTestBoxAround (F : α → Finset (𝓨 → ℝ)) (q : α → (𝓨 → ℝ) → ℝ) (ε : ℝ)
+    (μ : α → Measure 𝓨) : Prop :=
+  0 < ε ∧ ∀ a, IsProbabilityMeasure (μ a) ∧
+    ∀ g ∈ F a, Integrable g (μ a) ∧ |∫ y, g y ∂(μ a) - q a g| < ε
+
+/-- The envelope `Ψ^G_x(μ) = ⨆ (V around μ), ⨅ κ ∈ V, Ψ_x(κ)` on the boxes of the test functions
+`G a` (README Layer 5.4). -/
+def testEnvelope (G : α → Set (𝓨 → ℝ)) (Λ : Set (α → Measure 𝓨)) (x : α → ℝ≥0)
+    (μ : α → Measure 𝓨) : ℝ≥0∞ :=
+  ⨆ (F : α → Finset (𝓨 → ℝ)) (q : α → (𝓨 → ℝ) → ℝ) (ε : ℝ) (_ : ∀ a, ↑(F a) ⊆ G a)
+    (_ : IsTestBoxAround F q ε μ), ⨅ κ ∈ testBox F q ε, weightedKLInf Λ x κ
+
+/-- **The lower bound on the growth of the designs** [EVR26, Note 55, Proposition 8; Csi84]:
+`Ψ^G_x(μ) ≤ D̄(x)` for test functions integrable under the instances of `Λ`, bounded or not. -/
+theorem testEnvelope_le_designGrowth {G : α → Set (𝓨 → ℝ)} {Λ : Set (α → Measure 𝓨)}
+    {μ : α → Measure 𝓨} (hΛ : ∀ ν ∈ Λ, ∀ a, IsProbabilityMeasure (ν a))
+    (hGm : ∀ a, ∀ g ∈ G a, Measurable g) (hGΛ : ∀ ν ∈ Λ, ∀ a, ∀ g ∈ G a, Integrable g (ν a))
+    (x : α → ℝ≥0) :
+    (testEnvelope G Λ x μ : EReal) ≤ designGrowth μ Λ x :=
+  sorry
+
+namespace IdentTask
+
+/-- **Experts from countably many test functions** [EVR26, Note 55, Proposition 8]: one sequence of
+experts, depending on the task and the test functions only, determines `D*` at every model and
+answer at which `Ψ^G_w = Ψ_w` against the alternatives for the rational allocations; there
+`D* = 1 / T*` when the answer is the only correct one. -/
+theorem exists_isExpertSeq_determinesDesignRate_of_testEnvelope_eq [Nonempty α] [Countable ℐ]
+    [Nonempty ℐ] (task : IdentTask α Θ ℐ 𝓨) (G : α → Set (𝓨 → ℝ)) (hGc : ∀ a, (G a).Countable)
+    (hGm : ∀ a, ∀ f ∈ G a, Measurable f)
+    (hGi : ∀ i, ∀ θ ∈ task.alt i, ∀ a, ∀ f ∈ G a, Integrable f (task.ν θ a)) :
+    ∃ (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ),
+      task.IsExpertSeq j S g ∧ ∀ (θ : Θ) (i : ℐ),
+        (∀ w ∈ simplex α, (∀ a, w a ∈ Set.range ((↑) : ℚ → ℝ)) →
+          testEnvelope G (task.altInstances i) (fun a ↦ (w a).toNNReal) (fun a ↦ task.ν θ a) =
+            weightedKLInf (task.altInstances i) (fun a ↦ (w a).toNNReal) (fun a ↦ task.ν θ a)) →
+        task.DeterminesDesignRate j S g θ i ∧
+          (task.correct θ = {i} → designRate (fun a ↦ task.ν θ a) (task.altInstances i) =
+            (((task.charTime θ)⁻¹ : ℝ≥0∞) : EReal)) :=
+  sorry
+
+/-- **Alternatives in a weakly compact set** [EVR26, Note 55, Corollary 9]: on a separable
+pseudo-metrizable observation space with its Borel σ-algebra, one sequence of experts determines
+`D*` at every model and answer whose alternatives have their laws in a weakly compact set `K` with
+the same weighted entropy infima; there `D̄(x) = Ψ_x` and `D* = 1 / T*`. -/
+theorem exists_isExpertSeq_determinesDesignRate_of_isCompact [TopologicalSpace 𝓨]
+    [TopologicalSpace.PseudoMetrizableSpace 𝓨] [TopologicalSpace.SeparableSpace 𝓨] [BorelSpace 𝓨]
+    [Nonempty α] [Countable ℐ] [Nonempty ℐ] (task : IdentTask α Θ ℐ 𝓨) :
+    ∃ (j : ℕ → ℐ) (S : ℕ → α → ℕ) (g : (e : ℕ) → ((Σ a, Fin (S e a)) → 𝓨) → ℝ),
+      task.IsExpertSeq j S g ∧ ∀ (θ : Θ) (i : ℐ) (K : Set (α → ProbabilityMeasure 𝓨)),
+        IsCompact K → task.altInstances i ⊆ (fun ν a ↦ (ν a : Measure 𝓨)) '' K →
+        (∀ w ∈ simplex α,
+          weightedKLInf ((fun ν a ↦ (ν a : Measure 𝓨)) '' K) (fun a ↦ (w a).toNNReal)
+              (fun a ↦ task.ν θ a) =
+            weightedKLInf (task.altInstances i) (fun a ↦ (w a).toNNReal) (fun a ↦ task.ν θ a)) →
+        task.DeterminesDesignRate j S g θ i ∧
+          (∀ x : α → ℝ≥0, designGrowth (fun a ↦ task.ν θ a) (task.altInstances i) x =
+            weightedKLInf (task.altInstances i) x (fun a ↦ task.ν θ a)) ∧
+          (task.correct θ = {i} → designRate (fun a ↦ task.ν θ a) (task.altInstances i) =
+            (((task.charTime θ)⁻¹ : ℝ≥0∞) : EReal)) :=
+  sorry
+
+end IdentTask
+
+/-- **Convergence in distribution on a separable space is second countable** (README Layer 5.4):
+the laws with finitely many atoms at the points of a dense sequence and rational weights are dense
+for the Lévy–Prokhorov distance. In LMLExplore, an instance. -/
+theorem secondCountableTopology_probabilityMeasure {X : Type*} [TopologicalSpace X]
+    [TopologicalSpace.PseudoMetrizableSpace X] [TopologicalSpace.SeparableSpace X]
+    [MeasurableSpace X] [OpensMeasurableSpace X] :
+    SecondCountableTopology (ProbabilityMeasure X) :=
+  sorry
+
+/-- Best arm identification among all the laws on `[0, 1]` (README Layers 1.1 and 5.4): a model is
+the vector of the arm laws, carried by `[0, 1]`, and its correct answer the arm of largest mean. -/
+def unitIntervalBaiTask : IdentTask α (α → ProbabilityMeasure ℝ) α ℝ where
+  M := (baiTask (productBandit fun _ (P : ProbabilityMeasure ℝ) ↦ (P : Measure ℝ))
+      (fun θ a ↦ ∫ x, x ∂(θ a : Measure ℝ))).M ∩
+    {θ | ∀ a, ∀ᵐ x ∂(θ a : Measure ℝ), x ∈ Set.Icc 0 1}
+  ν := productBandit fun _ (P : ProbabilityMeasure ℝ) ↦ (P : Measure ℝ)
+  isMarkovKernel_ν _ := inferInstance
+  correct θ := {a | ∀ b ≠ a, ∫ x, x ∂(θ b : Measure ℝ) < ∫ x, x ∂(θ a : Measure ℝ)}
+
+/-- **`0 < D* = 1 / T* < ∞` for the best arm among the laws on `[0, 1]`** [EVR26, Note 55,
+Corollary 9], at every model, with at least two arms. -/
+theorem designRate_eq_inv_charTime_unitIntervalBaiTask [Nontrivial α]
+    {θ : α → ProbabilityMeasure ℝ} (hθ : θ ∈ (unitIntervalBaiTask (α := α)).M) {i : α}
+    (hi : i ∈ (unitIntervalBaiTask (α := α)).correct θ) :
+    designRate (fun a ↦ (unitIntervalBaiTask (α := α)).ν θ a)
+        ((unitIntervalBaiTask (α := α)).altInstances i) =
+      ((((unitIntervalBaiTask (α := α)).charTime θ)⁻¹ : ℝ≥0∞) : EReal) ∧
+    (unitIntervalBaiTask (α := α)).charTime θ ≠ 0 ∧ (unitIntervalBaiTask (α := α)).charTime θ ≠ ⊤ :=
+  sorry
+
+/-- **One algorithm at `T*` for the best arm among the laws on `[0, 1]`** [EVR26, Note 55,
+Corollary 9]: the algorithm that learns the design, with the experts of the weakly compact
+alternatives, is `δ`-PAC and has `E_θ[τ_δ] / log (1/δ) → T*(θ)` at every model. -/
+theorem exists_isDeltaPAC_tendsto_charTime_unitIntervalBaiTask [Nontrivial α] :
+    ∃ A : ℝ → IdentAlg Unit α ℝ α,
+      (∀ δ ∈ Set.Ioo (0 : ℝ) 1, (unitIntervalBaiTask (α := α)).IsDeltaPAC (A δ) δ) ∧
+      ∀ θ ∈ (unitIntervalBaiTask (α := α)).M,
+        Tendsto (fun δ ↦ expectedStoppingTime (A δ)
+            (Environment.bandit ((unitIntervalBaiTask (α := α)).ν θ)) /
+              ENNReal.ofReal (log (1 / δ))) (𝓝[>] 0)
+          (𝓝 ((unitIntervalBaiTask (α := α)).charTime θ)) :=
+  sorry
+
+/-- **Exponential families, without an algorithm** [EVR26, Note 55, Corollary 10], for any task on
+vectors of means of per-arm exponential families `(ρ a, T a)` (README Layer 5.4): at a model `θ`
+at which the costs `θ' ↦ D(θ', w, ¬i)` are lower semicontinuous on `∏ a, S a`,
+`D̄(x) = ⨅ λ ∈ ¬i, ∑ a, x a d_a(θ a, λ a)` and `D* = 1 / T*(θ)`. Best arm identification in one
+family is the case of [EVR26, Note 55, Corollary 10]. -/
+theorem designRate_eq_inv_charTime_of_expFamily (task : IdentTask α (α → ℝ) ℐ 𝓨)
+    (ρ : α → Measure 𝓨) [∀ a, IsProbabilityMeasure (ρ a)] (T : α → 𝓨 → ℝ)
+    (hT : ∀ a, Measurable (T a)) (κ : α → ℝ → Measure 𝓨) [∀ a x, IsProbabilityMeasure (κ a x)]
+    (S : α → Set ℝ) (hS : ∀ a, IsOpen (S a))
+    (hκ : ∀ a, ∀ x ∈ S a, ∃ η ∈ interior (integrableExpSet (T a) (ρ a)),
+      κ a x = expFamily (ρ a) (T a) η ∧ ∫ y, T a y ∂(κ a x) = x)
+    (hν : task.ν = productBandit κ) (hM : task.M ⊆ Set.univ.pi S)
+    {θ : α → ℝ} (hθ : θ ∈ task.M) {i : ℐ} (hi : task.correct θ = {i})
+    (hlsc : ∀ w ∈ simplex α,
+      LowerSemicontinuousWithinAt (fun θ' ↦ task.altCost θ' w i) (Set.univ.pi S) θ) :
+    (∀ x : α → ℝ≥0, designGrowth (fun a ↦ task.ν θ a) (task.altInstances i) x =
+      weightedKLInf (task.altInstances i) x (fun a ↦ task.ν θ a)) ∧
+    designRate (fun a ↦ task.ν θ a) (task.altInstances i) =
+      (((task.charTime θ)⁻¹ : ℝ≥0∞) : EReal) :=
+  sorry
+
+end LearningTheDesign
 
 end LMLRoadmaps.Identification

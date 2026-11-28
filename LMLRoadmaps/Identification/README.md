@@ -44,7 +44,8 @@ Suggested homes: `LMLExplore/Identification/` for identification material (names
 `LMLExplore/Probability/LargeDeviations/` for Cramér-type bounds,
 `LMLExplore/SequentialLearning/` for the change of measure and the run-to-stream transfer,
 `LMLExplore/Topology/Semicontinuous/` for Berge's maximum theorem, `LMLExplore/OnlineLearning/` for
-AdaHedge).
+AdaHedge, `LMLExplore/MeasureTheory/Measure/ProbabilityMeasure/` for the separability of
+convergence in distribution).
 
 ## Scope and dependencies
 
@@ -54,7 +55,9 @@ tasks, with single or multiple correct answers, in unstructured models and in li
 It also owns three sequential-learning tools that the Bandits and ReinforcementLearning roadmaps
 build on: the chain rule for the divergence of stopped histories (Layer 2.1), the transfer from
 runs to the per-arm observation streams (Layer 4.1), and conditional domination of moment
-generating functions with its exponential supermartingales (Layer 4.2).
+generating functions with its exponential supermartingales (Layer 4.2). It owns the separability
+and second countability of convergence in distribution on the probability measures of a
+separable pseudo-metrizable space (Layer 5.4).
 
 | Material | Owner and interface consumed here |
 | --- | --- |
@@ -71,6 +74,8 @@ generating functions with its exponential supermartingales (Layer 4.2).
 | Tilts and transforms of standard laws | Tau Ceti `Probability/Distributions/Tilted.lean` (`gammaMeasure_tilted_mul`, `gaussianReal_tilted_mul`, `poissonMeasure_tilted_mul`), `Probability/Distributions/Gaussian/ChiSquared.lean` (`gaussianReal_map_sq`) |
 | Fenchel conjugates, Bregman divergences | Tau Ceti `Analysis/Convex/Conjugate.lean` (`fenchelConjugate`, for a bilinear pairing), LML `ForMathlib/Analysis/Convex/Bregman/Basic.lean` (`bregDiv`) |
 | Minimax theorems, continuity of suprema over compact sets | Mathlib `Topology/Sion.lean` (`Sion.minimax`, `Sion.exists_isSaddlePointOn`), Tau Ceti `Topology/Sion.lean`, Mathlib `Topology/Order/Compact.lean` (`IsCompact.continuous_sSup`, `IsCompact.continuous_sInf`) |
+| Designs: their value, rate and growth, and the Wald inequality with a design | EValues roadmap, Layer 6.4; LMLExplore `EValues/BipolarRate/Design/` (`designLaw`, `designValue`, `designRate`, `designGrowth`, `designBlockEquiv`, `Learning.IsAlgEnvSeq.eintegral_log_le_designRate_mul_lintegral`, `Learning.IsAlgEnvSeq.eintegral_log_le_designGrowth`), `Probability/ProductMeasure/Table.lean` (`restartShape`), `Identification/Task/DesignRate.lean` (`IdentTask.designRate_le_inv_charTime`), `Identification/LowerBound.lean` (`IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime`) |
+| Convergence in distribution, joint lower semicontinuity of the relative entropy | Mathlib `MeasureTheory/Measure/LevyProkhorovMetric.lean` (`LevyProkhorov.probabilityMeasureHomeomorph`, pseudo-metrizability of `ProbabilityMeasure X` for a separable pseudo-metrizable `X`), Tau Ceti `InformationTheory/KullbackLeibler/Variational.lean` (`TauCeti.lowerSemicontinuous_klDiv_probabilityMeasure`), `MeasureTheory/Measure/ProbabilityMeasure/Separable.lean` (separability for second-countable standard Borel spaces) |
 
 Build missing material in this roadmap where it is listed as a target, and consume existing
 implementations directly. The Bandits roadmap and this one do not overlap: regret minimization,
@@ -94,8 +99,12 @@ Outside this roadmap:
 - stopping thresholds, deviation inequalities and sampling rules built on $\mathrm K_{\inf}$ or
   $\mathrm{KL}_{\inf}$ for nonparametric classes (bounded or heavy-tailed arms), including the
   bounded-arm Top Two results of [JDBdHK22]. The $\mathrm K_{\inf}$ transportation costs of these
-  classes (Layer 1.4), their lower bounds (Layer 2.3) and the elimination algorithms for
-  sub-Gaussian or bounded arms (Layers 7, 8.1–8.2) are in scope.
+  classes (Layer 1.4), their lower bounds (Layer 2.3), the elimination algorithms for
+  sub-Gaussian or bounded arms (Layers 7, 8.1–8.2) and the algorithm of Layer 5.4, which attains
+  $T^*$ for the best arm among the laws on $[0,1]$, are in scope;
+- the Borel model of [EVR26, Note 55, Counterexample 11], in which no algorithm attains $D^*$ at
+  every model, and the one-stream counterexample it is built on
+  [EVR26, Note 55, Counterexample 2]: their proofs rest on an analytic set that is not Borel.
 
 ## Conventions
 
@@ -148,7 +157,16 @@ Cramér rate function (Layer 1.2), also `ℝ≥0∞`-valued.
 - It is *$\delta$-correct* on a task [DK19] if on every model $\theta\in M$, with probability at
   least $1-\delta$, it stops and outputs a correct answer.
 - It is *$\delta$-PAC* if moreover it stops almost surely on every model of $M$.
-- Both properties are stated on the laws of the runs, which the algorithm and the environment
+- It is *$\delta$-correct when it stops* [EVR26, Notes 49 and 55] if on every model $\theta\in M$,
+  with probability at most $\delta$, it stops and outputs an answer that is not correct for
+  $\theta$; nothing is asked when it does not stop. So $\delta$-PAC $\Rightarrow$ $\delta$-correct
+  $\Rightarrow$ LML's `IsPAC` at level $\delta$ $\Rightarrow$ $\delta$-correct when it stops, and
+  an algorithm $\delta$-correct when it stops is $\delta$-PAC exactly when it stops almost surely
+  on every model of $M$. This is the guarantee of the algorithm of Layer 5.4, which need not stop
+  at the models where its experts do not determine $D^*$, and the hypothesis of the lower bounds
+  with $D^*$ (Layers 2.3 and 5.4). State those results with it, not with $\delta$-correctness,
+  which that algorithm does not have.
+- These properties are stated on the laws of the runs, which the algorithm and the environment
   determine: the joint law of the stopped history and the output, built from LML's
   `stoppedHistMeasure` and the output kernel, and the law `IdentAlg.outputMeasure`.
 - The sample complexity is $\mathbb E_\theta[\tau]$, the `ℝ≥0∞`-valued lower integral of the
@@ -230,6 +248,8 @@ forms above, and that development may be adapted to them.
    - Prove $\delta$-PAC $\Rightarrow$ $\delta$-correct $\Rightarrow$ LML's `IsPAC` at level $\delta$,
      monotonicity in $\delta$ and in the badness predicate, restriction to subfamilies, and the
      run forms of each property.
+   - Layer 5.4 builds the weaker notion of algorithms $\delta$-correct when they stop
+     (Conventions), with the same API.
 3. **Sample complexity.**
    - Define $\mathbb E_{\mathrm{env}}[\tau]$ and prove it is the same along every run.
    - For stationary environments on finite arms, prove Wald's identities at the stopping time:
@@ -514,13 +534,17 @@ product models with $\mathrm K_{\inf}$ costs [AJG20, JDK23a].
    - For any task, a $\delta$-correct algorithm with $\delta\in(0,1/2)$ and an admissible model
      $\theta$ with a single correct answer, prove
      $\mathbb E_\theta[\tau]\ge T^*(\theta)\,\mathrm{kl}(\delta,1-\delta)$ [GK16, Theorem 1].
-   - The sharp form, for arm laws in any measurable spaces: for every single-answer task and every
-     $\delta$-correct algorithm with $\delta\le1/2$ that stops almost surely at $\theta$,
-     $\mathbb E_\theta[\tau]\ge\mathrm{kl}(\delta,1-\delta)/D^*(\theta)$, with $D^*$ the rate of
-     designs for the alternatives of $\theta$ and the Wald inequality with a design of the EValues
-     roadmap's Layer 6.4 [EVR26, Note 41]. $D^*\le1/T^*$, with equality on finite alphabets and
-     strict inequality in the instances of EValues 6.4, so that the first bullet is its corollary
-     when $\mathbb E_\theta[\tau]<\infty$, and holds trivially otherwise.
+   - The sharp form, for arm laws in any measurable spaces: for every task, every algorithm
+     $\delta$-correct when it stops (Conventions) with $\delta\le1/2$, and every admissible model
+     $\theta$ with a single correct answer and an alternative, at which the algorithm stops almost
+     surely, $\mathbb E_\theta[\tau]\ge\mathrm{kl}(\delta,1-\delta)/D^*(\theta)$, with $D^*$ the
+     rate of designs for the alternatives of $\theta$ and the Wald inequality with a design of the
+     EValues roadmap's Layer 6.4 [EVR26, Notes 41 and 55]. Layer 5.4 proves it for algorithms
+     $\delta$-correct when they stop; the case of $\delta$-correct algorithms is LMLExplore's
+     `IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime`. $D^*\le1/T^*$, with
+     equality on finite alphabets and strict inequality in the instances of EValues 6.4, so that
+     the first bullet is its corollary when $\mathbb E_\theta[\tau]<\infty$, and holds trivially
+     otherwise.
    - Prove $\mathrm{kl}(\delta,1-\delta)\ge\log\frac1{2.4\delta}$ [KCG16], and the
      Bretagnolle–Huber variant $\mathbb E_\theta[\tau]\ge T^*(\theta)\log\frac1{4\delta}$
      [LS, Theorem 33.5].
@@ -867,29 +891,185 @@ the alternatives, and conditional domination by any cumulant generating function
      multiple-answer task with finitely many answers whose costs satisfy either continuity
      hypothesis of Layer 3.3 [DK19, Theorems 10–11, Corollary 12, Lemmas 13–17].
 
-4. **Learning the design** [EVR26, Note 49]. For a task whose arm laws live on countably
-   generated spaces, with a σ-finite measure `ρ a` for each arm, countably many answers and one
-   correct answer per model:
-   - **Experts.** The countable family of bounded block bets of the EValues roadmap's Layer 6.1,
-     applied for each answer `j` and block shape `s` to the null of the blocks of the models whose
-     answer is not `j`, gives experts `(j, s, g)` with `g` bounded and `∫ e^g dλ^(s) ≤ 1` for those
-     models; at every model dominated by the `ρ a`, the experts of the correct answer have values
-     `∫ g dμ^(s) / |s|` of supremum `D*`, and those of a wrong answer have values at most `0`.
-   - **The algorithm.** Rounds `t = 1, 2, …`: each admitted expert reads `t` blocks of its shape to
-     estimate its value; the eligible expert with the largest estimate bets on about `2^t`
-     observations; its bets multiply into one product per answer, and the algorithm stops when the
-     product of an answer `j` reaches `1 / (δ w j)`, for weights `w` on the answers.
-   - **Guarantees.** Prove that it is `δ`-correct on every model, dominated or not (Ville's
-     inequality for each product), and that at every model `μ` dominated by the `ρ a`,
-     `E_μ[τ_δ] / log (1/δ) → 1 / D*(μ)` (with `1/∞ = 0`, and `∞` when `D* = 0`) and
-     `limsup τ_δ / log (1/δ) ≤ 1 / D*` almost surely. With Layer 2.3, `D*` is the complexity of
-     identification at every such model.
-   - The proof gives `E_μ[τ_δ] ≤ log (1/δ) / (D* - 9η) + C(η)` with a constant `C(η)` of order
-     `exp(Θ(η^{-4}))`; no continuity of the optimal proportions is used.
+4. **Learning the design** [EVR26, Note 49; Note 55, Section 2]. The tasks have countably many
+   answers and observations in any measurable space `𝓨`, with no domination and no countable
+   generation; their models may have several correct answers, and the guarantees bear on the
+   models with a single correct answer. Write `D*(θ, ¬i)` for the rate of the designs of the
+   laws of the arms at `θ` against the laws of the arms at the alternatives to `i`, and `D̄` for
+   the growth of the designs (the EValues roadmap's Layer 6.4; LMLExplore's `designRate` and
+   `designGrowth`).
+   - **Correctness when stopping.** Define the algorithms `δ`-correct when they stop
+     (Conventions), for a family of environments and a badness predicate and for a task, with the
+     API of Layers 0.2 and 1.1 (monotonicity in `δ` and in the badness predicate, restriction,
+     pullbacks, run forms), and prove the implications of the Conventions. Prove the sharp bound of
+     Layer 2.3 for them: `kl(δ, 1 - δ) ≤ D*(θ, ¬i) E_θ[τ]` for `δ ≤ 1/2`, at every admissible
+     model `θ` with the single correct answer `i` and an alternative, at which the algorithm
+     stops almost surely. The proof is that of LMLExplore's
+     `IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime`, which becomes its
+     corollary.
+   - **Experts** [EVR26, Note 55, Definition 4]. An *expert* is a triple `(j, S, g)` of an answer
+     `j`, a block shape `S : α → ℕ` with `S ≠ 0` and a bounded measurable function `g` on the
+     tables `(Σ a, Fin (S a)) → 𝓨` of the design `S`, such that `∫ exp g dλ^(S) ≤ 1` for every
+     alternative `λ` to `j`, where `λ^(S)` is LMLExplore's `designLaw` of the laws of the arms at
+     `λ`. Its *value* at a model `θ` is `∫ g dθ^(S) / |S|`. Prove that the value of an expert of
+     the answer `j` is at most `D*(θ, ¬j)` at every model `θ`, and at most `0` at the alternatives
+     to `j` (Jensen's inequality). A sequence of experts `(j e, S e, g e)`, `e : ℕ`, *determines
+     `D*` at `θ` for the answer `i`* if the values at `θ` of its experts of the answer `i` have
+     supremum `D*(θ, ¬i)`. Prove that a countable family of experts, with a zero expert `(i, 1, 0)`
+     added (one observation of each arm, `g = 0`), is a sequence of experts with the same values.
+   - **The algorithm** [EVR26, Note 49, Section 3; Note 55, Theorem 5]. Given a sequence of
+     experts, integer bounds `c e ≥ sup |g e|` and weights `w j > 0` with `∑' j, w j ≤ 1`, round
+     `t` occupies a window of time fixed in advance. Every expert admitted in round `t`
+     (`e + |S e| + c e ≤ log₂ t`) reads `t²` fresh blocks of its shape and estimates its value by
+     the mean of `g e` on them divided by `|S e|`. Then the admitted expert with the largest
+     estimate, the smallest index among ties, reads `⌊2^t / |S e|⌋` fresh blocks, each multiplying
+     the product of its answer by `exp (g e)`, and a fixed arm fills the rest of the window. The
+     algorithm stops when the product of an answer `j` reaches `1 / (δ w j)`, and answers the first
+     such `j` in a fixed order. Construct it as an `IdentAlg` whose sampling rule does not depend
+     on `δ`, with its run lemmas. These windows are those of the Lean proof in [EVR26]; the rounds
+     of [EVR26, Note 49] have random lengths and estimate from all the records since admission.
+   - **Guarantees** [EVR26, Note 55, Theorem 5; Note 49, Theorems 2 and 3]. Prove that for every
+     `δ ∈ (0, 1)` the algorithm is `δ`-correct when it stops, at every model, dominated or not:
+     each block is fresh given the past, so the product of an answer `j` is a nonnegative
+     supermartingale under every alternative to `j`, and Ville's inequality with the weights bounds
+     the probability of a wrong answer. It is not `δ`-correct in general: it need not stop at a
+     model where its experts do not determine `D*`. Prove that at every admissible model `θ` with a
+     single correct answer `i`, at which the experts determine `D*` and `D*(θ, ¬i) > 0`, it stops
+     almost surely for every `δ ∈ (0, 1)`; almost surely, for every `b > 1 / D*`,
+     `τ_δ ≤ b log (1/δ)` for all small `δ`; and `E_θ[τ_δ] / log (1/δ) → 1 / D*` in `ℝ≥0∞`, with
+     `1/∞ = 0`, the lower half by the first bullet. When `D* = 0`, no algorithm `δ`-correct when it
+     stops with `δ < 1/2` stops almost surely at `θ` (first bullet), so `E_θ[τ_δ] = ∞`. On a task
+     whose admissible models all have a single correct answer, at which the experts determine a
+     positive `D*`, the algorithm is `δ`-PAC. The proof of [EVR26, Note 49] gives
+     `E_θ[τ_δ] ≤ log (1/δ) / (D* - 9η) + C(η)` with a constant `C(η)` of order `exp(Θ(η^{-4}))`;
+     no continuity of the optimal proportions is used.
+   - **Experts for the dominated models** [EVR26, Note 55, Lemma 6; Note 49, Lemma 1]. For a
+     countably generated `𝓨` and an s-finite measure `ρ a` for each arm, prove that one sequence of
+     experts determines `D*` at every model `θ`, admissible or not, with `ν_a(θ) ≪ ρ a` for every
+     arm, for every answer. The experts are the block bets of the EValues roadmap's Layer 6.1
+     ("Block bets for a class of alternatives") for the i.i.d. null of the tables of each shape `s`
+     at the alternatives to each answer, dominated by the finite measure
+     `designLaw (fun a ↦ (ρ a).toFinite) s`; their bets on `m` tables are experts of shape `m • s`
+     (LMLExplore's `designBlockEquiv`), and `designRate_eq_iSup_bipolarRate` gives the supremum.
+     With these experts, the algorithm attains `D*` at every dominated model
+     [EVR26, Note 49, Theorem 3].
+   - **The classes of models on which `D*` is attained** [EVR26, Note 55, Theorem 7]. For every set
+     `M'` of admissible models, prove that the following are equivalent:
+     - some sequence of experts determines `D*` at every model of `M'` with a single correct
+       answer, for that answer;
+     - there are identification algorithms `A δ`, `δ`-correct when they stop for every
+       `δ ∈ (0, 1/2)`, with `limsup_{δ → 0} E_θ[τ_δ] / log (1/δ) ≤ 1 / D*(θ, ¬i)`, where
+       `1/∞ = 0`, at every model `θ ∈ M'` with a single correct answer `i` and `D*(θ, ¬i) > 0`.
 
-Generalization: arbitrary tasks, where [GK16] treats best arm identification; arbitrary dominated
-models and the rate `D*` of designs (item 4), where Track-and-Stop has exponential families and
-`T*`.
+     The algorithm gives the first implication. Prove the converse from `δ`-correctness when they
+     stop for small `δ` only. The experts of an answer `j` are built from `A δ` as in the proof of
+     the Wald inequality with a design (EValues 6.4): the run of `A δ` stopped at `min τ k` pays
+     `(1 - δ) / δ` when it has stopped by `k` with the answer `j` and `δ / (1 - δ)` otherwise, an
+     e-variable for the alternatives to `j`; `m` such runs restarted on the entries not yet read
+     (LMLExplore's `restartShape`), the product of their payoffs mixed with the constant `1` and set
+     to `1/2` when they do not fit in the table of a design `n`, with the seeds integrated out, give
+     a bounded function of that table whose logarithm is an expert of `j`. These experts, for the
+     levels `δ = 1 / (r + 3)` and all `j`, `m`, `n` and `k`, with the zero experts, determine `D*`
+     on `M'`.
+   - **Single models and countable sets** [EVR26, Note 55, Section 2]. Prove that for every
+     countable set of pairs of a model and an answer some sequence of experts determines `D*` at
+     each model for its answer, on any spaces: `D*` is a supremum of values of designs, bounded
+     e-variables suffice in each, and a countable union of sequences of experts is one. So for
+     every task with countably many answers, at every admissible model `θ` with a single correct
+     answer `i` and an alternative, `1 / D*(θ, ¬i)` is the smallest
+     `limsup_{δ → 0} E_θ[τ_δ] / log (1/δ)` of a family of algorithms `δ`-correct when they stop,
+     and one algorithm attains it at all the models of any countable set. On an uncountable class
+     it may not: in a Borel model with one arm on `[0, 1]² × {0, 1}`, `D* = 1/T* > 0` at every
+     model and no family of algorithms `δ`-correct when they stop attains `D*` at every model
+     [EVR26, Note 55, Counterexample 11] (outside this roadmap: Scope).
+   - **Experts from test functions** [EVR26, Note 55, Proposition 8; Csi84]. For each arm `a` let
+     `G a` be a set of measurable real functions on `𝓨`, bounded or not, the *test functions*. A
+     *box* is a set `{κ | ∀ a, ∀ g ∈ F a, g is κ a-integrable and |∫ g dκ a - q a g| ≤ ε}` of
+     instances `κ : α → Measure 𝓨` of probability measures, in the model or not, for finite sets
+     `F a ⊆ G a`, centres `q a g` and `ε > 0`; it is *around* `μ` if its inequalities are strict at
+     `μ`. For a set `Λ` of instances and `x : α → ℝ≥0`, define in `ℝ≥0∞`, with `0 * ∞ = 0`,
+     `Ψ_x(κ) = ⨅ λ ∈ Λ, ∑ a, x a * KL(κ a, λ a)` and its envelope
+     `Ψ^G_x(μ) = ⨆ (V around μ), ⨅ κ ∈ V, Ψ_x(κ)`, at most `Ψ_x(μ)`; the equality is a lower
+     semicontinuity of `Ψ_x` at `μ` for the test functions. At the laws of the arms at a model
+     `θ`, against the laws at the alternatives to `i`, `Ψ_w` is the cost `D(θ, w, ¬i)` of Layer 3.1.
+     - If the test functions are integrable under the instances of `Λ`, prove
+       `Ψ^G_x(μ) ≤ D̄(x) ≤ Ψ_x(μ)` for every `x`, hence
+       `⨆ w ∈ Δ_K, Ψ^G_w(μ) ≤ D* ≤ ⨆ w ∈ Δ_K, Ψ_w(μ)`; `D̄(x) = Ψ_x(μ)` when
+       `Ψ^G_x(μ) = Ψ_x(μ)`, and `D* = ⨆ w ∈ Δ_K, Ψ_w(μ)` when `Ψ^G_w(μ) = Ψ_w(μ)` at the
+       allocations `w` with rational coordinates. The upper bounds are LMLExplore's
+       `designGrowth_le_iInf_sum_mul_klDiv` and `designRate_le_iSup_iInf_sum_mul_klDiv`. For the
+       lower bound, prove the Sanov-type bound for one arm and a box [Csi84]: under `λ^{⊗n}`, the
+       probability that the empirical measure of the `n` observations satisfies the inequalities of
+       the box is at most `exp (-n ⨅ R, KL(R, λ))` over the probability measures `R` that satisfy
+       them, for integrable test functions, unbounded ones included. Then `1/2 + (1/2) e^c 𝟙_A`,
+       for the event `A` that the empirical measures of the rows of a table satisfy the
+       inequalities of the box and `c` at most the cost `⨅ κ ∈ V, Ψ_n(κ)` of the box `V`, is an
+       e-variable for `Λ`, and the law of large numbers at `μ` gives the growth.
+     - If every `G a` is countable and its functions are integrable under the laws of the arms at
+       every alternative of every answer, prove that the experts of the boxes with rational centres
+       and radius (an answer `j`, a design `n`, a nonempty box and a rational level at most its
+       cost against the alternatives to `j`) form one sequence of experts, depending on the task and
+       the `G a` only, that determines `D*` at every model `θ` for the answer `i` at which
+       `Ψ^G_w = Ψ_w`, against the alternatives to `i`, for every allocation `w` with rational
+       coordinates. There `D* = 1/T*(θ)` when `i` is the only correct answer of `θ`.
+   - **Alternatives in a weakly compact set** [EVR26, Note 55, Corollary 9]. Let `𝓨` be a separable
+     pseudo-metrizable space with its Borel σ-algebra, and give `α → ProbabilityMeasure 𝓨` the
+     product of the topologies of convergence in distribution. Prove that one sequence of experts,
+     depending on the task only, determines `D*` at every model `θ` for the answer `i` such that
+     the laws of the arms at the alternatives to `i` lie in a compact set `K` of instances and, at
+     the laws of the arms at `θ`, `Ψ_w` is the same for `Λ = K` and for `Λ` the laws at the
+     alternatives to `i`, for every `w ∈ Δ_K`. There `D̄(x) = Ψ_x` for every `x`, and
+     `D* = 1/T*(θ)` when `i` is the only correct answer. A weakly compact set of alternatives is
+     the case of `K` that set. The test functions are countably many bounded continuous functions
+     whose boxes around each law form a basis of its neighbourhoods (from a countable basis of the
+     topology); the weighted relative entropy is jointly lower semicontinuous (Tau Ceti's
+     `TauCeti.lowerSemicontinuous_klDiv_probabilityMeasure`), so its infimum over `K` is lower
+     semicontinuous, and the bullet on test functions applies; [EVR26, Note 55] assumes a
+     metrizable space. This needs, and this item builds, the separability and second countability of
+     `ProbabilityMeasure X`, as instances, for every separable pseudo-metrizable `X` with
+     `OpensMeasurableSpace X`: the laws with finitely many atoms at the points of a dense sequence
+     and rational weights are dense for the Lévy–Prokhorov distance, which metrizes convergence in
+     distribution (Mathlib's `LevyProkhorov.probabilityMeasureHomeomorph`, from which Mathlib
+     derives the pseudo-metrizability). Tau Ceti has them for second-countable standard Borel
+     spaces only (`MeasureTheory.ProbabilityMeasure.instSeparableSpace`).
+     - **The best arm among the laws on `[0, 1]`.** For best arm identification on the model of all
+       bandits with real observations restricted to the laws on `[0, 1]` (Layer 1.1; LMLExplore's
+       `(baiTask lawBandit lawMean).restrict (Set.univ.pi fun _ ↦ unitIntervalLaws)`), with at
+       least two arms, prove that the instances of laws on `[0, 1]` in which some arm `b ≠ i` has a
+       mean at least that of `i` form such a `K` at every model with best arm `i`: the laws on
+       `[0, 1]` are weakly compact and their mean is continuous, and mixing with `δ_0` and `δ_1`
+       with weight `t` moves a point of `K` into the alternatives at a cost at most
+       `log (1 / (1 - t))` per arm. This equality of the infima is the closure property under which
+       Layer 1.4 writes these costs with `K_inf`. Prove `0 < D* = 1/T*(θ) < ∞` at every model (the
+       uniform allocation gives the positivity, mixtures with weight `2/3` the bound `log 3`). So
+       the algorithm with these experts is `δ`-PAC on this task for every `δ ∈ (0, 1)`, with
+       `E_θ[τ_δ] / log (1/δ) → T*(θ)` at every model: the lower bound of Layer 2.3 is attained on
+       this nonparametric class, by an algorithm that is not explicit.
+   - **Exponential families, without an algorithm** [EVR26, Note 55, Corollary 10]. For a task on
+     vectors of means of per-arm exponential families (the product model of Layer 1.4 with `κ a x`
+     the member of mean `x` of `(ρ a, T a)`, for `x` in an open set `S a` of means of the family,
+     and admissible models in `∏ a, S a`), take the statistic `T a` as the only test function of
+     the arm `a`. Prove that at every admissible model `θ` and answer `i` such that
+     `θ' ↦ D(θ', w, ¬i)` is lower semicontinuous at `θ` on `∏ a, S a` for every `w ∈ Δ_K`,
+     `Ψ^G_x = Ψ_x` for every `x`: so `D̄(x) = ⨅ λ ∈ ¬i, ∑ a, x a * d_a(θ a, λ a)`, the experts of
+     the test functions `T a` determine `D*` at `θ` for `i`, and `D* = 1/T*(θ)` when `i` is the
+     only correct answer. The key step is `KL(κ, κ a z) ≥ d_a(y, z)` for every law `κ` under which
+     `T a` is integrable with mean `y ∈ S a` and every `z ∈ S a`, the log-likelihood ratio of two
+     members being affine in `T a`. With `S a` all the means of the family, the continuity theorem
+     of Layer 3.3 gives the semicontinuity at every admissible model of every task under its
+     per-arm hypotheses, which the instances of Layer 1.2 satisfy; best arm identification in one
+     family, the case of [EVR26, Note 55, Corollary 10], has it from LMLExplore's
+     `continuousWithinAt_altCost_baiTask_restrict`. So `D* = 1/T*`, which EValues 6.4 derives from
+     Track-and-Stop (Layer 5.2), holds with no algorithm, for every such task and with `D̄`; and the
+     algorithm of this item with these experts attains `T*` at all these models, with no
+     hypothesis on the optimal allocations.
+
+Generalization: arbitrary tasks, where [GK16] treats best arm identification; the rate `D*` of
+designs on any observation space, attained by one algorithm on every class of models on which a
+sequence of experts determines it, dominated or not, with these classes characterized (item 4),
+where Track-and-Stop has exponential families and `T*`; `D* = 1/T*` for every task on per-arm
+exponential families whose costs are lower semicontinuous, where [EVR26, Note 55, Corollary 10]
+treats best arm identification in one family.
 
 ## Layer 6: Game-based, Top Two and Frank–Wolfe sampling rules
 
@@ -1092,6 +1272,13 @@ all runs. Check in particular:
   sequential halving and RAGE are all built with the constructor of Layer 0.5.
 - **Fixed budget:** the fixed-budget lower bound of Layer 8.4 and the upper bounds of
   Layers 8.1–8.2 agree up to the $\log K$ factors stated.
+- **Learning the design:** with the experts of the dominated models, the algorithm of Layer 5.4
+  attains $D^*$ at every dominated model [EVR26, Note 49, Theorem 3]; for best arm identification
+  in one exponential family, the experts of the statistic give $D^*=1/T^*$, which EValues 6.4
+  derives from Track-and-Stop; on a finite observation space with all its subsets measurable,
+  where $\mathrm{KL}(\mu_a,\cdot)$ is continuous with values in $[0,\infty]$, the bullet on
+  weakly compact sets with $K$ the closure of the laws at the alternatives gives the
+  finite-alphabet equality $D^*=1/T^*$ of EValues 6.4.
 
 Compilation of the suggested signatures checks their types, not the truth of their admitted
 theorems or the completion of these milestones.
@@ -1120,6 +1307,9 @@ Section 4.6 describes the stack-of-rewards model.
   of the GLR stopping rule and of the game that defines the characteristic time.
 - [CL16] A. Carpentier and A. Locatelli, *Tight (lower) bounds for the fixed budget best arm
   identification bandit problem*, COLT 2016.
+- [Csi84] I. Csiszár, *Sanov property, generalized I-projection and a conditional limit theorem*,
+  Ann. Probab. 12 (1984), for the bound on the probability that an empirical measure lies in a
+  convex set.
 - [D23] R. Degenne, *On the existence of a complexity in fixed budget bandit identification*,
   COLT 2023.
 - [DK19] R. Degenne and W. M. Koolen, *Pure exploration with multiple correct answers*,
@@ -1136,7 +1326,7 @@ Section 4.6 describes the stack-of-rewards model.
   decision processes*, COLT 2002.
 - [EMM06] E. Even-Dar, S. Mannor and Y. Mansour, *Action elimination and stopping conditions for
   the multi-armed bandit and reinforcement learning problems*, JMLR 7 (2006).
-- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 49 and
+- [EVR26] *Answers to open questions in e-values and anytime-valid inference*, notes 01 to 55 and
   the Lean library `EValuesResearch` of github.com/RemyDegenne/evalues_research, 2026; written and
   refereed by AI agents. The EValues roadmap cites it in full.
 - [FJJR19] T. Fiez, L. Jain, K. Jamieson and L. Ratliff, *Sequential experimental design for

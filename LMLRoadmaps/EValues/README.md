@@ -290,7 +290,7 @@ names keep their names.
 ## Restatements of merged code
 
 The Generalization roadmap's e-values targets (its Layer 0, targets 0.17–0.26, and Layer 1,
-targets 1.26–1.37) restate the merged e-values code in the conventions above: the operations on
+targets 1.26–1.39) restate the merged e-values code in the conventions above: the operations on
 nulls, the polarity, the quasi-sure filter, tests, `klInf` and `maxEPower`, the filtration `piLT`,
 one conditional null that may depend on the past, and the canonical nulls of calibrators and
 merging functions. The items of this roadmap that define those objects are their prerequisites.
@@ -309,7 +309,8 @@ Layer 6.1's characterization of the classes on which one e-process attains the r
 (`EValues/BipolarRate/Universal.lean`: the alternatives dominated by an s-finite measure on a
 countably generated space), whose proof uses the domination only through the family of block bets
 `ProbabilityTheory.exists_iSup_integral_div_eq_bipolarRate`. The pull request that builds the
-e-process from a family derives the merged theorem from it and from that family.
+e-process from a family derives the merged theorem from it and from that family (Generalization
+1.38).
 
 ## Layers and dependencies
 
@@ -1609,14 +1610,16 @@ the effective null of the `n`-sample null. Write
      It contains the Wald inequality of item 3 (one source) and, through
      `a n ≤ ⨅ λ ∈ Λ, ∑ a, n a * klDiv (μ a) (λ a)`, the transportation lemma of Identification 2.2
      [KCG16, Lemma 1] for stopping times of finite mean, for e-variables rather than events.
-   - **Consequences** [EVR26, Note 41]. A `δ`-correct algorithm (Identification 0.2) with
+   - **Consequences** [EVR26, Note 41]. An algorithm `δ`-correct when it stops (Identification,
+     Conventions; the `δ`-correct algorithms of Identification 0.2 are such algorithms) with
      `δ ≤ 1/2` that stops almost surely at `μ` has `E_μ[τ] ≥ kl(δ, 1-δ) / D*` and
      `kl(δ, 1-δ) ≤ D̄ (E_μ[N τ])`, with `D*` for `Λ` the alternatives of `μ`, and
      `D* ≤ 1 / T* μ`, so that this is the sharp form of [GK16, Theorem 1]. For testing a known
      instance, blocks of a near-optimal shape with the tests of item 3 attain `log (1/δ) / D*` to
-     first order, and no sampling rule does better. If `δ`-correct algorithms attain `c` at `μ`,
-     then `D* ≥ 1 / c`; with Identification 5.2 this gives `D* = 1 / T*` for best arm
-     identification in exponential families.
+     first order, and no sampling rule does better. If algorithms `δ`-correct when they stop and
+     stopping almost surely at `μ` attain `c` at `μ`, then `D* ≥ 1 / c`; with Identification 5.2
+     this gives `D* = 1 / T*` for best arm identification in exponential families, which
+     Identification 5.4 also gives with no algorithm.
    - **When `D*` is the entropy constant** [EVR26, Note 41]. On finite alphabets `D* = 1 / T* μ`,
      and `D̄ x = ⨅ λ ∈ Λ, ∑ a, x a * klDiv (μ a) (λ a)`, from the finite-alphabet equality of
      item 1; on countable alphabets `D*` is the same supremum with `klIntegral` in place of `klDiv`

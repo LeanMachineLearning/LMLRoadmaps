@@ -906,7 +906,7 @@ the alternatives, and conditional domination by any cumulant generating function
      model `θ` with the single correct answer `i` and an alternative, at which the algorithm
      stops almost surely. The proof is that of LMLExplore's
      `IdentTask.IsDeltaCorrect.klBer_le_designRate_mul_expectedStoppingTime`, which becomes its
-     corollary.
+     corollary (Generalization 1.39).
    - **Experts** [EVR26, Note 55, Definition 4]. An *expert* is a triple `(j, S, g)` of an answer
      `j`, a block shape `S : α → ℕ` with `S ≠ 0` and a bounded measurable function `g` on the
      tables `(Σ a, Fin (S a)) → 𝓨` of the design `S`, such that `∫ exp g dλ^(S) ≤ 1` for every
